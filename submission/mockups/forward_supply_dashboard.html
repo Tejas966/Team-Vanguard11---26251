@@ -1,0 +1,751 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Forward Supply Intelligence — mockup</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans+Condensed:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0e100f; --panel:#151815; --panel-2:#1b1f1b; --line:#272c26; --line-2:#343a33;
+  --ink:#ebe8dd; --ink-2:#b9b6aa; --muted:#878479;
+  --accent:#d9a441; --accent-ink:#1a1405;
+  --contour:#263022; --contour-2:#2f3b2a; --road:#7a7d70;
+  --good:#0ca30c; --warn:#fab219; --serious:#ec835a; --crit:#d03b3b;
+  --series:#3987e5; --band:rgba(57,135,229,.22);
+  --mono:"IBM Plex Mono",ui-monospace,Consolas,monospace;
+  --cond:"IBM Plex Sans Condensed","Arial Narrow",system-ui,sans-serif;
+  --sans:"IBM Plex Sans",system-ui,"Segoe UI",sans-serif;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:14px;line-height:1.4}
+button,input,select{font:inherit;color:inherit}
+.wrap{max-width:1440px;margin:0 auto;padding:0 16px 40px}
+
+/* top strip */
+.mock-strip{background:repeating-linear-gradient(135deg,#2a2208 0 10px,#231c06 10px 20px);color:var(--accent);font-family:var(--mono);font-size:11.5px;letter-spacing:.06em;text-align:center;padding:5px 8px;border-bottom:1px solid #3d3110}
+header.top{display:flex;flex-wrap:wrap;align-items:center;gap:14px 22px;padding:14px 0 12px;border-bottom:1px solid var(--line)}
+.brand{display:flex;align-items:baseline;gap:10px}
+.brand b{font-family:var(--cond);font-size:21px;font-weight:700;letter-spacing:.02em}
+.brand span{font-family:var(--mono);font-size:11px;color:var(--muted)}
+.dtg{font-family:var(--mono);font-size:12px;color:var(--ink-2)}
+.hdr-ctl{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--ink-2)}
+.hdr-ctl select{background:var(--panel-2);border:1px solid var(--line-2);padding:5px 8px;border-radius:2px}
+.seg{display:inline-flex;border:1px solid var(--line-2);border-radius:2px;overflow:hidden}
+.seg button{background:transparent;border:0;padding:5px 11px;font-family:var(--mono);font-size:12px;cursor:pointer;color:var(--ink-2)}
+.seg button+button{border-left:1px solid var(--line-2)}
+.seg button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);font-weight:600}
+.badge-sim{margin-left:auto;font-family:var(--mono);font-size:11px;border:1px dashed var(--accent);color:var(--accent);padding:4px 8px;letter-spacing:.05em}
+
+/* story */
+.story{display:grid;grid-template-columns:repeat(3,1fr);gap:0;border:1px solid var(--line);margin:14px 0;background:var(--panel)}
+.story div{padding:10px 14px;font-size:13px;color:var(--ink-2)}
+.story div+div{border-left:1px solid var(--line)}
+.story b{display:block;font-family:var(--mono);font-size:10.5px;letter-spacing:.1em;color:var(--accent);margin-bottom:3px;font-weight:500}
+
+/* tiles */
+.tiles{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:12px}
+.tile{background:var(--panel);border:1px solid var(--line);padding:12px 14px 10px;position:relative}
+.tile .lbl{font-family:var(--mono);font-size:10.5px;letter-spacing:.09em;color:var(--muted);text-transform:uppercase}
+.tile .val{font-family:var(--cond);font-size:34px;font-weight:600;line-height:1.1;margin-top:4px}
+.tile .val small{font-size:15px;color:var(--ink-2);font-weight:500;margin-left:4px}
+.tile .sub{font-size:12px;color:var(--ink-2);margin-top:2px}
+.tile .tag{position:absolute;top:10px;right:10px;font-family:var(--mono);font-size:9.5px;color:var(--muted);border:1px solid var(--line-2);padding:1px 5px}
+
+/* panels */
+.grid{display:grid;gap:12px}
+.g-main{grid-template-columns:minmax(0,1.55fr) minmax(0,1fr)}
+.g-mid{grid-template-columns:minmax(0,1.1fr) minmax(0,1fr)}
+.g-low{grid-template-columns:minmax(0,1.15fr) minmax(0,1fr) minmax(0,.95fr)}
+.panel{background:var(--panel);border:1px solid var(--line);display:flex;flex-direction:column;min-width:0}
+.ph{display:flex;align-items:baseline;gap:10px;padding:10px 14px 8px;border-bottom:1px solid var(--line)}
+.ph .no{font-family:var(--mono);font-size:11px;color:var(--accent)}
+.ph h2{margin:0;font-family:var(--cond);font-size:15.5px;font-weight:600;letter-spacing:.03em;text-transform:uppercase}
+.ph .q{margin-left:auto;font-size:12px;color:var(--muted);font-style:italic;text-align:right}
+.pb{padding:12px 14px;flex:1;min-width:0}
+
+/* map */
+.map-wrap{position:relative;flex:1;display:flex;align-items:center;background:#111410}
+svg.map{width:100%;height:auto;display:block;background:#111410}
+.map-legend{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:11.5px;color:var(--ink-2);padding:8px 14px;border-top:1px solid var(--line)}
+.map-legend i{display:inline-block;width:10px;height:10px;margin-right:5px;vertical-align:-1px}
+.post-g{cursor:pointer}
+.post-g:focus{outline:none}
+.post-g:focus rect.hit, .post-g:hover rect.hit{stroke:var(--accent);stroke-width:1.5}
+
+/* resilience */
+.res-ctl{display:grid;grid-template-columns:1fr auto;gap:6px 12px;align-items:center}
+.res-ctl label{font-size:13px}
+.res-ctl output{font-family:var(--mono);font-size:22px;color:var(--accent);font-weight:600}
+input[type=range]{width:100%;accent-color:var(--accent)}
+.chk{display:flex;align-items:center;gap:8px;font-size:13px;margin-top:8px;cursor:pointer}
+.chk input{accent-color:var(--accent);width:16px;height:16px}
+.timeline{margin:14px 0 4px}
+.timeline svg{width:100%;height:auto;display:block}
+.fail-list{list-style:none;margin:8px 0 0;padding:0;font-size:13px}
+.fail-list li{display:grid;grid-template-columns:22px 1fr auto;gap:8px;padding:6px 0;border-top:1px solid var(--line);align-items:baseline}
+.fail-list .n{font-family:var(--mono);color:var(--muted);font-size:12px}
+.fail-list .d{font-family:var(--mono);font-size:12.5px;white-space:nowrap}
+.fail-list .moved{color:var(--good)}
+.empty{color:var(--muted);font-size:13px;padding:8px 0}
+.plan{margin-top:12px;border:1px solid var(--line-2);background:var(--panel-2);padding:10px 12px}
+.plan h3{margin:0 0 6px;font-family:var(--mono);font-size:11px;letter-spacing:.09em;color:var(--accent);font-weight:500}
+.plan ol{margin:0;padding-left:18px;font-size:13px}
+.plan ol li{margin:3px 0}
+.btns{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
+.btn{border:1px solid var(--line-2);background:transparent;padding:6px 14px;cursor:pointer;border-radius:2px;font-size:13px}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink);font-weight:600}
+.btn:hover{border-color:var(--accent)}
+.btn:disabled{opacity:.5;cursor:default}
+.approved{font-family:var(--mono);font-size:12px;color:var(--good);margin-top:8px}
+.cmp{width:100%;border-collapse:collapse;margin-top:10px;font-size:12.5px}
+.cmp th,.cmp td{padding:5px 6px;border-top:1px solid var(--line);text-align:right}
+.cmp th:first-child,.cmp td:first-child{text-align:left}
+.cmp thead th{font-family:var(--mono);font-size:10.5px;color:var(--muted);font-weight:500;letter-spacing:.05em}
+
+/* tables */
+table.risk{width:100%;border-collapse:collapse;font-size:13px}
+table.risk th{font-family:var(--mono);font-size:10.5px;letter-spacing:.07em;color:var(--muted);font-weight:500;text-align:left;padding:6px 8px;border-bottom:1px solid var(--line-2);text-transform:uppercase}
+table.risk td{padding:6px 8px;border-bottom:1px solid var(--line);vertical-align:middle}
+table.risk td.num{font-family:var(--mono);font-variant-numeric:tabular-nums;text-align:right;white-space:nowrap}
+table.risk th.num{text-align:right}
+table.risk tbody tr{cursor:pointer}
+table.risk tbody tr:hover{background:var(--panel-2)}
+table.risk tbody tr[aria-selected="true"]{background:#221d10;box-shadow:inset 3px 0 0 var(--accent)}
+.band{color:var(--muted);font-size:11.5px}
+.st{display:inline-flex;align-items:center;gap:5px;font-family:var(--mono);font-size:11px;font-weight:600;letter-spacing:.04em;white-space:nowrap}
+.st i{font-style:normal;display:inline-grid;place-items:center;width:15px;height:15px;font-size:10px;color:#111;border-radius:1px}
+.st.ok i{background:var(--good)} .st.ok{color:#5fd35f}
+.st.watch i{background:var(--warn)} .st.watch{color:var(--warn)}
+.st.risk i{background:var(--serious)} .st.risk{color:var(--serious)}
+.st.crit i{background:var(--crit);color:#fff} .st.crit{color:#ff7b7b}
+.pbar{display:inline-block;width:46px;height:6px;background:var(--line-2);vertical-align:middle;margin-right:6px}
+.pbar span{display:block;height:100%}
+.action{font-size:12.5px;color:var(--ink-2)}
+
+/* forecast */
+.fc-head{display:flex;flex-wrap:wrap;gap:8px 14px;align-items:baseline;margin-bottom:6px}
+.fc-head b{font-family:var(--cond);font-size:17px;font-weight:600}
+.fc-head span{font-size:12px;color:var(--muted)}
+.chart-wrap{position:relative}
+svg.chart{width:100%;height:auto;display:block}
+.tip{position:absolute;pointer-events:none;background:#0b0c0b;border:1px solid var(--line-2);padding:6px 8px;font-size:12px;font-family:var(--mono);white-space:nowrap;display:none;z-index:2}
+.why{margin-top:10px;border-left:2px solid var(--accent);padding:4px 0 4px 10px;font-size:13px;color:var(--ink-2)}
+.why b{color:var(--ink);font-weight:600}
+.why ul{margin:4px 0 0;padding-left:16px}
+.legend-row{display:flex;gap:16px;font-size:11.5px;color:var(--ink-2);margin-top:6px}
+.legend-row i{display:inline-block;width:14px;height:8px;margin-right:5px;vertical-align:0}
+
+/* winter */
+.wc-top{display:flex;gap:18px;align-items:flex-end;flex-wrap:wrap}
+.wc-big{font-family:var(--cond);font-size:44px;line-height:1;font-weight:700;color:var(--accent)}
+.wc-big small{font-size:15px;color:var(--ink-2);font-weight:500;margin-left:4px}
+.wc-txt{font-size:13px;color:var(--ink-2);max-width:300px}
+.wc-verdict{margin:12px 0 10px;padding:9px 12px;border:1px solid var(--line-2);font-size:13.5px}
+.wc-verdict.short{border-color:#6b2a2a;background:#1f1313}
+.wc-verdict.okv{border-color:#1f4d1f;background:#111c11}
+.wc-verdict b{font-family:var(--mono)}
+.wbars{display:grid;grid-template-columns:34px 1fr 70px;gap:6px 8px;align-items:center;font-size:12px}
+.wbars .id{font-family:var(--mono);color:var(--ink-2)}
+.wbar{height:12px;background:#10130f;border:1px solid var(--line-2);position:relative}
+.wbar span{position:absolute;top:0;bottom:0;left:0;background:#6d7a62}
+.wbar em{position:absolute;top:0;bottom:0;background:repeating-linear-gradient(135deg,rgba(217,164,65,.55) 0 3px,transparent 3px 6px)}
+.wbars .g{font-family:var(--mono);text-align:right;color:var(--ink)}
+.wc-ctl{display:flex;gap:10px;align-items:center;font-size:12px;color:var(--ink-2);margin-top:12px;flex-wrap:wrap}
+
+/* feed */
+.feed{list-style:none;margin:0;padding:0;font-size:12.5px}
+.feed li{display:grid;grid-template-columns:auto 1fr auto;gap:4px 10px;padding:7px 0;border-bottom:1px solid var(--line);align-items:center}
+.feed .sid{font-family:var(--mono);font-size:11.5px;color:var(--ink-2)}
+.feed .what{color:var(--ink)}
+.feed .age{font-family:var(--mono);font-size:11px;color:var(--muted);grid-column:2/4}
+.fs{font-family:var(--mono);font-size:10.5px;font-weight:600;padding:2px 6px;letter-spacing:.05em;white-space:nowrap}
+.fs.live{color:#5fd35f;border:1px solid #1f4d1f}
+.fs.stale{color:var(--warn);border:1px solid #5a4410}
+.fs.none{color:#ff7b7b;border:1px dashed #7a2c2c}
+.feed li.none .what{color:var(--muted);text-decoration:line-through}
+.pulse{display:inline-block;width:6px;height:6px;border-radius:50%;background:#5fd35f;margin-right:6px;animation:p 1.6s infinite}
+@keyframes p{0%,100%{opacity:1}50%{opacity:.2}}
+.note{font-size:11.5px;color:var(--muted);margin-top:8px}
+
+/* backtest */
+table.bt{width:100%;border-collapse:collapse;font-size:12.5px}
+table.bt th,table.bt td{padding:6px 6px;border-bottom:1px solid var(--line);text-align:right;font-variant-numeric:tabular-nums}
+table.bt th:first-child,table.bt td:first-child{text-align:left}
+table.bt thead th{font-family:var(--mono);font-size:10px;color:var(--muted);font-weight:500;letter-spacing:.05em;vertical-align:bottom}
+table.bt td{font-family:var(--mono)}
+table.bt td.best{color:var(--ink);font-weight:600}
+table.bt td.dim{color:var(--muted)}
+.cov{display:inline-block;position:relative;width:54px;height:8px;background:var(--line-2);vertical-align:middle;margin-left:6px}
+.cov span{position:absolute;left:0;top:0;bottom:0;background:var(--series)}
+.cov b{position:absolute;left:80%;top:-3px;bottom:-3px;width:1.5px;background:var(--ink)}
+.illus{display:inline-block;font-family:var(--mono);font-size:9.5px;color:var(--accent);border:1px dashed var(--accent);padding:1px 5px;margin-left:6px;letter-spacing:.04em}
+
+footer{margin-top:18px;padding-top:12px;border-top:1px solid var(--line);font-size:11.5px;color:var(--muted);display:flex;flex-wrap:wrap;gap:6px 24px}
+.sr{position:absolute;left:-9999px}
+
+@media (max-width:1100px){
+  .g-main,.g-mid,.g-low{grid-template-columns:1fr}
+  .tiles{grid-template-columns:repeat(2,1fr)}
+}
+@media (max-width:640px){
+  .story{grid-template-columns:1fr}.story div+div{border-left:0;border-top:1px solid var(--line)}
+  .tiles{grid-template-columns:1fr 1fr}
+  .tile .val{font-size:28px}
+  .ph .q{display:none}
+  .badge-sim{margin-left:0}
+  .tile .tag{position:static;display:inline-block;margin-bottom:4px}
+}
+</style>
+</head>
+<body>
+<div class="mock-strip">ILLUSTRATIVE MOCKUP · FICTIONAL SECTOR, POSTS AND NUMBERS · NOT REAL DATA · SIH26251 / TEAM VAN GUARD</div>
+<div class="wrap">
+
+<header class="top">
+  <div class="brand"><b>FORWARD SUPPLY INTELLIGENCE</b><span>v0.1 mock</span></div>
+  <div class="dtg" id="dtg">—</div>
+  <div class="hdr-ctl">
+    <label for="sector">Sector</label>
+    <select id="sector"><option>North-1 (fictional, high altitude)</option></select>
+  </div>
+  <div class="hdr-ctl">
+    <span id="hzl">Horizon</span>
+    <div class="seg" role="group" aria-labelledby="hzl">
+      <button type="button" data-h="7" aria-pressed="false">7 d</button>
+      <button type="button" data-h="14" aria-pressed="true">14 d</button>
+      <button type="button" data-h="30" aria-pressed="false">30 d</button>
+    </div>
+  </div>
+  <div class="badge-sim">SIMULATED DATA</div>
+</header>
+
+<section class="story" aria-label="How to read this screen">
+  <div><b>THE PROBLEM</b>Eight posts beyond one mountain pass. When snow or a landslide shuts it, supplies stop, and today nobody can say who runs short first.</div>
+  <div><b>WHAT THIS SCREEN DOES</b>Forecasts each post's needs, turns stock into <em>days of supply with a probability</em>, and stress-tests road closures before they happen.</div>
+  <div><b>TRY THIS</b>Drag <em>“Close Pass-1”</em> in panel 02. Watch posts turn red in order, then tick “Apply mitigation”. Click any post or table row to see its forecast.</div>
+</section>
+
+<section class="tiles" aria-label="Headline figures">
+  <div class="tile"><div class="lbl">Posts at risk</div><div class="val" id="t-risk">–</div><div class="sub" id="t-risk-s">–</div></div>
+  <div class="tile"><div class="lbl">Avg days of supply (lowest item)</div><div class="val" id="t-dos">–</div><div class="sub" id="t-dos-s">–</div></div>
+  <div class="tile"><div class="lbl">Routes disrupted</div><div class="val" id="t-route">–</div><div class="sub" id="t-route-s">–</div></div>
+  <div class="tile"><span class="tag">ILLUSTRATIVE</span><div class="lbl">Forecast error (backtest)</div><div class="val">0.71<small>MASE</small></div><div class="sub">80% band held truth 78% of days · lower is better, &lt;1 beats naive</div></div>
+</section>
+
+<div class="grid g-main">
+  <section class="panel" aria-labelledby="p1">
+    <div class="ph"><span class="no">01</span><h2 id="p1">Sector map</h2><span class="q">Where is the trouble?</span></div>
+    <div class="map-wrap"><svg class="map" id="map" viewBox="0 0 680 430" role="img" aria-label="Schematic sector map"></svg></div>
+    <div class="map-legend">
+      <span><i style="background:var(--good)"></i>OK</span>
+      <span><i style="background:var(--warn)"></i>Watch</span>
+      <span><i style="background:var(--serious)"></i>At risk</span>
+      <span><i style="background:var(--crit)"></i>Critical</span>
+      <span><i style="border:1px dashed var(--ink-2)"></i>No sensor signal</span>
+      <span><i style="border-top:2px dashed var(--accent);height:0;width:16px"></i>Alternate route (Pass-2)</span>
+      <span style="margin-left:auto;color:var(--muted)">Schematic · not to scale · no real locations</span>
+    </div>
+  </section>
+
+  <section class="panel" aria-labelledby="p2">
+    <div class="ph"><span class="no">02</span><h2 id="p2">Resilience test</h2><span class="q">If the pass shuts, who runs out first?</span></div>
+    <div class="pb">
+      <div class="res-ctl">
+        <label for="closeN">Close <b>Pass-1</b> for</label><output id="closeOut" for="closeN">0 d</output>
+        <input type="range" id="closeN" min="0" max="30" value="0" style="grid-column:1/3" aria-describedby="closeHelp">
+      </div>
+      <div id="closeHelp" class="note" style="margin-top:2px">Simulates a snow or landslide closure. Posts beyond the pass get no road convoy until it reopens + 1 day transit.</div>
+      <label class="chk"><input type="checkbox" id="mitig"> Apply mitigation (detour via Pass-2 + medical air-drop)</label>
+      <div class="timeline" aria-hidden="true"><svg id="tl" viewBox="0 0 420 76"></svg></div>
+      <ol class="fail-list" id="failList" aria-live="polite"></ol>
+      <div class="plan" id="plan" hidden>
+        <h3>SUGGESTED RE-PLAN · system recommends, commander decides</h3>
+        <ol id="planList"></ol>
+        <div class="btns">
+          <button type="button" class="btn primary" id="approve">Approve plan</button>
+          <button type="button" class="btn" id="compare" aria-expanded="false">Compare with current</button>
+        </div>
+        <div id="approvedMsg" class="approved" hidden></div>
+        <div id="cmpBox" hidden></div>
+      </div>
+    </div>
+  </section>
+</div>
+
+<div class="grid g-mid" style="margin-top:12px">
+  <section class="panel" aria-labelledby="p3">
+    <div class="ph"><span class="no">03</span><h2 id="p3">Stock-out risk</h2><span class="q">Which post, which item, how sure?</span></div>
+    <div class="pb" style="padding-top:4px;overflow-x:auto">
+      <table class="risk" id="riskTable">
+        <thead><tr><th>Post</th><th>Item</th><th class="num">Days left <span class="band">(80% band)</span></th><th class="num">P(stock-out)</th><th>Status</th><th>Suggested action</th></tr></thead>
+        <tbody></tbody>
+      </table>
+      <div class="note">P(stock-out) = chance stock hits zero before the next resupply arrives, within the selected horizon. Top 10 shown, sorted by probability.</div>
+    </div>
+  </section>
+
+  <section class="panel" aria-labelledby="p4">
+    <div class="ph"><span class="no">04</span><h2 id="p4">Demand forecast</h2><span class="q">How much will they need, and why?</span></div>
+    <div class="pb">
+      <div class="fc-head"><b id="fcTitle">–</b><span id="fcSub">–</span></div>
+      <div class="chart-wrap"><svg class="chart" id="chart" viewBox="0 0 560 230" role="img" aria-label="Demand forecast chart"></svg><div class="tip" id="tip"></div></div>
+      <div class="legend-row"><span><i style="background:var(--ink-2);height:2px"></i>Actual daily use</span><span><i style="background:var(--series);height:2px"></i>Forecast (median)</span><span><i style="background:var(--band)"></i>80% range</span></div>
+      <div class="why" id="why"></div>
+    </div>
+  </section>
+</div>
+
+<div class="grid g-low" style="margin-top:12px">
+  <section class="panel" aria-labelledby="p5">
+    <div class="ph"><span class="no">05</span><h2 id="p5">Winter-stocking countdown</h2><span class="q">Can we stock up before the pass closes?</span></div>
+    <div class="pb">
+      <div class="wc-top">
+        <div class="wc-big" id="wcDays">–<small>days</small></div>
+        <div class="wc-txt">until Pass-1 is expected to close for winter. Planning uses the <b>early</b> estimate (10% chance it closes sooner). <span class="illus">ILLUSTRATIVE DATES</span></div>
+      </div>
+      <div class="wc-verdict" id="wcVerdict">–</div>
+      <div class="wbars" id="wbars"></div>
+      <div class="legend-row"><span><i style="background:#6d7a62"></i>On hand</span><span><i style="background:repeating-linear-gradient(135deg,rgba(217,164,65,.7) 0 3px,transparent 3px 6px)"></i>Still to push before closure</span></div>
+      <div class="wc-ctl">
+        <label for="wcConf">Confidence to last winter</label>
+        <select id="wcConf" style="background:var(--panel-2);border:1px solid var(--line-2);padding:4px 6px"><option value="1.2816">90%</option><option value="1.6449" selected>95%</option><option value="2.3263">99%</option></select>
+        <label for="wcLen">Winter length</label>
+        <select id="wcLen" style="background:var(--panel-2);border:1px solid var(--line-2);padding:4px 6px"><option value="90">90 d</option><option value="120" selected>120 d</option><option value="150">150 d</option></select>
+      </div>
+    </div>
+  </section>
+
+  <section class="panel" aria-labelledby="p6">
+    <div class="ph"><span class="no">06</span><h2 id="p6">Live inventory feed</h2><span class="q">Can we trust the numbers?</span></div>
+    <div class="pb" style="padding-top:2px">
+      <ul class="feed" id="feed" aria-live="off"></ul>
+      <div class="note"><span class="pulse"></span>Simulated sensors. Silent &gt;60 min = <b>No signal</b>: the system stops trusting the last reading, falls back to forecast-only stock and widens that post's uncertainty band (see H4 in panel 03).</div>
+    </div>
+  </section>
+
+  <section class="panel" aria-labelledby="p7">
+    <div class="ph"><span class="no">07</span><h2 id="p7">Is the AI real?</h2><span class="q">Backtest</span></div>
+    <div class="pb" style="padding-top:4px">
+      <table class="bt">
+        <thead><tr><th>Item</th><th>Seasonal<br>naive</th><th>ETS /<br>TSB</th><th>Our<br>model</th><th>80% band held<br>(target 80%)</th></tr></thead>
+        <tbody id="btBody"></tbody>
+      </table>
+      <div class="note">MASE: error relative to “repeat last week”. Below 1.00 means we beat it. Coverage is checked on a <b>separate held-out generator</b>, so the model can't just memorise our own formula. <span class="illus">ILLUSTRATIVE — real table produced by code</span></div>
+    </div>
+  </section>
+</div>
+
+<footer>
+  <span>All posts, routes, stock levels and sensor readings are fictional and generated for illustration.</span>
+  <span>Production build: weather drivers from Open-Meteo (CC BY 4.0); every number computed by the engine.</span>
+  <span>Team Van Guard · SIH 2026</span>
+</footer>
+</div>
+
+<script>
+/* ---------- tiny helpers ---------- */
+const $=s=>document.querySelector(s);
+const NS="http://www.w3.org/2000/svg";
+const el=(tag,attrs={},parent)=>{const e=document.createElementNS(NS,tag);for(const k in attrs)e.setAttribute(k,attrs[k]);if(parent)parent.appendChild(e);return e};
+function rng(seed){return function(){seed|=0;seed=seed+0x6D2B79F5|0;let t=Math.imul(seed^seed>>>15,1|seed);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+function phi(x){const t=1/(1+.2316419*Math.abs(x));const d=.3989423*Math.exp(-x*x/2);const p=d*t*(.3193815+t*(-.3565638+t*(1.781478+t*(-1.821256+t*1.330274))));return x>0?1-p:p}
+const fmt=(n,d=0)=>n.toLocaleString('en-IN',{maximumFractionDigits:d,minimumFractionDigits:d});
+
+/* ---------- fictional data ---------- */
+const ITEMS=[
+ {k:'R',name:'Rations',unit:'kg',cv:.08,kg:1},
+ {k:'F',name:'Heating fuel',unit:'L',cv:.15,kg:.8},
+ {k:'M',name:'Medical',unit:'kits',cv:.6,kg:5},
+ {k:'S',name:'Vehicle spares',unit:'units',cv:.7,kg:8},
+];
+const NODES={
+ DA:{x:80,y:385,label:'Depot-A',sub:'rear depot'},
+ J1:{x:215,y:318}, J2:{x:120,y:215},
+ P1:{x:330,y:222,label:'Pass-1',pass:true},
+ P2:{x:215,y:105,label:'Pass-2',pass:true,sub:'light vehicles only'},
+ DB:{x:430,y:160,label:'Depot-B',sub:'forward depot'},
+};
+const POSTS=[
+ {id:'H1',x:560,y:92, alt:15200,tr:120,conv:5,prio:2,beyond:1,days:{R:22,F:14,M:30,S:25},sig:'live'},
+ {id:'H2',x:600,y:178,alt:16100,tr:60, conv:7,prio:3,beyond:1,days:{R:18,F:11,M:8, S:20},sig:'live'},
+ {id:'H3',x:575,y:250,alt:14800,tr:90, conv:4,prio:3,beyond:1,days:{R:16,F:6, M:19,S:12},sig:'live'},
+ {id:'H4',x:455,y:48, alt:17400,tr:40, conv:8,prio:2,beyond:1,days:{R:20,F:12,M:15,S:18},sig:'none'},
+ {id:'H5',x:350,y:82, alt:15900,tr:80, conv:6,prio:2,beyond:1,days:{R:13,F:9, M:24,S:9 },sig:'stale'},
+ {id:'V1',x:330,y:355,alt:10400,tr:150,conv:3,prio:1,beyond:0,days:{R:25,F:20,M:28,S:30},sig:'live'},
+ {id:'V2',x:470,y:330,alt:11200,tr:100,conv:4,prio:1,beyond:0,days:{R:12,F:7, M:16,S:14},sig:'live'},
+ {id:'V3',x:610,y:378,alt:12600,tr:70, conv:5,prio:1,beyond:0,days:{R:19,F:8, M:21,S:17},sig:'live'},
+];
+const ROADS=[['DA','J1'],['J1','P1'],['P1','DB'],['DB','H5'],['H5','H4'],['DB','H1'],['H1','H2'],['DB','H3'],['J1','V1'],['V1','V2'],['V2','V3']];
+const ALT=[['DA','J2'],['J2','P2'],['P2','DB']];
+const pt=id=>NODES[id]||POSTS.find(p=>p.id===id);
+
+function altMult(a){return a<9000?1:a<12000?1.1:1.2}
+function mu(p,k){
+  if(k==='R')return p.tr*2.5*altMult(p.alt);
+  if(k==='F')return p.tr*2.4*(1+(p.alt-10000)/20000);
+  if(k==='M')return p.tr*.015;
+  return p.tr*.02;
+}
+const sigSd={live:0,stale:.06,none:.22};
+
+/* ---------- state ---------- */
+const S={h:14,N:0,mit:false,sel:{p:'H3',k:'F'},approved:false};
+
+/* ---------- risk engine (mock of the real Monte Carlo) ---------- */
+function plan(){
+  // greedy: detour capacity = 2 posts, chosen by priority x worst risk without mitigation
+  if(S.N===0)return {detour:[],air:[]};
+  const cand=POSTS.filter(p=>p.beyond).map(p=>{
+    const worst=Math.max(...ITEMS.filter(i=>i.k!=='M').map(i=>assess(p,i,{detour:[],air:[]},true).P));
+    return {p,score:worst*p.prio};
+  }).filter(c=>c.score>.05).sort((a,b)=>b.score-a.score);
+  const detour=cand.slice(0,2).map(c=>c.p.id);
+  const air=POSTS.filter(p=>p.beyond&&assess(p,ITEMS[2],{detour:[],air:[]},true).P>.1).map(p=>p.id).slice(0,2);
+  return {detour,air};
+}
+function resupplyDay(p,it,pl,ignoreMit){
+  let r=p.conv;
+  if(p.beyond&&S.N>0)r=Math.max(r,S.N+1);
+  if(S.mit&&!ignoreMit){
+    if(pl.detour.includes(p.id))r=Math.min(r,5);
+    if(it.k==='M'&&pl.air.includes(p.id))r=Math.min(r,2);
+  }
+  return r;
+}
+function assess(p,it,pl,ignoreMit){
+  const m=mu(p,it.k), stock=p.days[it.k]*m, dos=p.days[it.k];
+  const r=resupplyDay(p,it,pl,ignoreMit), w=Math.min(r,S.h);
+  const sdD=Math.sqrt(w*1.5)*m*it.cv, sdS=sigSd[p.sig]*stock;
+  const tot=Math.hypot(sdD,sdS)||1e-9;
+  const P=1-phi((stock-m*w)/tot);
+  const rel=Math.hypot(it.cv*Math.sqrt(1.5/dos),sigSd[p.sig]);
+  return {p,it,m,stock,dos,lo:Math.max(0,dos*(1-1.2816*rel)),hi:dos*(1+1.2816*rel),r,P,fails:dos<r};
+}
+function level(P){return P>=.5?'crit':P>=.2?'risk':P>=.05?'watch':'ok'}
+const LV={ok:['✓','OK'],watch:['!','WATCH'],risk:['▲','AT RISK'],crit:['✕','CRITICAL']};
+const stBadge=l=>`<span class="st ${l}"><i aria-hidden="true">${LV[l][0]}</i>${LV[l][1]}</span>`;
+const lvColor={ok:'var(--good)',watch:'var(--warn)',risk:'var(--serious)',crit:'var(--crit)'};
+
+function action(a,pl){
+  const {p,it,r}=a, l=level(a.P);
+  if(l==='ok')return '—';
+  if(p.sig==='none')return 'Verify stock by radio; sensor silent';
+  if(S.mit&&pl.detour.includes(p.id))return 'On detour via Pass-2 (day 5)';
+  if(S.mit&&it.k==='M'&&pl.air.includes(p.id))return 'Medical air-drop day 2';
+  if(p.beyond&&S.N>0)return it.k==='M'?'Request air-drop':'Candidate for Pass-2 detour';
+  if(r>2)return `Bring convoy forward to day ${Math.max(1,Math.floor(a.dos)-1)}`;
+  return 'Ration consumption; monitor';
+}
+
+/* ---------- render: everything ---------- */
+function render(){
+  const pl=plan();
+  const all=[];POSTS.forEach(p=>ITEMS.forEach(it=>all.push(assess(p,it,pl))));
+  const byPost={};all.forEach(a=>{(byPost[a.p.id]??=[]).push(a)});
+  renderTiles(all,byPost);renderMap(byPost,pl);renderRes(all,pl);renderTable(all,pl);renderChart();renderWinter();
+}
+
+function renderTiles(all,byPost){
+  const risk=POSTS.filter(p=>Math.max(...byPost[p.id].map(a=>a.P))>=.2);
+  $('#t-risk').innerHTML=`${risk.length}<small>/ ${POSTS.length}</small>`;
+  $('#t-risk-s').textContent=risk.length?risk.map(p=>p.id).join(', ')+` · within ${S.h} d`:`none within ${S.h} d`;
+  const mins=POSTS.map(p=>Math.min(...byPost[p.id].map(a=>a.dos)));
+  const avg=mins.reduce((a,b)=>a+b,0)/mins.length;
+  $('#t-dos').innerHTML=`${fmt(avg,1)}<small>days</small>`;
+  const lowest=POSTS[mins.indexOf(Math.min(...mins))];
+  $('#t-dos-s').textContent=`lowest: ${lowest.id} at ${fmt(Math.min(...mins),0)} d`;
+  $('#t-route').innerHTML=S.N>0?`1<small>/ 2 passes</small>`:`0<small>/ 2 passes</small>`;
+  $('#t-route-s').textContent=S.N>0?`Pass-1 closed ${S.N} d (simulated)${S.mit?' · Pass-2 detour active':''}`:'All routes open';
+}
+
+/* map */
+function contours(svg){
+  const g=el('g',{},svg);
+  const peaks=[[300,170,9,1],[150,60,7,2],[620,300,6,3],[520,40,6,4],[60,250,5,5]];
+  peaks.forEach(([cx,cy,n,s])=>{
+    const R=rng(s*99);
+    const ph=[R()*6,R()*6,R()*6];
+    for(let i=1;i<=n;i++){
+      const r0=i*17;let d='';
+      for(let a=0;a<=64;a++){
+        const t=a/64*Math.PI*2;
+        const rr=r0*(1+.18*Math.sin(3*t+ph[0])+.1*Math.sin(5*t+ph[1])+.06*Math.sin(7*t+ph[2]));
+        const x=cx+rr*Math.cos(t)*1.35,y=cy+rr*Math.sin(t);
+        d+=(a?'L':'M')+x.toFixed(1)+' '+y.toFixed(1);
+      }
+      el('path',{d:d+'Z',fill:'none',stroke:i%4===0?'var(--contour-2)':'var(--contour)','stroke-width':i%4===0?1.3:.9},g);
+    }
+  });
+  // grid ticks
+  for(let x=0;x<=680;x+=85){el('line',{x1:x,y1:0,x2:x,y2:430,stroke:'#1a1f19','stroke-width':1},g);if(x)el('text',{x:x+3,y:12,fill:'#4a5146','font-size':9,'font-family':'IBM Plex Mono'},g).textContent=String(x/85).padStart(2,'0')}
+  for(let y=0;y<=430;y+=86){el('line',{x1:0,y1:y,x2:680,y2:y,stroke:'#1a1f19','stroke-width':1},g)}
+  // north arrow
+  const n=el('g',{transform:'translate(30,404)'},svg);
+  el('path',{d:'M0 -16 L6 6 L0 2 L-6 6Z',fill:'var(--ink-2)'},n);
+  el('text',{x:0,y:-20,'text-anchor':'middle',fill:'var(--ink-2)','font-size':10,'font-family':'IBM Plex Mono'},n).textContent='N';
+}
+function line(svg,a,b,attrs){const A=pt(a),B=pt(b);return el('line',{x1:A.x,y1:A.y,x2:B.x,y2:B.y,...attrs},svg)}
+function renderMap(byPost,pl){
+  const svg=$('#map');svg.innerHTML='';
+  contours(svg);
+  const closed=S.N>0;
+  // alt route
+  ALT.forEach(([a,b])=>line(svg,a,b,{stroke:S.mit&&closed?'var(--accent)':'#4b4e44','stroke-width':S.mit&&closed?2.4:1.4,'stroke-dasharray':'6 5'}));
+  // roads
+  ROADS.forEach(([a,b])=>{
+    const cut=closed&&((a==='J1'&&b==='P1')||(a==='P1'&&b==='DB'));
+    line(svg,a,b,{stroke:cut?'var(--crit)':'var(--road)','stroke-width':cut?2.4:2,'stroke-dasharray':cut?'2 4':'none','stroke-linecap':'round'});
+  });
+  // convoy (animated) on open path
+  const cv=el('g',{},svg);
+  const pathD=closed? (S.mit?'M80 385 L120 215 L215 105 L430 160':'') : 'M80 385 L215 318 L330 222 L430 160';
+  if(pathD){
+    const p=el('path',{id:'cvpath',d:pathD,fill:'none',stroke:'none'},cv);
+    const truck=el('g',{},cv);
+    el('rect',{x:-9,y:-5,width:18,height:10,fill:'#0e100f',stroke:'var(--accent)','stroke-width':1.5},truck);
+    el('text',{x:0,y:3.5,'text-anchor':'middle','font-size':7,'font-family':'IBM Plex Mono',fill:'var(--accent)'},truck).textContent='C14';
+    const am=el('animateMotion',{dur:closed?'9s':'7s',repeatCount:'indefinite',rotate:'0'},truck);
+    el('mpath',{href:'#cvpath'},am);
+  }
+  // nodes
+  for(const id in NODES){
+    const n=NODES[id];if(!n.label)continue;
+    const g=el('g',{transform:`translate(${n.x},${n.y})`},svg);
+    if(n.pass){
+      const isClosed=id==='P1'&&closed;
+      el('path',{d:'M-9 6 L0 -9 L9 6Z',fill:isClosed?'var(--crit)':'#0e100f',stroke:isClosed?'var(--crit)':'var(--ink-2)','stroke-width':1.5},g);
+      if(isClosed){
+        el('rect',{x:12,y:-9,width:92,height:18,fill:'#2a0f0f',stroke:'var(--crit)'},g);
+        el('text',{x:58,y:4,'text-anchor':'middle',fill:'#ff9b9b','font-size':10.5,'font-family':'IBM Plex Mono','font-weight':600},g).textContent=`✕ CLOSED ${S.N} D`;
+      }
+    }else{
+      el('path',{d:'M0 -10 L10 0 L0 10 L-10 0Z',fill:'#0e100f',stroke:'var(--ink)','stroke-width':1.6},g);
+    }
+    const t=el('text',{x:n.pass?-12:14,y:n.pass?-12:-4,'text-anchor':n.pass?'end':'start',fill:'var(--ink)','font-size':11.5,'font-family':'IBM Plex Sans Condensed','font-weight':600},g);t.textContent=n.label;
+    if(n.sub){el('text',{x:n.pass?-12:14,y:n.pass?0:9,'text-anchor':n.pass?'end':'start',fill:'var(--muted)','font-size':9.5,'font-family':'IBM Plex Mono'},g).textContent=n.sub}
+  }
+  // posts
+  POSTS.forEach(p=>{
+    const as=byPost[p.id];const worst=as.reduce((a,b)=>b.P>a.P?b:a);const l=level(worst.P);
+    const minDos=Math.min(...as.map(a=>a.dos));
+    const g=el('g',{class:'post-g',transform:`translate(${p.x},${p.y})`,tabindex:0,role:'button','aria-label':`${p.id}, ${LV[l][1]}, lowest ${Math.round(minDos)} days`},svg);
+    el('rect',{class:'hit',x:-14,y:-14,width:28,height:28,fill:'transparent'},g);
+    el('rect',{x:-8,y:-8,width:16,height:16,fill:p.sig==='none'?'#0e100f':lvColor[l],stroke:p.sig==='none'?lvColor[l]:'#0e100f','stroke-width':p.sig==='none'?2:1.5,'stroke-dasharray':p.sig==='none'?'3 2':'none'},g);
+    el('text',{x:0,y:3.5,'text-anchor':'middle','font-size':9,'font-weight':700,fill:p.sig==='none'?lvColor[l]:'#111','font-family':'IBM Plex Mono'},g).textContent=LV[l][0];
+    const lab=el('g',{transform:'translate(13,-2)'},g);
+    el('text',{x:0,y:0,fill:'var(--ink)','font-size':12,'font-family':'IBM Plex Sans Condensed','font-weight':700},lab).textContent=`Post-${p.id}`;
+    el('text',{x:0,y:12,fill:l==='ok'?'var(--muted)':lvColor[l],'font-size':10,'font-family':'IBM Plex Mono'},lab).textContent=p.sig==='none'?'NO SIGNAL':(l==='ok'?`${Math.round(minDos)} d left`:`${worst.it.name.split(' ').pop()} · ${Math.round(worst.dos)} d`);
+    const sel=()=>{const best=as.reduce((a,b)=>b.P>a.P?b:a);S.sel={p:p.id,k:best.it.k};render()};
+    g.addEventListener('click',sel);g.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();sel()}});
+  });
+  // side labels
+  el('text',{x:340,y:420,'text-anchor':'middle',fill:'#4a5146','font-size':9.5,'font-family':'IBM Plex Mono'},svg).textContent='VALLEY ROAD (all-weather)';
+}
+
+/* resilience */
+function renderRes(all,pl){
+  $('#closeOut').textContent=S.N+' d';
+  const base=S.mit?all.map(a=>({...a,base:assess(a.p,a.it,pl,true)})):all;
+  const failing=all.filter(a=>a.fails).sort((a,b)=>a.dos-b.dos);
+  const list=$('#failList');list.innerHTML='';
+  if(S.N===0&&!failing.length){list.innerHTML='<li class="empty" style="display:block">No post runs out before its next convoy. Drag the slider to simulate a closure.</li>'}
+  else{
+    const items=(S.mit?POSTS.flatMap(p=>ITEMS.map(it=>({a:assess(p,it,pl),b:assess(p,it,pl,true)}))).filter(x=>x.b.fails).sort((x,y)=>x.b.dos-y.b.dos):failing.map(a=>({a,b:a})));
+    if(!items.length)list.innerHTML='<li class="empty" style="display:block">Every post still holds until its next resupply.</li>';
+    items.slice(0,6).forEach((x,i)=>{
+      const li=document.createElement('li');
+      const saved=S.mit&&!x.a.fails;
+      li.innerHTML=`<span class="n">${i+1}.</span><span><b>Post-${x.b.p.id}</b> · ${x.b.it.name} ${saved?'':stBadge(level(x.a.P))}</span><span class="d ${saved?'moved':''}">${saved?`✓ covered (resupply day ${x.a.r})`:`runs out ≈ day ${Math.round(x.b.dos)} · resupply day ${x.a.r}`}</span>`;
+      list.appendChild(li);
+    });
+  }
+  // timeline
+  const tl=$('#tl');tl.innerHTML='';
+  const X=d=>20+d*(380/30);
+  el('line',{x1:20,y1:40,x2:400,y2:40,stroke:'var(--line-2)'},tl);
+  for(let d=0;d<=30;d+=5){el('line',{x1:X(d),y1:37,x2:X(d),y2:43,stroke:'var(--muted)'},tl);el('text',{x:X(d),y:58,'text-anchor':'middle',fill:'var(--muted)','font-size':9,'font-family':'IBM Plex Mono'},tl).textContent=d===0?'today':'d'+d}
+  if(S.N>0){el('rect',{x:X(0),y:32,width:X(Math.min(S.N,30))-X(0),height:16,fill:'rgba(208,59,59,.18)'},tl)}
+  const fl=all.filter(a=>a.fails).sort((a,b)=>a.dos-b.dos);
+  const lastX=[-99,-99,-99];
+  fl.forEach((a,i)=>{const x=X(Math.min(a.dos,30));const c=lvColor[level(a.P)];
+    el('circle',{cx:x,cy:40,r:4.5,fill:c,stroke:'#0e100f','stroke-width':1.5},tl);
+    if(i>=6)return;
+    let row=lastX.findIndex(lx=>x-lx>=30);if(row<0)return;lastX[row]=x;
+    el('line',{x1:x,x2:x,y1:34,y2:29-row*9,stroke:c,'stroke-width':.8},tl);
+    el('text',{x,y:26-row*9,'text-anchor':'middle',fill:c,'font-size':9,'font-family':'IBM Plex Mono'},tl).textContent=a.p.id+a.it.k;
+  });
+  el('text',{x:20,y:72,fill:'var(--muted)','font-size':8.5,'font-family':'IBM Plex Mono'},tl).textContent=(S.N>0?'red band = Pass-1 closed · ':'')+'● stock-out day (R rations, F fuel, M medical, S spares)';
+  // plan
+  const planBox=$('#plan');planBox.hidden=!(S.N>0&&S.mit);
+  if(!planBox.hidden){
+    const L=$('#planList');L.innerHTML='';
+    pl.detour.forEach(id=>{L.insertAdjacentHTML('beforeend',`<li>Route next convoy for <b>Post-${id}</b> via Pass-2 (light vehicles, +2 d, arrives day 5).</li>`)});
+    pl.air.forEach(id=>{L.insertAdjacentHTML('beforeend',`<li>Air-drop medical to <b>Post-${id}</b> on day 2 (weather permitting).</li>`)});
+    if(!pl.detour.length&&!pl.air.length)L.innerHTML='<li>No action needed: all posts hold until Pass-1 reopens.</li>';
+    L.insertAdjacentHTML('beforeend','<li>Pass-2 capacity limits the detour to 2 posts. Chosen by <i>priority × risk</i>.</li>');
+    const before=all.length?POSTS.flatMap(p=>ITEMS.map(it=>assess(p,it,pl,true))):[];
+    const bFail=before.filter(a=>a.fails), aFail=all.filter(a=>a.fails);
+    const first=x=>x.length?'day '+Math.round(Math.min(...x.map(a=>a.dos))):'none';
+    const posts=x=>new Set(x.map(a=>a.p.id)).size;
+    $('#cmpBox').innerHTML=`<table class="cmp"><thead><tr><th></th><th>CURRENT</th><th>RE-PLAN</th></tr></thead><tbody>
+      <tr><td>Post×item stock-outs</td><td>${bFail.length}</td><td>${aFail.length}</td></tr>
+      <tr><td>Posts affected</td><td>${posts(bFail)}</td><td>${posts(aFail)}</td></tr>
+      <tr><td>First stock-out</td><td>${first(bFail)}</td><td>${first(aFail)}</td></tr>
+      <tr><td>Extra cost <span class="illus">ILLUS.</span></td><td>—</td><td>${pl.detour.length*2} detour runs, ${pl.air.length} sorties</td></tr></tbody></table>`;
+    $('#approve').disabled=S.approved;
+    $('#approvedMsg').hidden=!S.approved;
+  }
+}
+
+/* table */
+function renderTable(all,pl){
+  const tb=$('#riskTable tbody');tb.innerHTML='';
+  all.slice().sort((a,b)=>b.P-a.P).slice(0,10).forEach(a=>{
+    const l=level(a.P);const tr=document.createElement('tr');
+    tr.tabIndex=0;tr.setAttribute('aria-selected',S.sel.p===a.p.id&&S.sel.k===a.it.k);
+    tr.innerHTML=`<td><b>${a.p.id}</b>${a.p.sig!=='live'?` <span class="band">(${a.p.sig==='none'?'no signal':'stale'})</span>`:''}</td><td>${a.it.name}</td>
+      <td class="num">${fmt(a.dos,0)} d <span class="band">(${fmt(a.lo,0)}–${fmt(a.hi,0)})</span></td>
+      <td class="num"><span class="pbar" aria-hidden="true"><span style="width:${Math.round(a.P*100)}%;background:${lvColor[l]}"></span></span>${Math.round(a.P*100)}%</td>
+      <td>${stBadge(l)}</td><td class="action">${action(a,pl)}</td>`;
+    const go=()=>{S.sel={p:a.p.id,k:a.it.k};render()};
+    tr.addEventListener('click',go);tr.addEventListener('keydown',e=>{if(e.key==='Enter'){go()}});
+    tb.appendChild(tr);
+  });
+}
+
+/* forecast chart */
+function series(p,it){
+  const R=rng(p.id.charCodeAt(1)*31+it.k.charCodeAt(0));
+  const m=mu(p,it.k), H=60, hist=[], temp=[];
+  for(let t=0;t<H;t++){
+    const tc=-1-15*(t/H)+1.5*Math.sin(t/4)+(R()-.5)*2; temp.push(tc);
+    let base=m*(it.k==='F'?(1+.035*(-tc-8)):it.k==='M'?(1+.01*(-tc-8)):1)*(t>=40&&t<44&&it.k!=='R'?1.3:1);
+    let v;
+    if(it.k==='M'||it.k==='S'){const lam=base;let L=Math.exp(-lam),k=0,pr=1;do{k++;pr*=R()}while(pr>L);v=k-1}
+    else v=base*(1+it.cv*(R()+R()+R()-1.5)*1.1);
+    hist.push(Math.max(0,v));
+  }
+  const mean7=hist.slice(-14).reduce((a,b)=>a+b,0)/14;
+  const fc=[];const trend=it.k==='F'?.006:it.k==='R'?.001:.002;
+  for(let h=1;h<=S.h;h++){const md=mean7*(1+trend*h);const w=1.2816*it.cv*md*Math.sqrt(1+h/10)*(p.sig==='none'?1.5:1);fc.push({md,lo:Math.max(0,md-w),hi:md+w})}
+  return {hist,temp,fc,m};
+}
+function renderChart(){
+  const p=POSTS.find(x=>x.id===S.sel.p), it=ITEMS.find(x=>x.k===S.sel.k);
+  const {hist,temp,fc}=series(p,it);
+  $('#fcTitle').textContent=`Post-${p.id} · ${it.name}`;
+  $('#fcSub').textContent=`${fmt(p.alt)} ft · ${p.tr} personnel · daily use in ${it.unit} · last 60 d + next ${S.h} d`;
+  const svg=$('#chart');svg.innerHTML='';
+  const W=560,Hh=230,ml=44,mr=12,mt=12,mb=26,N=hist.length+fc.length;
+  const ymax=Math.max(...hist,...fc.map(f=>f.hi))*1.1;
+  const X=i=>ml+i*(W-ml-mr)/(N-1), Y=v=>mt+(Hh-mt-mb)*(1-v/ymax);
+  // grid
+  for(let k=0;k<=4;k++){const v=ymax*k/4;el('line',{x1:ml,x2:W-mr,y1:Y(v),y2:Y(v),stroke:k?'#22271f':'#3a4036'},svg);el('text',{x:ml-6,y:Y(v)+3,'text-anchor':'end',fill:'var(--muted)','font-size':9.5,'font-family':'IBM Plex Mono'},svg).textContent=fmt(v,v<10?1:0)}
+  const today=hist.length-1;
+  el('line',{x1:X(today),x2:X(today),y1:mt,y2:Hh-mb,stroke:'var(--accent)','stroke-dasharray':'3 3'},svg);
+  el('text',{x:X(today)+4,y:mt+9,fill:'var(--accent)','font-size':9.5,'font-family':'IBM Plex Mono'},svg).textContent='today';
+  [0,15,30,45].forEach(d=>el('text',{x:X(d),y:Hh-8,'text-anchor':'middle',fill:'var(--muted)','font-size':9.5,'font-family':'IBM Plex Mono'},svg).textContent=`d-${60-d}`);
+  el('text',{x:X(N-1),y:Hh-8,'text-anchor':'end',fill:'var(--muted)','font-size':9.5,'font-family':'IBM Plex Mono'},svg).textContent=`d+${S.h}`;
+  // band
+  let d=`M${X(today)} ${Y(hist[today])}`;fc.forEach((f,i)=>d+=`L${X(today+1+i)} ${Y(f.hi)}`);
+  for(let i=fc.length-1;i>=0;i--)d+=`L${X(today+1+i)} ${Y(fc[i].lo)}`;d+='Z';
+  el('path',{d,fill:'var(--band)'},svg);
+  // history
+  el('path',{d:hist.map((v,i)=>(i?'L':'M')+X(i).toFixed(1)+' '+Y(v).toFixed(1)).join(''),fill:'none',stroke:'var(--ink-2)','stroke-width':1.5,'stroke-linejoin':'round'},svg);
+  el('path',{d:`M${X(today)} ${Y(hist[today])}`+fc.map((f,i)=>`L${X(today+1+i)} ${Y(f.md)}`).join(''),fill:'none',stroke:'var(--series)','stroke-width':2},svg);
+  // hover
+  const cross=el('line',{y1:mt,y2:Hh-mb,stroke:'var(--ink-2)','stroke-width':1,opacity:0},svg);
+  const dot=el('circle',{r:4,fill:'var(--series)',stroke:'#0e100f','stroke-width':2,opacity:0},svg);
+  const hit=el('rect',{x:ml,y:mt,width:W-ml-mr,height:Hh-mt-mb,fill:'transparent'},svg);
+  const tip=$('#tip');
+  hit.addEventListener('mousemove',e=>{
+    const r=svg.getBoundingClientRect();const sx=(e.clientX-r.left)*W/r.width;
+    const i=Math.max(0,Math.min(N-1,Math.round((sx-ml)/((W-ml-mr)/(N-1)))));
+    const isF=i>today;const v=isF?fc[i-today-1].md:hist[i];
+    cross.setAttribute('x1',X(i));cross.setAttribute('x2',X(i));cross.setAttribute('opacity',1);
+    dot.setAttribute('cx',X(i));dot.setAttribute('cy',Y(v));dot.setAttribute('opacity',1);dot.setAttribute('fill',isF?'var(--series)':'var(--ink-2)');
+    tip.style.display='block';
+    tip.innerHTML=isF?`d+${i-today} forecast<br><b>${fmt(v,1)}</b> ${it.unit}<br>80%: ${fmt(fc[i-today-1].lo,1)}–${fmt(fc[i-today-1].hi,1)}`:`d-${today-i+1} actual<br><b>${fmt(v,1)}</b> ${it.unit}<br>min temp ${fmt(temp[i],0)} °C`;
+    const px=X(i)*r.width/W;tip.style.left=(px>r.width*.65?px-tip.offsetWidth-10:px+10)+'px';tip.style.top=(Y(v)*r.height/Hh-10)+'px';
+  });
+  hit.addEventListener('mouseleave',()=>{tip.style.display='none';cross.setAttribute('opacity',0);dot.setAttribute('opacity',0)});
+  // why
+  const t30=temp.slice(-30).reduce((a,b)=>a+b,0)/30,t7=temp.slice(-7).reduce((a,b)=>a+b,0)/7;
+  const last14=hist.slice(-14).reduce((a,b)=>a+b,0)/14, prev14=hist.slice(-28,-14).reduce((a,b)=>a+b,0)/14;
+  const fcMean=fc.reduce((a,f)=>a+f.md,0)/fc.length;const chg=Math.round((fcMean/last14-1)*100);
+  const drivers={
+    F:[`Min temperature ${fmt(t7,0)} °C this week, `+(t30-t7>=1?`${fmt(t30-t7,0)} °C colder than the 30-day average → more heating fuel`:`close to the 30-day average`),`Altitude band above 12,000 ft → higher heating scale`,`Personnel ${p.tr} (no change planned)`],
+    R:[`Personnel ${p.tr}; ration scale for altitude band ${p.alt>12000?'>12,000 ft':'9–12,000 ft'}`,`Ration demand is steady; weather has little effect`,`Patrol surge on d-20 to d-17 visible as a bump`],
+    M:[`Demand is intermittent (many zero days), so the range is wide`,`Cold-weather injuries rise as temperature falls (${fmt(t7,0)} °C)`,`Personnel rotation planned in 10 days → new arrivals not yet acclimatised`],
+    S:[`Intermittent demand driven by vehicle-km and activity level`,`Patrol surge on d-20 to d-17 raised use`,`Cold starts below −10 °C increase failures (assumed)`]
+  }[it.k];
+  $('#why').innerHTML=`<b>Why this forecast:</b> next ${S.h} days ${chg>=0?'+':'−'}${Math.abs(chg)}% vs the last fortnight.<ul>${drivers.map(x=>`<li>${x}</li>`).join('')}</ul>${p.sig==='none'?'<div style="margin-top:4px;color:#ff9b9b">Sensor silent: range widened ×1.5 until stock is confirmed.</div>':''}`;
+}
+
+/* winter countdown */
+function renderWinter(){
+  const daysToClose=38, early=31, z=+$('#wcConf').value, W=+$('#wcLen').value, truckT=5, loadsPerDay=1.6;
+  $('#wcDays').innerHTML=`${early}<small>days (median ${daysToClose})</small>`;
+  const rows=POSTS.filter(p=>p.beyond).map(p=>{
+    let need=0,have=0;
+    ITEMS.forEach(it=>{const m=mu(p,it.k);need+=(m*(early+W)+z*Math.sqrt(W*1.5)*m*it.cv)*it.kg/1000;have+=p.days[it.k]*m*it.kg/1000});
+    const gap=Math.max(0,need-have);return {p,need,have,gap,loads:Math.ceil(gap/truckT)};
+  });
+  const totLoads=rows.reduce((a,r)=>a+r.loads,0), cap=Math.floor(early*loadsPerDay), short=totLoads-cap;
+  const v=$('#wcVerdict');
+  v.className='wc-verdict '+(short>0?'short':'okv');
+  v.innerHTML=short>0?`Need <b>${totLoads}</b> more truckloads before closure. Convoy capacity allows <b>${cap}</b>. <b style="color:#ff9b9b">${short} loads short</b>: start Pass-2 runs now or pre-book air lift.`
+                     :`Need <b>${totLoads}</b> truckloads; capacity allows <b>${cap}</b>. <b style="color:#5fd35f">On track</b> with ${-short} loads spare.`;
+  const max=Math.max(...rows.map(r=>r.need));
+  $('#wbars').innerHTML=rows.map(r=>`<span class="id">${r.p.id}</span><div class="wbar" title="${fmt(r.have,1)} t on hand of ${fmt(r.need,1)} t needed"><span style="width:${r.have/max*100}%"></span><em style="left:${r.have/max*100}%;width:${r.gap/max*100}%"></em></div><span class="g">+${r.loads} loads</span>`).join('');
+}
+
+/* feed */
+const FEED=[
+ {sid:'LC-H3-02',p:'H3',it:'Heating fuel',q:1910,u:'L',age:40,st:'live'},
+ {sid:'LC-H1-07',p:'H1',it:'Rations',q:7920,u:'kg',age:95,st:'live'},
+ {sid:'RF-V2-11',p:'V2',it:'Medical',q:24,u:'kits',age:130,st:'live'},
+ {sid:'LC-H5-04',p:'H5',it:'Heating fuel',q:2150,u:'L',age:22*60,st:'stale'},
+ {sid:'LC-H4-01',p:'H4',it:'Heating fuel',q:1310,u:'L',age:31*3600,st:'none'},
+ {sid:'LC-V3-03',p:'V3',it:'Heating fuel',q:1430,u:'L',age:12,st:'live'},
+];
+const ageTxt=s=>s<60?`${s}s ago`:s<3600?`${Math.floor(s/60)} min ago`:`${Math.floor(s/3600)} h ago`;
+function renderFeed(){
+  $('#feed').innerHTML=FEED.map(f=>{
+    const st=f.age>3600?'none':f.age>900?'stale':'live';
+    const lab={live:'LIVE',stale:'STALE',none:'NO SIGNAL'}[st];
+    return `<li class="${st}"><span class="sid">${f.sid}</span><span class="what">Post-${f.p} · ${f.it} <b>${fmt(f.q)}</b> ${f.u}</span><span class="fs ${st}">${st==='none'?'✕ ':st==='stale'?'! ':'● '}${lab}</span><span class="age">last reading ${ageTxt(f.age)}${st==='none'?' · using forecast-only estimate':''}${st==='stale'?' · value greyed until refreshed':''}</span></li>`;
+  }).join('');
+}
+const FR=rng(7);
+setInterval(()=>{
+  FEED.forEach(f=>f.age+=3);
+  const live=FEED.filter(f=>f.st==='live');const f=live[Math.floor(FR()*live.length)];
+  f.q=Math.max(0,f.q-(f.u==='kits'?(FR()<.3?1:0):Math.round(FR()*12)));f.age=0;
+  renderFeed();
+},3000);
+
+/* backtest (illustrative) */
+const BT=[['Rations',1.00,.84,.71,79,76],['Heating fuel',1.00,.78,.62,81,74],['Medical',1.00,.93,.88,77,70],['Vehicle spares',1.00,.95,.91,76,69]];
+$('#btBody').innerHTML=BT.map(r=>`<tr><td>${r[0]}</td><td class="dim">${r[1].toFixed(2)}</td><td>${r[2].toFixed(2)}</td><td class="best">${r[3].toFixed(2)}</td><td title="Train world ${r[4]}% · held-out world ${r[5]}%">${r[5]}%<span class="cov" aria-hidden="true"><span style="width:${r[5]}%"></span><b></b></span></td></tr>`).join('')
+ +`<tr><td colspan="5" style="text-align:left;font-family:var(--sans);color:var(--muted);font-size:11.5px;border:0;padding-top:8px">Coverage shown on the held-out world. Tick mark = 80% target. Being a little under target is expected and reported, not hidden.</td></tr>`;
+
+/* DTG */
+function dtg(){const d=new Date();const m=['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'][d.getUTCMonth()];
+  $('#dtg').textContent=`DTG ${String(d.getUTCDate()).padStart(2,'0')}${String(d.getUTCHours()).padStart(2,'0')}${String(d.getUTCMinutes()).padStart(2,'0')}Z ${m} ${String(d.getUTCFullYear()).slice(2)}`}
+dtg();setInterval(dtg,30000);
+
+/* wiring */
+document.querySelectorAll('.seg button').forEach(b=>b.addEventListener('click',()=>{
+  document.querySelectorAll('.seg button').forEach(x=>x.setAttribute('aria-pressed',x===b));S.h=+b.dataset.h;render()}));
+$('#closeN').addEventListener('input',e=>{S.N=+e.target.value;S.approved=false;render()});
+$('#mitig').addEventListener('change',e=>{S.mit=e.target.checked;S.approved=false;render()});
+$('#approve').addEventListener('click',()=>{S.approved=true;$('#approvedMsg').textContent=`✓ Approved ${$('#dtg').textContent.replace('DTG ','')} by Sector Logistics Officer (demo). Orders issued to Depot-A & Depot-B.`;render()});
+$('#compare').addEventListener('click',e=>{const b=$('#cmpBox');b.hidden=!b.hidden;e.target.setAttribute('aria-expanded',!b.hidden);e.target.textContent=b.hidden?'Compare with current':'Hide comparison'});
+$('#wcConf').addEventListener('change',renderWinter);$('#wcLen').addEventListener('change',renderWinter);
+render();renderFeed();
+</script>
+</body>
+</html>
