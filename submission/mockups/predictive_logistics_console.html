@@ -1,0 +1,944 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Predictive Logistics Console</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans+Condensed:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --navy-900:#0B1D33; --navy-800:#112A47; --navy-700:#17365D; --navy-500:#2A5687; --navy-300:#8FA9C8; --navy-100:#E4ECF5;
+  --ink:#14202E; --ink-2:#44515F; --muted:#6B7887; --line:#D6DCE4; --line-2:#C3CBD6;
+  --bg:#EEF1F5; --panel:#FFFFFF; --panel-2:#F6F8FB;
+  --good:#2E9E4A; --good-ink:#1C6B31; --good-bg:#E8F5EC;
+  --warn:#E0A100; --warn-ink:#7D5300; --warn-bg:#FDF4DC;
+  --crit:#C62828; --crit-ink:#A61F1F; --crit-bg:#FBE9E9;
+  --planA:#17365D; --planB:#5B8DD6; --dis:#7A3E9D;
+  --mono:"IBM Plex Mono",ui-monospace,Consolas,monospace;
+  --cond:"IBM Plex Sans Condensed","Arial Narrow",system-ui,sans-serif;
+  --sans:"IBM Plex Sans",system-ui,"Segoe UI",sans-serif;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth;scroll-padding-top:110px}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:14px;line-height:1.45}
+button,input,select{font:inherit;color:inherit}
+a{color:var(--navy-500)}
+.wrap{max-width:1400px;margin:0 auto;padding:0 16px}
+
+/* command bar */
+.cmd{background:var(--navy-900);color:#E8EEF6}
+.cmd .wrap{display:flex;flex-wrap:wrap;align-items:center;gap:10px 22px;padding-top:12px;padding-bottom:12px}
+.brand{display:flex;flex-direction:column}
+.brand b{font-family:var(--cond);font-size:20px;letter-spacing:.03em;font-weight:700}
+.brand span{font-family:var(--mono);font-size:10.5px;color:var(--navy-300);letter-spacing:.08em}
+.cmd label{font-size:12px;color:var(--navy-300);margin-right:6px}
+.cmd select{background:var(--navy-800);border:1px solid #2B4568;color:#fff;padding:5px 8px;border-radius:2px}
+.demo-badge{margin-left:auto;font-family:var(--mono);font-size:11px;letter-spacing:.06em;border:1px dashed #E0A100;color:#F2C14E;padding:4px 9px}
+nav.sec{background:var(--navy-800);border-top:1px solid #1F3A5E}
+nav.sec .wrap{display:flex;gap:2px;overflow-x:auto}
+nav.sec a{color:#C9D6E6;text-decoration:none;font-size:12.5px;padding:8px 12px;white-space:nowrap;font-family:var(--mono)}
+nav.sec a:hover{background:var(--navy-700);color:#fff}
+
+/* scenario bar */
+.scbar{position:sticky;top:0;z-index:20;background:var(--panel);border-bottom:1px solid var(--line-2);box-shadow:0 1px 0 rgba(11,29,51,.04)}
+.scbar .wrap{display:flex;flex-wrap:wrap;align-items:center;gap:6px 8px;padding-top:8px;padding-bottom:8px}
+.scbar .lbl{font-family:var(--mono);font-size:10.5px;letter-spacing:.08em;color:var(--muted);margin-right:4px}
+.chip{font-family:var(--mono);font-size:11.5px;border:1px solid var(--line-2);padding:3px 8px;background:var(--panel-2);white-space:nowrap}
+.chip.on{border-color:var(--navy-500);background:var(--navy-100);color:var(--navy-700)}
+.chip.bad{border-color:#E4A3A3;background:var(--crit-bg);color:var(--crit-ink)}
+.scbar .sp{flex:1}
+.btn{border:1px solid var(--line-2);background:var(--panel);padding:6px 12px;border-radius:2px;cursor:pointer;font-size:13px}
+.btn:hover{border-color:var(--navy-500)}
+.btn.primary{background:var(--navy-700);border-color:var(--navy-700);color:#fff;font-weight:500}
+.btn.primary:hover{background:var(--navy-500)}
+.btn.sm{padding:3px 9px;font-size:12px}
+.btn:focus-visible,select:focus-visible,input:focus-visible,a:focus-visible,[tabindex]:focus-visible{outline:2px solid var(--navy-500);outline-offset:2px}
+
+/* sections */
+section.mod{margin-top:18px}
+.mh{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 14px;margin-bottom:10px}
+.mh .no{font-family:var(--mono);font-size:11px;color:#fff;background:var(--navy-700);padding:2px 7px;letter-spacing:.06em}
+.mh h2{margin:0;font-family:var(--cond);font-size:22px;font-weight:700;letter-spacing:.01em}
+.mh p{margin:0;color:var(--ink-2);font-size:13px;flex-basis:100%}
+.panel{background:var(--panel);border:1px solid var(--line);min-width:0}
+.ph{padding:9px 14px;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.ph h3{margin:0;font-family:var(--cond);font-size:15px;font-weight:600;letter-spacing:.02em;text-transform:uppercase}
+.ph .hint{margin-left:auto;font-size:11.5px;color:var(--muted)}
+.pb{padding:12px 14px}
+.grid{display:grid;gap:12px}
+.est{font-family:var(--mono);font-size:9.5px;letter-spacing:.06em;color:var(--warn-ink);background:var(--warn-bg);border:1px solid #EBCB78;padding:1px 5px;white-space:nowrap}
+.fact{font-family:var(--mono);font-size:9.5px;letter-spacing:.06em;color:var(--navy-700);background:var(--navy-100);border:1px solid #BFD0E4;padding:1px 5px;white-space:nowrap}
+
+/* overview */
+.tiles{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+.tile{background:var(--panel);border:1px solid var(--line);border-top:3px solid var(--navy-700);padding:11px 14px}
+.tile .l{font-family:var(--mono);font-size:10.5px;letter-spacing:.08em;color:var(--muted);text-transform:uppercase}
+.tile .v{font-family:var(--cond);font-size:32px;font-weight:600;line-height:1.1;margin-top:3px}
+.tile .v small{font-size:14px;color:var(--ink-2);font-weight:500;margin-left:3px}
+.tile .s{font-size:12px;color:var(--ink-2)}
+.ov2{grid-template-columns:1.25fr 1fr;margin-top:12px}
+.alerts{list-style:none;margin:0;padding:0}
+.alerts li{display:grid;grid-template-columns:auto 1fr;gap:3px 10px;padding:9px 0;border-bottom:1px solid var(--line)}
+.alerts li:last-child{border-bottom:0}
+.alerts .t{font-weight:600}
+.alerts .why{grid-column:2;font-size:12.5px;color:var(--ink-2)}
+.actions{margin:0;padding-left:18px}
+.actions li{margin:6px 0}
+.empty{color:var(--muted);font-size:13px;padding:10px 0}
+
+/* risk badges */
+.rb{display:inline-flex;align-items:center;gap:5px;font-family:var(--mono);font-size:11px;font-weight:600;letter-spacing:.03em;padding:2px 7px 2px 3px;white-space:nowrap;border:1px solid}
+.rb i{font-style:normal;width:15px;height:15px;display:inline-grid;place-items:center;font-size:10px;color:#fff}
+.rb.green{color:var(--good-ink);background:var(--good-bg);border-color:#A9D8B5}.rb.green i{background:var(--good)}
+.rb.amber{color:var(--warn-ink);background:var(--warn-bg);border-color:#EBCB78}.rb.amber i{background:var(--warn);color:#2B1D00}
+.rb.red{color:var(--crit-ink);background:var(--crit-bg);border-color:#E4A3A3}.rb.red i{background:var(--crit)}
+
+/* forms */
+.form{display:grid;gap:11px}
+.field label{display:block;font-size:12.5px;font-weight:500;margin-bottom:3px}
+.field .row{display:flex;align-items:center;gap:8px}
+.field input[type=number],.field select{width:100%;border:1px solid var(--line-2);background:#fff;padding:6px 8px;border-radius:2px}
+.field input[type=range]{flex:1;accent-color:var(--navy-700)}
+.field .unit{font-family:var(--mono);font-size:11.5px;color:var(--muted);min-width:52px;text-align:right}
+.field .help{font-size:11.5px;color:var(--muted);margin-top:2px}
+.field .err{font-size:11.5px;color:var(--crit-ink);margin-top:2px;display:none}
+.field.invalid input{border-color:var(--crit);background:#FFF7F7}
+.field.invalid .err{display:block}
+.field input[readonly]{background:var(--panel-2);color:var(--ink-2)}
+output.val{font-family:var(--mono);font-size:12.5px;min-width:58px;text-align:right;color:var(--navy-700);font-weight:600}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chips button{font-family:var(--mono);font-size:12px;border:1px solid var(--line-2);background:#fff;padding:5px 11px;cursor:pointer;border-radius:2px}
+.chips button[aria-pressed="true"]{background:var(--navy-700);color:#fff;border-color:var(--navy-700)}
+.check{display:flex;gap:8px;align-items:flex-start;font-size:13px;cursor:pointer}
+.check input{margin-top:3px;accent-color:var(--navy-700);width:15px;height:15px}
+
+/* module 1 */
+.m1{grid-template-columns:330px 1fr}
+.cmp2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.card{border:1px solid var(--line);background:var(--panel-2);padding:11px 13px}
+.card h4{margin:0 0 6px;font-family:var(--mono);font-size:11px;letter-spacing:.08em;color:var(--muted);font-weight:500;text-transform:uppercase;display:flex;gap:8px;align-items:center}
+.card.dis{border-left:4px solid var(--dis)}
+.card.nor{border-left:4px solid var(--navy-500)}
+.kv{display:grid;grid-template-columns:1fr auto;gap:4px 10px;font-size:13px}
+.kv dt{color:var(--ink-2)}
+.kv dd{margin:0;font-family:var(--mono);font-weight:600;text-align:right;font-variant-numeric:tabular-nums}
+.verdict{margin-top:12px;padding:10px 12px;border:1px solid var(--line);display:flex;gap:12px;align-items:flex-start;flex-wrap:wrap}
+.verdict.red{background:var(--crit-bg);border-color:#E4A3A3}
+.verdict.amber{background:var(--warn-bg);border-color:#EBCB78}
+.verdict.green{background:var(--good-bg);border-color:#A9D8B5}
+.verdict p{margin:0;flex:1;min-width:220px;font-size:13px}
+.chart-wrap{position:relative;margin-top:12px}
+svg.chart{width:100%;height:auto;display:block}
+.tip{position:absolute;pointer-events:none;background:var(--navy-900);color:#fff;font-family:var(--mono);font-size:11.5px;padding:6px 8px;white-space:nowrap;display:none;z-index:5}
+.legend{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:12px;color:var(--ink-2);margin-top:6px}
+.legend i{display:inline-block;width:16px;height:0;border-top:2px solid;margin-right:6px;vertical-align:3px}
+.legend i.box{height:10px;width:12px;border:0;vertical-align:-1px}
+
+/* module 2 */
+.m2{grid-template-columns:minmax(0,1.6fr) minmax(0,1fr)}
+.ctl-row{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;align-items:end}
+svg.net{width:100%;height:auto;display:block;background:var(--panel-2)}
+.node{cursor:pointer}
+.node:hover rect.box,.node:focus rect.box{stroke:var(--navy-700);stroke-width:2.2}
+.node:focus{outline:none}
+.flow{list-style:none;margin:0;padding:0;counter-reset:f}
+.flow li{position:relative;padding:8px 0 8px 34px;border-left:2px solid var(--line-2);margin-left:10px;font-size:13px}
+.flow li:last-child{border-left-color:transparent}
+.flow li::before{counter-increment:f;content:counter(f);position:absolute;left:-11px;top:7px;width:20px;height:20px;background:var(--navy-700);color:#fff;font-family:var(--mono);font-size:11px;display:grid;place-items:center}
+.flow b{display:block;font-family:var(--mono);font-size:11px;letter-spacing:.06em;color:var(--muted);font-weight:500;text-transform:uppercase}
+.urgent{border:1px solid #E4A3A3;background:var(--crit-bg);padding:10px 12px;margin-bottom:12px}
+.urgent.ok{border-color:#A9D8B5;background:var(--good-bg)}
+.urgent h4{margin:0 0 4px;font-family:var(--mono);font-size:11px;letter-spacing:.08em;color:var(--crit-ink);font-weight:600}
+.urgent.ok h4{color:var(--good-ink)}
+.urgent p{margin:0;font-size:13px}
+table.t{width:100%;border-collapse:collapse;font-size:13px}
+table.t th{text-align:left;font-family:var(--mono);font-size:10.5px;letter-spacing:.06em;font-weight:500;color:var(--muted);text-transform:uppercase;padding:7px 8px;border-bottom:1px solid var(--line-2);background:var(--panel-2)}
+table.t td{padding:7px 8px;border-bottom:1px solid var(--line);vertical-align:top}
+table.t td.n{font-family:var(--mono);text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums}
+table.t th.n{text-align:right}
+table.t td.reason{font-size:12.5px;color:var(--ink-2);min-width:260px}
+.scroll{overflow-x:auto}
+
+/* module 3 */
+.m3{grid-template-columns:330px 1fr}
+.reco{border:2px solid var(--navy-700);background:var(--navy-100);padding:12px 14px}
+.reco h4{margin:0 0 4px;font-family:var(--mono);font-size:11px;letter-spacing:.08em;color:var(--navy-700);font-weight:600}
+.reco .big{font-family:var(--cond);font-size:24px;font-weight:700;line-height:1.2}
+.reco ul{margin:6px 0 0;padding-left:18px;font-size:13px}
+.limit{border:1px solid #E4A3A3;background:var(--crit-bg);padding:10px 12px;margin-top:10px;font-size:13px}
+.limit b{color:var(--crit-ink)}
+table.cmp td.better{font-weight:700}
+table.cmp td.better::after{content:" ✓ better";font-family:var(--mono);font-size:10px;color:var(--good-ink);font-weight:600}
+.charts2{display:grid;grid-template-columns:1.3fr 1fr;gap:12px;margin-top:12px}
+.na{color:var(--muted);font-style:italic}
+
+/* methods */
+.m5{grid-template-columns:1fr 1fr}
+.method h4{margin:12px 0 4px;font-family:var(--cond);font-size:15px}
+.method h4:first-child{margin-top:0}
+.method p,.method li{font-size:13px;color:var(--ink-2)}
+.method code{font-family:var(--mono);font-size:12px;background:var(--panel-2);border:1px solid var(--line);padding:1px 4px;color:var(--ink)}
+.refs{list-style:none;margin:0;padding:0}
+.refs li{padding:8px 0;border-bottom:1px solid var(--line);font-size:13px}
+.refs li:last-child{border-bottom:0}
+.refs .use{display:block;font-size:12px;color:var(--ink-2);margin-top:2px}
+.tag-used{font-family:var(--mono);font-size:9.5px;color:var(--good-ink);border:1px solid #A9D8B5;background:var(--good-bg);padding:0 4px;margin-left:4px}
+.tag-plan{font-family:var(--mono);font-size:9.5px;color:var(--navy-700);border:1px solid #BFD0E4;background:var(--navy-100);padding:0 4px;margin-left:4px}
+
+footer{margin:24px 0 30px;padding-top:12px;border-top:1px solid var(--line-2);font-size:12px;color:var(--muted)}
+
+@media (max-width:1080px){
+  .m1,.m2,.m3,.m5,.ov2,.charts2{grid-template-columns:1fr}
+  .tiles{grid-template-columns:repeat(2,1fr)}
+  .ctl-row{grid-template-columns:1fr 1fr}
+}
+@media (max-width:600px){
+  .tiles,.cmp2,.ctl-row{grid-template-columns:1fr}
+  .demo-badge{margin-left:0}
+  .tile .v{font-size:26px}
+  .scbar .wrap{flex-wrap:nowrap;overflow-x:auto}
+  .scbar .sp{display:none}
+}
+</style>
+</head>
+<body>
+
+<header class="cmd">
+  <div class="wrap">
+    <div class="brand"><b>FORWARD SUPPLY INTELLIGENCE</b><span>PREDICTIVE LOGISTICS CONSOLE · SIH26251 · TEAM VAN GUARD</span></div>
+    <div><label for="itemSel">Supply class</label><select id="itemSel"></select></div>
+    <div class="demo-badge" title="All posts, depots and numbers are fictional">SYNTHETIC DEMO DATA · NOT OPERATIONAL</div>
+  </div>
+  <nav class="sec" aria-label="Sections"><div class="wrap">
+    <a href="#overview">Overview</a><a href="#m1">01 What-If Simulator</a><a href="#m2">02 Ripple-Effect Analyzer</a><a href="#m3">03 Stress Test</a><a href="#history">Scenario history</a><a href="#methods">Methods &amp; references</a>
+  </div></nav>
+</header>
+
+<div class="scbar" aria-label="Shared scenario">
+  <div class="wrap" id="scbar"></div>
+</div>
+
+<main class="wrap">
+
+<!-- OVERVIEW -->
+<section class="mod" id="overview" aria-labelledby="ovh">
+  <div class="mh"><span class="no">OVERVIEW</span><h2 id="ovh">Inventory and supply risk</h2><p>Current scenario, computed live from the shared scenario. Every alert states its cause.</p></div>
+  <div class="tiles" id="tiles"></div>
+  <div class="grid ov2">
+    <div class="panel"><div class="ph"><h3>Critical shortage alerts</h3><span class="hint">Red and amber nodes, most urgent first</span></div><div class="pb" style="padding-top:2px"><ul class="alerts" id="alerts"></ul></div></div>
+    <div class="panel"><div class="ph"><h3>Recommended preventive actions</h3><span class="est">ESTIMATE · HUMAN DECIDES</span></div><div class="pb"><ol class="actions" id="actions"></ol></div></div>
+  </div>
+</section>
+
+<!-- MODULE 1 -->
+<section class="mod" id="m1" aria-labelledby="m1h">
+  <div class="mh"><span class="no">MODULE 01</span><h2 id="m1h">What-If Logistics Impact Simulator</h2><p>Compare normal delivery with a delayed delivery for one node. The node you pick becomes the disruption source for Modules 02 and 03.</p></div>
+  <div class="grid m1">
+    <div class="panel">
+      <div class="ph"><h3>Inputs</h3></div>
+      <div class="pb form" id="simForm">
+        <div class="field"><label for="simNode">Node (disruption source)</label><select id="simNode"></select><div class="help" id="simNodeHelp"></div></div>
+        <div class="field" id="f-stock"><label for="inStock">Available inventory</label><div class="row"><input type="number" id="inStock" min="0" step="1"><span class="unit" data-unit></span></div><div class="err">Enter a number of 0 or more.</div><div class="help" id="stockHelp"></div></div>
+        <div class="field" id="f-cons"><label for="inCons">Average daily consumption</label><div class="row"><input type="number" id="inCons" min="0" step="1"><span class="unit" data-unit-d></span></div><div class="err">Must be greater than 0.</div><div class="help" id="consHelp"></div></div>
+        <div class="field" id="f-lead"><label for="inLead">Expected delivery time</label><div class="row"><input type="number" id="inLead" min="0" max="30" step="1"><span class="unit">days</span></div><div class="err">Enter 0 to 30 days.</div></div>
+        <div class="field"><label for="inDelay">Additional delivery delay</label><div class="row"><input type="range" id="inDelay" min="0" max="10" step="1"><output class="val" id="oDelay" for="inDelay"></output></div></div>
+        <div class="field"><label for="inChg">Change in consumption rate</label><div class="row"><input type="range" id="inChg" min="-30" max="60" step="5"><output class="val" id="oChg" for="inChg"></output></div><div class="help">Cold snap, troop surge or patrol tempo. Applies to this node and everything it supplies.</div></div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button type="button" class="btn primary" id="toRipple">Trace ripple effect →</button>
+          <button type="button" class="btn" id="resetSim">Reset inputs</button>
+        </div>
+      </div>
+    </div>
+    <div class="panel">
+      <div class="ph"><h3>Normal vs disrupted</h3><span class="est">ALL OUTPUTS ARE ESTIMATES</span></div>
+      <div class="pb" id="simOut"></div>
+    </div>
+  </div>
+</section>
+
+<!-- MODULE 2 -->
+<section class="mod" id="m2" aria-labelledby="m2h">
+  <div class="mh"><span class="no">MODULE 02</span><h2 id="m2h">Supply Chain Ripple-Effect Analyzer</h2><p>One disruption, traced through the actual connections of the demo network. A depot with enough buffer absorbs a delay; one without passes it downstream. Click any node to make it the source.</p></div>
+  <div class="panel" style="margin-bottom:12px"><div class="pb ctl-row">
+    <div class="field"><label for="rSrc">Disrupted node</label><select id="rSrc"></select></div>
+    <div class="field"><label for="rDelay">Supply delay at source</label><div class="row"><input type="range" id="rDelay" min="0" max="10" step="1"><output class="val" id="orDelay" for="rDelay"></output></div></div>
+    <div class="field"><label for="rShort">Shortage in incoming delivery</label><div class="row"><input type="range" id="rShort" min="0" max="80" step="10"><output class="val" id="orShort" for="rShort"></output></div></div>
+    <div><button type="button" class="btn" id="resetRipple">Reset disruption</button></div>
+  </div></div>
+  <div class="grid m2">
+    <div class="panel">
+      <div class="ph"><h3>Demo supply network</h3><span class="hint">Arrows = supply direction · dashed = lateral transfer allowed</span></div>
+      <svg class="net" id="net" viewBox="0 0 900 450" role="img" aria-label="Supply network diagram"></svg>
+      <div class="legend" style="padding:8px 14px 10px">
+        <span><span class="rb green"><i>✓</i>GREEN</span> no effect / buffer holds</span>
+        <span><span class="rb amber"><i>!</i>AMBER</span> delayed or thin buffer</span>
+        <span><span class="rb red"><i>✕</i>RED</span> shortage expected</span>
+      </div>
+    </div>
+    <div class="panel">
+      <div class="ph"><h3>Impact chain</h3></div>
+      <div class="pb">
+        <div id="urgent"></div>
+        <ol class="flow" id="flow"></ol>
+      </div>
+    </div>
+  </div>
+  <div class="panel" style="margin-top:12px">
+    <div class="ph"><h3>Node-by-node impact</h3><span class="est">ESTIMATES</span></div>
+    <div class="pb scroll" style="padding-top:0"><table class="t" id="impactTbl"></table></div>
+  </div>
+</section>
+
+<!-- MODULE 3 -->
+<section class="mod" id="m3" aria-labelledby="m3h">
+  <div class="mh"><span class="no">MODULE 03</span><h2 id="m3h">Logistics Stress Test and Decision Comparison</h2><p>Stress the current scenario, then compare Plan A (current schedule) with Plan B (a permitted alternative). The recommendation uses written rules and a weighted score, both shown below.</p></div>
+  <div class="grid m3">
+    <div class="panel">
+      <div class="ph"><h3>Scenario builder</h3></div>
+      <div class="pb form">
+        <div class="field"><label id="stDelayL">Delivery delayed by</label><div class="chips" role="group" aria-labelledby="stDelayL" id="stDelay"></div><div class="help" id="stSrcHelp"></div></div>
+        <div class="field"><label for="stCons">Increased consumption</label><div class="row"><input type="range" id="stCons" min="-30" max="60" step="5"><output class="val" id="ostCons" for="stCons"></output></div></div>
+        <div class="field"><label for="stInv">Reduced inventory availability</label><div class="row"><input type="range" id="stInv" min="0" max="60" step="5"><output class="val" id="ostInv" for="stInv"></output></div><div class="help">Spoilage, damage or a stock count correction in the disrupted area.</div></div>
+        <label class="check"><input type="checkbox" id="stRoute"> <span><b>Route-1 via Pass-1 unavailable</b><br><span style="color:var(--muted);font-size:12px">Depot-B gets no road resupply within the 14-day horizon.</span></span></label>
+        <div class="field"><label for="planB">Plan B (alternative)</label><select id="planB">
+          <option value="reroute">Reroute Depot-B resupply via Route-2 (Pass-2)</option>
+          <option value="air">Emergency airlift to most urgent posts</option>
+          <option value="realloc">Lateral reallocation between posts</option>
+          <option value="combo">Reroute + airlift combined</option>
+        </select></div>
+        <div class="field"><label for="prio">Decision priority</label><select id="prio">
+          <option value="balanced">Balanced (risk 60 · time 25 · cost 15)</option>
+          <option value="risk">Minimise shortage (80 · 15 · 5)</option>
+          <option value="cost">Minimise cost (40 · 20 · 40)</option>
+        </select></div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button type="button" class="btn primary" id="saveRun">Save run to history</button>
+          <button type="button" class="btn" id="resetStress">Reset stress</button>
+        </div>
+      </div>
+    </div>
+    <div class="panel">
+      <div class="ph"><h3>Plan comparison</h3><span class="est">ESTIMATES · COST RATES ILLUSTRATIVE</span></div>
+      <div class="pb">
+        <div id="reco"></div>
+        <div class="scroll" style="margin-top:12px"><table class="t cmp" id="cmpTbl"></table></div>
+        <div class="charts2">
+          <div><div style="font-size:12.5px;font-weight:600;margin-bottom:4px">Days of margin per post (stock lasts minus delivery day)</div><div class="chart-wrap"><svg class="chart" id="barChart" viewBox="0 0 520 250" role="img" aria-label="Margin per post, Plan A vs Plan B"></svg><div class="tip" id="tip2"></div></div>
+            <div class="legend"><span><i class="box" style="background:var(--planA)"></i>Plan A</span><span><i class="box" style="background:var(--planB)"></i>Plan B</span><span>Below zero = shortage expected</span></div></div>
+          <div><div style="font-size:12.5px;font-weight:600;margin-bottom:4px">All alternatives evaluated (lower score is better)</div><div class="scroll"><table class="t" id="altTbl"></table></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- HISTORY -->
+<section class="mod" id="history" aria-labelledby="hh">
+  <div class="mh"><span class="no">LOG</span><h2 id="hh">Scenario history</h2><p>Saved runs. Restore one to load its scenario into all three modules.</p></div>
+  <div class="panel"><div class="ph"><h3>Runs</h3><button type="button" class="btn sm" id="clearHist" style="margin-left:auto">Clear history</button></div><div class="pb scroll" style="padding-top:0"><table class="t" id="histTbl"></table></div></div>
+</section>
+
+<!-- METHODS -->
+<section class="mod" id="methods" aria-labelledby="mth">
+  <div class="mh"><span class="no">METHODS</span><h2 id="mth">Calculations, decision rules and references</h2><p>How every number on this page is produced, and which research it rests on.</p></div>
+  <div class="grid m5">
+    <div class="panel"><div class="ph"><h3>Calculations and rules</h3></div><div class="pb method">
+      <h4>01 What-If Simulator</h4>
+      <p>Stock at arrival = <code>inventory − consumption × (delivery time + delay)</code>, with consumption scaled by the change %. Time to stock-out = <code>inventory ÷ consumption</code>. Severity uses margin = time to stock-out − arrival day: ≥ 2 d <b>Low</b>; 0–2 d <b>Watch</b>; 0 to −2 d <b>High</b>; below −2 d <b>Critical</b>. Extra cost = shortage units airlifted at an illustrative ₹200 per kg.</p>
+      <h4>Stock-out probability</h4>
+      <p>Daily demand varies, by coefficient of variation (CV) per class: rations 0.08, fuel 0.15, medical 0.5, spares 0.6. Higher CV for intermittent items follows the spare-parts literature. Probability = <code>1 − Φ((stock − c·T) ÷ (CV·c·√T))</code>, a normal approximation. The full build replaces this with Monte Carlo and conformal intervals.</p>
+      <h4>02 Ripple-Effect Analyzer</h4>
+      <p>The delay or shortage hits the source node's incoming delivery. Each depot then runs a dispatch queue: in date order it ships each child's scheduled load if stock allows. If not, that load waits for the depot's (delayed) resupply. A child's delay is passed on to its own children the same way, following real edges only. A post is <b>red</b> if stock runs out before its delivery, or the delivery covers under 2 days. It is <b>amber</b> if delayed, the margin is under 2 days, or post-delivery cover is under 5 days.</p>
+      <h4>03 Stress Test and decision rule</h4>
+      <ol>
+        <li>Hard rule: a plan with fewer posts short wins.</li>
+        <li>Otherwise lowest weighted score = w<sub>risk</sub>·risk + w<sub>time</sub>·time + w<sub>cost</sub>·cost, each scaled 0–1 against the worst plan. Risk = shortage post-days + 5 per post short.</li>
+        <li>If no plan removes all shortages, the panel says so and computes what would close the gap.</li>
+      </ol>
+      <p>Plan B rules: <b>reroute</b> sends Depot-B resupply via Route-2, arriving day 5 at 60% of normal load. <b>Airlift</b> sends up to 2 sorties of 2,000 kg on day 1 to the most urgent red posts, ranked by priority × shortage. <b>Reallocation</b> moves surplus over 3 days' safety from a green neighbour along a permitted lateral link, arriving day 1.</p>
+    </div></div>
+    <div class="panel"><div class="ph"><h3>Research and references</h3><span class="hint">From our SIH idea deck</span></div><div class="pb">
+      <ul class="refs">
+        <li>Hyndman &amp; Athanasopoulos, <i>Forecasting: Principles and Practice</i>, 3rd ed. — <a href="https://otexts.com/fpp3" target="_blank" rel="noopener">otexts.com/fpp3</a><span class="tag-plan">PLANNED</span><span class="use">Forecast models, rolling-origin backtesting and error measures for the full build.</span></li>
+        <li>Teunter &amp; Duncan (2009), intermittent demand on RAF spare parts — <a href="https://eprints.lancs.ac.uk/id/eprint/45112" target="_blank" rel="noopener">eprints.lancs.ac.uk</a><span class="tag-used">USED</span><span class="use">Why spares and medical carry high demand variability (CV), which widens their risk.</span></li>
+        <li>Teunter, Syntetos &amp; Babai (2011), TSB method, EJOR — <a href="https://doi.org/10.1016/j.ejor.2011.05.018" target="_blank" rel="noopener">doi.org/10.1016/j.ejor.2011.05.018</a><span class="tag-plan">PLANNED</span><span class="use">Forecasting lumpy demand that has many zero days.</span></li>
+        <li>Lei et al. (2018), conformal prediction intervals — <a href="https://arxiv.org/abs/1604.04173" target="_blank" rel="noopener">arxiv.org/abs/1604.04173</a><span class="tag-plan">PLANNED</span><span class="use">Calibrated ranges to replace the normal approximation used here.</span></li>
+        <li>Makridakis et al. (2022), M5 competition — <a href="https://doi.org/10.1016/j.ijforecast.2021.11.013" target="_blank" rel="noopener">doi.org/10.1016/j.ijforecast.2021.11.013</a><span class="tag-plan">PLANNED</span><span class="use">Evidence for gradient boosting with drivers on retail-style demand.</span></li>
+        <li>CAPS (2024), logistics information systems in the Indian armed forces — <a href="https://capssindia.org/?p=13949" target="_blank" rel="noopener">capssindia.org</a><span class="tag-used">USED</span><span class="use">Problem framing: lack of integrated, in-transit visibility across systems.</span></li>
+        <li>ThePrint (2020), winter readiness for high-altitude troops — <a href="https://theprint.in/defence/heres-how-army-is-getting-30000-additional-troops-winter-ready-in-ladakh/464301/" target="_blank" rel="noopener">theprint.in</a><span class="tag-used">USED</span><span class="use">Anchor for demo rations (~2.5 kg per person per day) and winter fuel scale.</span></li>
+        <li>CAG Report No. 16, press brief — <a href="https://www.cag.gov.in/uploads/PressRelease/PR-Press-Brief-Report-no-16-05f19941ebcdbc7-81616480.pdf" target="_blank" rel="noopener">cag.gov.in</a><span class="tag-used">USED</span><span class="use">Ration scales rise with altitude band; used only as ratios in demo data.</span></li>
+        <li>Open-Meteo historical weather API (CC BY 4.0) — <a href="https://open-meteo.com" target="_blank" rel="noopener">open-meteo.com</a><span class="tag-plan">PLANNED</span><span class="use">Real temperature and snowfall as demand and disruption drivers.</span></li>
+        <li>NASA Global Landslide Catalog — <a href="https://data.nasa.gov/dataset/global-landslide-catalog-export" target="_blank" rel="noopener">data.nasa.gov</a> · Google OR-Tools routing — <a href="https://developers.google.com/optimization/routing/vrptw" target="_blank" rel="noopener">developers.google.com</a><span class="tag-plan">PLANNED</span><span class="use">Route-disruption likelihood, and full vehicle routing for the finale build.</span></li>
+      </ul>
+    </div></div>
+  </div>
+  <div class="panel" style="margin-top:12px">
+    <div class="ph"><h3>Synthetic demo dataset</h3><span class="hint" id="dsHint"></span></div>
+    <div class="pb scroll" style="padding-top:0"><table class="t" id="dsTbl"></table>
+    <p style="font-size:12px;color:var(--muted);margin:8px 0 0">Consumption is derived from strength × ration or fuel scale × altitude factor (bands &lt;9,000 / 9–12,000 / &gt;12,000 ft). Base scales are anchored on public reporting (ThePrint 2020, CAG); multipliers and stock levels are our assumptions. Names, posts and routes are fictional.</p></div>
+  </div>
+</section>
+
+<footer>Prototype for SIH 2026 idea submission. All locations, units, stock levels, routes and costs are fictional or illustrative. Outputs are estimates from documented rules, not verified facts, and the system is not used in any real operation.</footer>
+</main>
+
+<script>
+"use strict";
+/* ============ helpers ============ */
+const $=s=>document.querySelector(s);
+const NS="http://www.w3.org/2000/svg";
+const svgEl=(tag,a={},p)=>{const e=document.createElementNS(NS,tag);for(const k in a)e.setAttribute(k,a[k]);if(p)p.appendChild(e);return e};
+const fmt=(n,d=0)=>Number.isFinite(n)?n.toLocaleString('en-IN',{maximumFractionDigits:d,minimumFractionDigits:d}):'—';
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+function phi(x){const t=1/(1+.2316419*Math.abs(x));const d=.3989423*Math.exp(-x*x/2);const p=d*t*(.3193815+t*(-.3565638+t*(1.781478+t*(-1.821256+t*1.330274))));return x>0?1-p:p}
+const HORIZON=14;
+const RB={green:['✓','GREEN'],amber:['!','AMBER'],red:['✕','RED']};
+const badge=r=>`<span class="rb ${r}"><i aria-hidden="true">${RB[r][0]}</i>${RB[r][1]}</span>`;
+
+/* ============ synthetic demo data (fictional) ============ */
+const ITEMS={
+  F:{name:'Heating fuel',unit:'L',cv:.15,kg:.85},
+  R:{name:'Rations',unit:'kg',cv:.08,kg:1},
+  M:{name:'Medical kits',unit:'kits',cv:.5,kg:4},
+  S:{name:'Vehicle spares',unit:'units',cv:.6,kg:6},
+};
+const NODES=[
+  {id:'DA',name:'Depot-A',role:'Rear base depot',type:'depot',parent:null,L:4,tr:2,route:'Railhead (off-map)',stockDays:20,qtyDays:14,x:30,y:195},
+  {id:'DB',name:'Depot-B',role:'Forward depot',type:'depot',parent:'DA',L:3,tr:2,route:'Route-1 via Pass-1',stockDays:5,qtyDays:10,x:300,y:110,alt:{route:'Route-2 via Pass-2',L:5,cap:.6}},
+  {id:'TH',name:'Hub T-1',role:'Transit hub',type:'depot',parent:'DA',L:2,tr:1,route:'Valley road',stockDays:6,qtyDays:10,x:300,y:330},
+  {id:'P1',name:'Post Kestrel',role:'Forward post',type:'post',parent:'DB',L:3,tr:1,troops:120,alt:15200,prio:2,stock:{F:5,R:7,M:9,S:12},qtyDays:10,x:610,y:18},
+  {id:'P2',name:'Post Falcon',role:'Forward post',type:'post',parent:'DB',L:5,tr:2,troops:80,alt:16100,prio:3,stock:{F:6,R:8,M:5,S:9},qtyDays:10,x:610,y:96},
+  {id:'P3',name:'Post Heron',role:'Forward post',type:'post',parent:'DB',L:4,tr:1,troops:100,alt:14800,prio:2,stock:{F:9,R:10,M:12,S:14},qtyDays:10,x:610,y:174},
+  {id:'P4',name:'Post Osprey',role:'Forward post',type:'post',parent:'DB',L:6,tr:2,troops:60,alt:17400,prio:3,stock:{F:7,R:9,M:8,S:6},qtyDays:10,x:610,y:252},
+  {id:'P5',name:'Post Kite',role:'Valley post',type:'post',parent:'TH',L:2,tr:1,troops:140,alt:11200,prio:1,stock:{F:8,R:9,M:10,S:11},qtyDays:10,x:610,y:330},
+  {id:'P6',name:'Post Merlin',role:'Valley post',type:'post',parent:'TH',L:4,tr:1,troops:90,alt:12600,prio:1,stock:{F:7,R:6,M:9,S:8},qtyDays:10,x:610,y:408},
+];
+const LATERAL=[['P2','P3'],['P5','P6']];
+const BYID=Object.fromEntries(NODES.map(n=>[n.id,n]));
+const kids=id=>NODES.filter(n=>n.parent===id);
+const POSTS=NODES.filter(n=>n.type==='post');
+function subtree(id){const s=new Set([id]);const st=[id];while(st.length){const x=st.pop();kids(x).forEach(k=>{s.add(k.id);st.push(k.id)})}return s}
+const altMult=a=>a<9000?1:a<12000?1.1:1.2;
+function baseCons(n,it){
+  if(n.type==='depot')return kids(n.id).reduce((a,k)=>a+baseCons(k,it),0);
+  if(it==='R')return n.troops*2.5*altMult(n.alt);
+  if(it==='F')return n.troops*2.4*(1+(n.alt-10000)/20000);
+  if(it==='M')return n.troops*.02;
+  return n.troops*.025;
+}
+const COST={reroute:1.5,sortie:4.0,transfer:0.4}; // ₹ lakh, illustrative
+const SORTIE_KG=2000, AIR_RATE=200; // ₹ per kg, illustrative
+
+/* ============ shared scenario ============ */
+const DEFAULT={item:'F',source:'DB',delay:5,cons:0,short:0,inv:0,routeOut:false,planB:'reroute',prio:'balanced',ovr:{}};
+const S=JSON.parse(JSON.stringify(DEFAULT));
+const ovKey=(id)=>id+'|'+S.item;
+function nodeVals(n){
+  const o=S.ovr[ovKey(n.id)]||{};
+  const c=baseCons(n,S.item);
+  const days=n.type==='depot'?n.stockDays:n.stock[S.item];
+  return {s:o.s??days*c, c:(n.type==='post'&&o.c!=null)?o.c:c, L:o.L??n.L, q:n.qtyDays*((n.type==='post'&&o.c!=null)?o.c:c)};
+}
+
+/* ============ engine: simulate one plan ============ */
+function simulate(sc,plan){
+  plan=plan||{};
+  const it=ITEMS[sc.item], sub=subtree(sc.source);
+  const R={};
+  // pass values
+  NODES.forEach(n=>{const v=nodeVals(n);const cf=sub.has(n.id)?1+sc.cons/100:1;const inf=sub.has(n.id)?1-sc.inv/100:1;
+    R[n.id]={n,s:v.s*inf,c:v.c*cf,L:v.L,q:v.q,D:0,F:1,why:[],rerouted:false,extra:0,extraWhy:''}});
+  // source disruption on incoming delivery
+  const src=R[sc.source];
+  if(sc.delay>0){src.D+=sc.delay;src.why.push(`${src.n.name}'s resupply delayed ${sc.delay} d (arrives day ${src.L+sc.delay}, was day ${src.L})`)}
+  if(sc.short>0){src.F*=1-sc.short/100;src.why.push(`${src.n.name}'s incoming load short by ${sc.short}%`)}
+  if(sc.routeOut){const db=R.DB;db.D=Infinity;db.why.push('Route-1 via Pass-1 unavailable: no road resupply to Depot-B in the 14-day horizon')}
+  if(plan.reroute){const db=R.DB, alt=BYID.DB.alt;const cur=db.L+db.D;
+    if(cur>alt.L){db.D=alt.L-db.L;db.F=Math.min(db.F,alt.cap);db.rerouted=true;db.why.push(`Plan B: resupply rerouted via ${alt.route}, arrives day ${alt.L} at ${alt.cap*100}% load`)}}
+  // top-down dispatch queues
+  const order=['DA','DB','TH'];
+  order.forEach(pid=>{
+    const p=R[pid];const A=p.L+p.D;let s=p.s;const Q=p.q*p.F;let arrived=false;
+    const ks=kids(pid).map(k=>R[k.id]).map(k=>({k,t:Math.max(0,k.L-k.n.tr)})).sort((a,b)=>a.t-b.t);
+    p.queue=[];
+    ks.forEach(({k,t})=>{
+      if(!arrived&&A<=t){s+=Q;arrived=true}
+      const need=k.q;
+      if(s>=need){s-=need;p.queue.push({id:k.n.id,t,ok:true})}
+      else if(A<=HORIZON){
+        if(!arrived){s+=Q;arrived=true}
+        const send=Math.min(need,Math.max(0,s));s-=send;
+        const wait=Math.max(t,A)-t;
+        k.D+=wait;k.F*=send/need;
+        if(wait>0)k.why.push(`${p.n.name} could not fill ${k.n.name}'s load on day ${t}; it waits for ${p.n.name}'s resupply (day ${A}) → ${k.n.name} delivery day ${k.L+k.D}, was day ${k.L}`);
+        if(send<need)k.why.push(`${k.n.name} receives only ${Math.round(send/need*100)}% of its load`);
+        p.queue.push({id:k.n.id,t,ok:false,wait});
+      }else{
+        const send=Math.min(need,Math.max(0,s));s-=send;
+        if(send>0){k.F*=send/need;k.why.push(`${p.n.name} sends its last stock: ${k.n.name} gets ${Math.round(send/need*100)}% of its load, and nothing further within 14 days`)}
+        else{k.D=Infinity;k.F=0;k.why.push(`${p.n.name} has no stock and no resupply in 14 days: ${k.n.name} gets no delivery`)}
+        p.queue.push({id:k.n.id,t,ok:false,wait:Infinity});
+      }
+    });
+    p.endStock=s;
+  });
+  // extra deliveries (airlift / reallocation) on day 1
+  (plan.extras||[]).forEach(x=>{const r=R[x.to];r.extra+=x.units;r.extraWhy=(r.extraWhy?r.extraWhy+'; ':'')+x.label;if(x.from){R[x.from].s-=x.units}});
+  // evaluate
+  NODES.forEach(n=>{
+    const r=R[n.id];const A=r.L+r.D;r.A=A;
+    if(n.type==='post'){
+      const s=r.s+(r.extra>0&&r.s/r.c>=1?r.extra:0);
+      r.sEff=s;r.Y=s/r.c;
+      const T=Math.min(A,HORIZON);
+      r.short=Math.max(0,T-r.Y);
+      r.margin=(!Number.isFinite(A)||A>HORIZON)?r.Y-HORIZON:r.Y-A;
+      r.cover=Number.isFinite(A)&&A<=HORIZON?(Math.max(0,s-r.c*A)+r.q*r.F)/r.c:0;
+      r.P=T<=0?(s<=0?1:0):1-phi((s-r.c*T)/(ITEMS[sc.item].cv*r.c*Math.sqrt(T)||1e-9));
+      if(r.short>0||(r.F<1&&r.cover<2))r.risk='red';
+      else if(r.D>0||r.margin<2||r.cover<5||r.F<1)r.risk='amber';
+      else r.risk='green';
+      if(r.risk==='green'&&r.extra>0)r.risk='green';
+    }else{
+      const late=(r.queue||[]).filter(q=>!q.ok).length;
+      r.lateKids=late;
+      r.risk=late>0?'red':(r.D>0||r.F<1)?'amber':'green';
+    }
+  });
+  return R;
+}
+function postReason(r){
+  const chain=[];let cur=r.n;const path=[];
+  while(cur){path.unshift(cur.id);cur=cur.parent?BYID[cur.parent]:null}
+  return path;
+}
+function explain(R,id){
+  const path=postReason(R[id]);const parts=[];
+  path.forEach(pid=>R[pid].why.forEach(w=>parts.push(w)));
+  const r=R[id];
+  if(r.extraWhy)parts.push(r.extraWhy);
+  if(r.n.type==='post'){
+    const it=ITEMS[S.item];
+    if(r.short>0)parts.push(`stock (${fmt(r.Y,1)} d) runs out on day ${fmt(r.Y,1)}, before delivery: est. shortage ${fmt(r.short,1)} d (${fmt(r.short*r.c)} ${it.unit})`);
+    else if(r.risk==='amber'){
+      const own=[];
+      if(r.D>0&&Number.isFinite(r.D))own.push(`its delivery moves to day ${r.A} but stock (${fmt(r.Y,1)} d) still holds`);
+      if(r.margin<2)own.push(`only ${fmt(r.margin,1)} d of margin before delivery`);
+      if(r.cover<5&&Number.isFinite(r.A))own.push(`after delivery only ${fmt(r.cover,1)} d of cover`);
+      if(r.F<1)own.push(`load reduced to ${Math.round(r.F*100)}%`);
+      if(!own.length&&r.D===0)own.push('its own delivery is on time; it sits downstream of the disruption');
+      parts.push(...own);
+    }
+  }else if(r.n.type==='depot'){
+    if(r.lateKids>0)parts.push(`${r.n.name}'s buffer could not cover ${r.lateKids} scheduled dispatch${r.lateKids>1?'es':''}`);
+    else if(r.D>0)parts.push(`${r.n.name}'s buffer absorbed the delay; all dispatches on time`);
+  }
+  return parts;
+}
+function actionFor(R,id){
+  const r=R[id],n=r.n,it=ITEMS[S.item];
+  if(r.risk==='green')return '—';
+  if(n.type==='depot'){
+    if(n.id==='DB'&&(S.routeOut||S.source==='DB'))return 'Expedite resupply via Route-2 (Pass-2) or request airlift';
+    return `Prioritise ${n.name}'s replenishment; dispatch to highest-priority posts first`;
+  }
+  if(r.risk==='red'){
+    const lat=LATERAL.find(l=>l.includes(id));
+    if(lat){const o=lat[0]===id?lat[1]:lat[0];const ro=R[o];const surplus=ro.s-ro.c*(Math.min(ro.A,HORIZON)+3);
+      if(ro.risk==='green'&&surplus>0)return `Reallocate up to ${fmt(Math.min(surplus,r.short*r.c+2*r.c))} ${it.unit} from ${BYID[o].name} (lateral link, 1 d)`}
+    return `Prioritise replenishment before day ${fmt(Math.max(0,r.Y),0)}: airlift or first slot on the next convoy`;
+  }
+  if(r.cover<5&&Number.isFinite(r.A))return 'Top up the next delivery; post-delivery buffer is thin';
+  return 'Monitor daily; pre-position stock at the parent depot';
+}
+
+/* ============ plans & metrics ============ */
+function urgentPosts(R){return POSTS.map(p=>R[p.id]).filter(r=>r.risk==='red').sort((a,b)=>(b.n.prio*b.short)-(a.n.prio*a.short)||a.Y-b.Y)}
+function buildPlan(kind){
+  const plan={reroute:false,extras:[],label:'',cost:0,notes:[]};
+  const it=ITEMS[S.item];
+  if(kind==='reroute'||kind==='combo'){
+    const affected=S.routeOut||(S.source==='DB'&&S.delay>BYID.DB.alt.L-BYID.DB.L)||(S.source==='DA'&&S.delay>0);
+    if(affected){plan.reroute=true;plan.cost+=COST.reroute}else plan.notes.push('Reroute not applicable: Route-1 is not the problem in this scenario');
+  }
+  if(kind==='air'||kind==='combo'){
+    const R0=simulate(S,{reroute:plan.reroute});
+    urgentPosts(R0).slice(0,2).forEach(r=>{
+      const units=Math.min(SORTIE_KG/it.kg,6*r.c);
+      plan.extras.push({to:r.n.id,units,label:`Plan B: airlift of ${fmt(units)} ${it.unit} lands day 1`});plan.cost+=COST.sortie;
+    });
+    if(!urgentPosts(R0).length)plan.notes.push('No red posts: airlift not needed');
+  }
+  if(kind==='realloc'){
+    const R0=simulate(S,{});
+    urgentPosts(R0).forEach(r=>{
+      const lat=LATERAL.find(l=>l.includes(r.n.id));if(!lat)return;
+      const o=lat[0]===r.n.id?lat[1]:lat[0];const ro=R0[o];if(ro.risk==='red')return;
+      const surplus=ro.s-ro.c*(Math.min(ro.A,HORIZON)+3);const need=r.short*r.c+2*r.c;
+      const units=Math.max(0,Math.min(surplus,need));
+      if(units>0){plan.extras.push({to:r.n.id,from:o,units,label:`Plan B: ${fmt(units)} ${it.unit} moved from ${BYID[o].name}, arrives day 1`});plan.cost+=COST.transfer}
+    });
+    if(!plan.extras.length)plan.notes.push('No permitted lateral link has surplus next to a red post');
+  }
+  return plan;
+}
+function metrics(R,cost){
+  const ps=POSTS.map(p=>R[p.id]);
+  const shortPosts=ps.filter(r=>r.short>0);
+  const sumShort=ps.reduce((a,r)=>a+r.short,0);
+  const arr=ps.filter(r=>r.D>0||r.extra>0||r.rerouted);
+  const delivery=ps.map(r=>r.extra>0?1:Math.min(r.A,HORIZON+1));
+  const avgArr=delivery.reduce((a,b)=>a+b,0)/delivery.length;
+  return {stockouts:shortPosts.length,sumShort,maxP:Math.max(...ps.map(r=>r.P)),avgArr,minMargin:Math.min(...ps.map(r=>r.margin)),
+    shortUnits:ps.reduce((a,r)=>a+r.short*r.c,0),cost,risk:sumShort+5*shortPosts.length,red:ps.filter(r=>r.risk==='red').length,amber:ps.filter(r=>r.risk==='amber').length};
+}
+const WEIGHTS={balanced:[.6,.25,.15],risk:[.8,.15,.05],cost:[.4,.2,.4]};
+function score(ms){
+  const w=WEIGHTS[S.prio];const mx=k=>Math.max(...ms.map(m=>m[k]),1e-9);
+  const mr=mx('risk'),mt=mx('avgArr'),mc=mx('cost');
+  return ms.map(m=>({risk:m.risk/mr,time:m.avgArr/mt,cost:mc>0?m.cost/mc:0,total:w[0]*m.risk/mr+w[1]*m.avgArr/mt+w[2]*(mc>0?m.cost/mc:0)}));
+}
+function decide(a,b){ // returns 'A'|'B' and reason
+  if(a.stockouts!==b.stockouts)return [a.stockouts<b.stockouts?'A':'B','hard rule: fewer posts short'];
+  const [sa,sb]=score([a,b]);
+  if(Math.abs(sa.total-sb.total)<1e-6)return ['A','tie: keep current schedule (no extra cost)'];
+  return [sa.total<sb.total?'A':'B','lower weighted score'];
+}
+
+/* ============ render: scenario bar ============ */
+function renderBar(){
+  const it=ITEMS[S.item];const src=BYID[S.source];
+  const chips=[
+    `<span class="chip on">Class: ${it.name}</span>`,
+    `<span class="chip on">Source: ${src.name}</span>`,
+    `<span class="chip ${S.delay?'bad':''}">Delay +${S.delay} d</span>`,
+    `<span class="chip ${S.cons?'bad':''}">Consumption ${S.cons>=0?'+':''}${S.cons}%</span>`,
+    `<span class="chip ${S.short?'bad':''}">Incoming short ${S.short}%</span>`,
+    `<span class="chip ${S.inv?'bad':''}">Inventory −${S.inv}%</span>`,
+    `<span class="chip ${S.routeOut?'bad':''}">Route-1 ${S.routeOut?'UNAVAILABLE':'open'}</span>`,
+  ];
+  if(Object.keys(S.ovr).length)chips.push(`<span class="chip on">${Object.keys(S.ovr).length} manual override${Object.keys(S.ovr).length>1?'s':''}</span>`);
+  $('#scbar').innerHTML=`<span class="lbl">SHARED SCENARIO</span>${chips.join('')}<span class="sp"></span><button type="button" class="btn sm" id="resetAll">Reset all</button>`;
+  $('#resetAll').onclick=()=>{Object.assign(S,JSON.parse(JSON.stringify(DEFAULT)));S.delay=0;syncControls();renderAll()};
+}
+
+/* ============ render: overview ============ */
+function renderOverview(R){
+  const it=ITEMS[S.item];const ps=POSTS.map(p=>R[p.id]);
+  const red=ps.filter(r=>r.risk==='red'),amb=ps.filter(r=>r.risk==='amber');
+  const low=ps.reduce((a,b)=>b.Y<a.Y?b:a);
+  const urg=urgentPosts(R)[0];
+  $('#tiles').innerHTML=`
+   <div class="tile"><div class="l">Posts at risk</div><div class="v">${red.length+amb.length}<small>/ ${ps.length}</small></div><div class="s">${red.length} red · ${amb.length} amber</div></div>
+   <div class="tile"><div class="l">Lowest days of supply</div><div class="v">${fmt(low.Y,1)}<small>days</small></div><div class="s">${low.n.name} · ${it.name}</div></div>
+   <div class="tile"><div class="l">Most urgent node</div><div class="v" style="font-size:24px;padding:4px 0">${urg?urg.n.name:'None'}</div><div class="s">${urg?`short ≈ ${fmt(urg.short,1)} d from day ${fmt(urg.Y,1)}`:'No shortage expected in 14 d'}</div></div>
+   <div class="tile"><div class="l">Active disruption</div><div class="v" style="font-size:24px;padding:4px 0">${S.delay||S.short||S.routeOut||S.cons||S.inv?BYID[S.source].name:'None'}</div><div class="s">${[S.delay?`+${S.delay} d delay`:'',S.short?`${S.short}% short`:'',S.routeOut?'Route-1 closed':'',S.cons?`use ${S.cons>0?'+':''}${S.cons}%`:'',S.inv?`stock −${S.inv}%`:''].filter(Boolean).join(' · ')||'Normal schedule'}</div></div>`;
+  const items=NODES.map(n=>R[n.id]).filter(r=>r.risk!=='green').sort((a,b)=>(a.risk==='red'?0:1)-(b.risk==='red'?0:1)||(a.Y??99)-(b.Y??99));
+  $('#alerts').innerHTML=items.length?items.map(r=>`<li>${badge(r.risk)}<span class="t">${r.n.name} <span style="font-weight:400;color:var(--muted)">· ${r.n.role}${r.n.type==='post'?` · ${fmt(r.Y,1)} d of stock`:''}</span></span><span class="why"><b>Cause:</b> ${esc(explain(R,r.n.id).join(' → ')||'—')}</span></li>`).join('')
+    :`<li><span class="empty">No alerts. All nodes hold until their next delivery. Add a delay in Module 01 or 02 to test.</span></li>`;
+  const acts=items.map(r=>({r,a:actionFor(R,r.n.id)})).filter(x=>x.a!=='—');
+  $('#actions').innerHTML=acts.length?acts.slice(0,6).map(x=>`<li><b>${x.r.n.name}:</b> ${esc(x.a)}</li>`).join('')+`<li style="list-style:none;margin-left:-18px;color:var(--muted);font-size:12px">See Module 03 for the full plan comparison.</li>`
+    :'<li style="list-style:none;margin-left:-18px" class="empty">Nothing to do: no node is at risk.</li>';
+}
+
+/* ============ render: module 1 ============ */
+let simValid=true;
+function renderSimForm(){
+  const n=BYID[S.source];const v=nodeVals(n);const it=ITEMS[S.item];
+  $('#simNode').value=S.source;
+  $('#simNodeHelp').textContent=`${n.role}. Supplied by ${n.parent?BYID[n.parent].name:'railhead'} via ${n.route}.`;
+  document.querySelectorAll('[data-unit]').forEach(e=>e.textContent=it.unit);
+  document.querySelectorAll('[data-unit-d]').forEach(e=>e.textContent=it.unit+'/day');
+  if(document.activeElement!==$('#inStock'))$('#inStock').value=Math.round(v.s);
+  if(document.activeElement!==$('#inCons'))$('#inCons').value=Math.round(v.c*10)/10;
+  if(document.activeElement!==$('#inLead'))$('#inLead').value=v.L;
+  $('#inCons').readOnly=n.type==='depot';
+  $('#consHelp').textContent=n.type==='depot'?'Depot outflow = sum of the posts it supplies (edit at post level).':`Derived: ${n.troops} personnel × ${S.item==='R'?'2.5 kg':S.item==='F'?'2.4 L':S.item==='M'?'0.02 kits':'0.025 units'} × altitude factor.`;
+  $('#stockHelp').textContent=S.inv?`Stress test cuts this by ${S.inv}% in the calculation.`:'';
+  $('#inDelay').value=S.delay;$('#oDelay').textContent=`+${S.delay} d`;
+  $('#inChg').value=S.cons;$('#oChg').textContent=`${S.cons>=0?'+':''}${S.cons}%`;
+}
+function readSim(){
+  const n=BYID[S.source];let ok=true;
+  const s=parseFloat($('#inStock').value),c=parseFloat($('#inCons').value),L=parseFloat($('#inLead').value);
+  const set=(id,bad)=>{$(id).classList.toggle('invalid',bad);if(bad)ok=false};
+  set('#f-stock',!(s>=0));set('#f-cons',!(c>0));set('#f-lead',!(L>=0&&L<=30));
+  if(ok){const o=S.ovr[ovKey(n.id)]||{};const base=nodeVals.call(null,n);
+    o.s=s;o.L=Math.round(L);if(n.type==='post')o.c=c;S.ovr[ovKey(n.id)]=o}
+  simValid=ok;return ok;
+}
+function renderSimOut(){
+  const box=$('#simOut');
+  if(!simValid){box.innerHTML='<div class="empty" style="padding:30px 0;text-align:center">Fix the highlighted inputs to see the comparison.</div>';return}
+  const n=BYID[S.source],v=nodeVals(n),it=ITEMS[S.item];
+  const s=v.s*(1-S.inv/100), c=v.c, c2=c*(1+S.cons/100), L=v.L, d=S.delay, A=L+d;
+  const remN=s-c*L, remD=s-c2*A, tN=s/c, tD=s/c2;
+  const marginN=tN-L, marginD=tD-A;
+  const sev=m=>m>=2?['green','LOW','Stock outlasts delivery by '+fmt(m,1)+' d']:m>=0?['amber','WATCH','Only '+fmt(m,1)+' d of margin']:m>-2?['red','HIGH','Runs out '+fmt(-m,1)+' d before delivery']:['red','CRITICAL','Runs out '+fmt(-m,1)+' d before delivery'];
+  const [cN,lN,tNt]=sev(marginN),[cD,lD,tDt]=sev(marginD);
+  const shortU=Math.max(0,-remD), extraCost=shortU*it.kg*AIR_RATE/1e5;
+  const P=(T,cc)=>T<=0?(s<=0?1:0):1-phi((s-cc*T)/(it.cv*cc*Math.sqrt(T)));
+  box.innerHTML=`
+   <div class="cmp2">
+     <div class="card nor"><h4>Normal delivery <span class="est">EST.</span></h4><dl class="kv">
+       <dt>Delivery arrives</dt><dd>day ${L}</dd>
+       <dt>Stock at arrival</dt><dd>${remN>=0?fmt(remN):'0'} ${it.unit}</dd>
+       <dt>Time to stock-out</dt><dd>${fmt(tN,1)} d</dd>
+       <dt>P(stock-out before arrival)</dt><dd>${fmt(P(L,c)*100)}%</dd>
+       <dt>Shortage</dt><dd>${remN<0?fmt(-remN)+' '+it.unit:'none'}</dd>
+     </dl><div style="margin-top:8px">${badge(cN)} <span style="font-size:12.5px">${lN} · ${tNt}</span></div></div>
+     <div class="card dis"><h4>Disrupted (+${d} d, ${S.cons>=0?'+':''}${S.cons}% use) <span class="est">EST.</span></h4><dl class="kv">
+       <dt>Delivery arrives</dt><dd>day ${A}</dd>
+       <dt>Stock at arrival</dt><dd>${remD>=0?fmt(remD):'0'} ${it.unit}</dd>
+       <dt>Time to stock-out</dt><dd>${fmt(tD,1)} d</dd>
+       <dt>P(stock-out before arrival)</dt><dd>${fmt(P(A,c2)*100)}%</dd>
+       <dt>Shortage</dt><dd>${remD<0?fmt(-remD)+' '+it.unit:'none'}</dd>
+     </dl><div style="margin-top:8px">${badge(cD)} <span style="font-size:12.5px">${lD} · ${tDt}</span></div></div>
+   </div>
+   <div class="verdict ${cD}">${badge(cD)}<p><b>Estimated impact:</b> ${remD<0?`${n.name} would be out of ${it.name.toLowerCase()} from day ${fmt(tD,1)} until day ${A}, a gap of ${fmt(shortU)} ${it.unit}. Covering it by emergency air delivery would cost about <b>₹${fmt(extraCost,1)} lakh</b> <span class="est">ILLUSTRATIVE RATE ₹${AIR_RATE}/kg</span>.`:marginD<2?`No stock-out expected, but margin shrinks from ${fmt(marginN,1)} d to ${fmt(marginD,1)} d.`:`Delay is absorbed: stock still lasts ${fmt(marginD,1)} d beyond delivery.`}</p></div>
+   ${n.type==='depot'?`<p style="font-size:12px;color:var(--muted);margin:8px 0 0">For a depot, consumption is its outflow to the posts it supplies. A depot "shortage" means dispatches fall behind schedule; Module 02 shows exactly which posts are hit.</p>`:''}
+   <div class="chart-wrap"><svg class="chart" id="simChart" viewBox="0 0 640 230" role="img" aria-label="Projected stock, normal versus disrupted"></svg><div class="tip" id="tip1"></div></div>
+   <div class="legend"><span><i style="border-color:var(--navy-500)"></i>Normal</span><span><i style="border-color:var(--dis);border-top-style:dashed"></i>Disrupted</span><span><i class="box" style="background:rgba(198,40,40,.15)"></i>Shortage window</span><span>▼ delivery arrives</span></div>`;
+  drawSimChart({s,c,c2,L,A,q:v.q,F:1-S.short/100,tD,unit:it.unit});
+}
+function drawSimChart(o){
+  const svg=$('#simChart');const W=640,H=230,ml=56,mr=14,mt=14,mb=28;
+  const days=Math.max(10,Math.ceil(o.A+4));
+  const series=(cc,arr,F)=>{const pts=[];let st=o.s;for(let t=0;t<=days;t+=.5){if(Math.abs(t-arr)<.01)st+=o.q*F;pts.push({t,v:Math.max(0,st)});st-=cc*.5}return pts};
+  const nrm=series(o.c,o.L,1), dis=series(o.c2,o.A,o.F);
+  const ymax=Math.max(...nrm.map(p=>p.v),...dis.map(p=>p.v))*1.08||1;
+  const X=t=>ml+t/days*(W-ml-mr), Y=v=>mt+(H-mt-mb)*(1-v/ymax);
+  for(let k=0;k<=4;k++){const v=ymax*k/4;svgEl('line',{x1:ml,x2:W-mr,y1:Y(v),y2:Y(v),stroke:k?'#E6EAF0':'#9AA6B4'},svg);svgEl('text',{x:ml-6,y:Y(v)+4,'text-anchor':'end','font-size':10,fill:'#6B7887','font-family':'IBM Plex Mono'},svg).textContent=fmt(v)}
+  for(let t=0;t<=days;t+=2)svgEl('text',{x:X(t),y:H-10,'text-anchor':'middle','font-size':10,fill:'#6B7887','font-family':'IBM Plex Mono'},svg).textContent=t===0?'today':'d'+t;
+  if(o.tD<o.A)svgEl('rect',{x:X(o.tD),y:mt,width:X(Math.min(o.A,days))-X(o.tD),height:H-mt-mb,fill:'rgba(198,40,40,.12)'},svg);
+  const path=(pts)=>pts.map((p,i)=>(i?'L':'M')+X(p.t).toFixed(1)+' '+Y(p.v).toFixed(1)).join('');
+  svgEl('path',{d:path(nrm),fill:'none',stroke:'#2A5687','stroke-width':2},svg);
+  svgEl('path',{d:path(dis),fill:'none',stroke:'#7A3E9D','stroke-width':2,'stroke-dasharray':'6 4'},svg);
+  [[o.L,'#2A5687'],[o.A,'#7A3E9D']].forEach(([t,c])=>{if(t<=days){svgEl('path',{d:`M${X(t)-5} ${mt} L${X(t)+5} ${mt} L${X(t)} ${mt+8}Z`,fill:c},svg)}});
+  const cross=svgEl('line',{y1:mt,y2:H-mb,stroke:'#14202E','stroke-width':1,opacity:0},svg);
+  const hit=svgEl('rect',{x:ml,y:mt,width:W-ml-mr,height:H-mt-mb,fill:'transparent'},svg);
+  const tip=$('#tip1');
+  hit.addEventListener('mousemove',e=>{const r=svg.getBoundingClientRect();const sx=(e.clientX-r.left)*W/r.width;let t=Math.round(((sx-ml)/(W-ml-mr))*days*2)/2;t=Math.max(0,Math.min(days,t));
+    const i=Math.round(t*2);cross.setAttribute('x1',X(t));cross.setAttribute('x2',X(t));cross.setAttribute('opacity',.4);
+    tip.style.display='block';tip.innerHTML=`day ${t}<br>normal ${fmt(nrm[i].v)} ${o.unit}<br>disrupted ${fmt(dis[i].v)} ${o.unit}`;
+    const px=X(t)*r.width/W;tip.style.left=(px>r.width*.6?px-tip.offsetWidth-10:px+10)+'px';tip.style.top='20px'});
+  hit.addEventListener('mouseleave',()=>{tip.style.display='none';cross.setAttribute('opacity',0)});
+}
+
+/* ============ render: module 2 ============ */
+function renderNet(R){
+  const svg=$('#net');svg.innerHTML='';
+  const defs=svgEl('defs',{},svg);
+  ['n','r'].forEach(k=>{const m=svgEl('marker',{id:'ar'+k,viewBox:'0 0 10 10',refX:9,refY:5,markerWidth:7,markerHeight:7,orient:'auto-start-reverse'},defs);svgEl('path',{d:'M0 0 L10 5 L0 10z',fill:k==='r'?'#C62828':'#6B7887'},m)});
+  const BW=180,BH=56;
+  const colr={green:['#E8F5EC','#2E9E4A'],amber:['#FDF4DC','#E0A100'],red:['#FBE9E9','#C62828']};
+  // edges
+  NODES.filter(n=>n.parent).forEach(n=>{
+    const p=BYID[n.parent];const r=R[n.id];
+    const x1=p.x+BW,y1=p.y+BH/2,x2=n.x-4,y2=n.y+BH/2;const mx=(x1+x2)/2;
+    const bad=r.D>0||r.F<1;
+    const cut=n.id==='DB'&&S.routeOut&&!r.rerouted;
+    svgEl('path',{d:`M${x1} ${y1} C${mx} ${y1}, ${mx} ${y2}, ${x2} ${y2}`,fill:'none',stroke:cut?'#C62828':bad?'#C62828':'#8C98A6','stroke-width':bad?2.4:1.6,'stroke-dasharray':cut?'4 5':'none','marker-end':`url(#ar${bad?'r':'n'})`},svg);
+    const lbl=r.D>0?(Number.isFinite(r.D)?`+${r.D} d`:'no supply'):`${n.L - n.tr >=0?'':''}${n.tr} d transit`;
+    const tx=mx, ty=(y1+y2)/2-6;
+    svgEl('rect',{x:tx-36,y:ty-11,width:72,height:16,fill:'#fff',stroke:bad?'#E4A3A3':'#D6DCE4'},svg);
+    svgEl('text',{x:tx,y:ty+1,'text-anchor':'middle','font-size':10,'font-family':'IBM Plex Mono',fill:bad?'#A61F1F':'#44515F'},svg).textContent=lbl;
+  });
+  // alt route
+  if(S.planB==='reroute'||S.planB==='combo'||R.DB.rerouted){
+    const p=BYID.DA,n=BYID.DB;
+    svgEl('path',{d:`M${p.x+60} ${p.y} C${p.x+60} ${n.y-60}, ${n.x-80} ${n.y-70}, ${n.x+30} ${n.y-2}`,fill:'none',stroke:'#5B8DD6','stroke-width':1.6,'stroke-dasharray':'6 5','marker-end':'url(#arn)'},svg);
+    svgEl('text',{x:p.x+70,y:n.y-50,'font-size':10,'font-family':'IBM Plex Mono',fill:'#2A5687'},svg).textContent='Route-2 via Pass-2 (Plan B option)';
+  }
+  // lateral
+  LATERAL.forEach(([a,b])=>{const A=BYID[a],B=BYID[b];const x=A.x+BW+6;
+    svgEl('path',{d:`M${x} ${A.y+BH/2} C${x+40} ${A.y+BH/2}, ${x+40} ${B.y+BH/2}, ${x} ${B.y+BH/2}`,fill:'none',stroke:'#8FA9C8','stroke-width':1.4,'stroke-dasharray':'3 4','marker-end':'url(#arn)','marker-start':'url(#arn)'},svg)});
+  // nodes
+  NODES.forEach(n=>{
+    const r=R[n.id];const [bg,bd]=colr[r.risk];const isSrc=n.id===S.source;
+    const g=svgEl('g',{class:'node',transform:`translate(${n.x},${n.y})`,tabindex:0,role:'button','aria-label':`${n.name}, ${RB[r.risk][1]}. Click to make disruption source.`},svg);
+    svgEl('rect',{class:'box',width:BW,height:BH,fill:bg,stroke:bd,'stroke-width':isSrc?2.6:1.4},g);
+    svgEl('rect',{width:5,height:BH,fill:bd},g);
+    svgEl('text',{x:14,y:20,'font-size':13,'font-weight':600,'font-family':'IBM Plex Sans',fill:'#14202E'},g).textContent=n.name;
+    const sub=n.type==='post'?(r.short>0?`short ${fmt(r.short,1)} d from d${fmt(r.Y,1)}`:`${fmt(r.Y,1)} d stock · next d${Number.isFinite(r.A)?r.A:'—'}`):(r.lateKids?`${r.lateKids} dispatch${r.lateKids>1?'es':''} late`:r.D>0?'delay absorbed':n.role);
+    svgEl('text',{x:14,y:37,'font-size':10.5,'font-family':'IBM Plex Mono',fill:'#44515F'},g).textContent=sub;
+    svgEl('text',{x:14,y:50,'font-size':9.5,'font-family':'IBM Plex Mono',fill:bd==='#E0A100'?'#7D5300':bd},g).textContent=`${RB[r.risk][0]} ${RB[r.risk][1]}${isSrc?' · SOURCE':''}`;
+    if(isSrc){svgEl('text',{x:BW-8,y:14,'text-anchor':'end','font-size':12,fill:'#7A3E9D','font-weight':700},g).textContent='⚡'}
+    const pick=()=>{S.source=n.id;syncControls();renderAll()};
+    g.addEventListener('click',pick);g.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();pick()}});
+  });
+}
+function renderRipple(R){
+  renderNet(R);
+  const it=ITEMS[S.item];const src=R[S.source];
+  const sub=[...subtree(S.source)].map(id=>R[id]);
+  const affected=sub.filter(r=>r.risk!=='green'&&r.n.id!==S.source);
+  const reds=urgentPosts(R);
+  const urg=reds[0];
+  $('#urgent').innerHTML=urg?`<div class="urgent"><h4>MOST URGENT · ${esc(urg.n.name.toUpperCase())}</h4><p>Runs out of ${it.name.toLowerCase()} on <b>day ${fmt(urg.Y,1)}</b>, with delivery on ${Number.isFinite(urg.A)&&urg.A<=HORIZON?'<b>day '+urg.A+'</b>':'<b>no date in 14 d</b>'}. It is first because it has the largest priority × shortage (priority ${urg.n.prio}, shortage ${fmt(urg.short,1)} d). <b>Action:</b> ${esc(actionFor(R,urg.n.id))}.</p></div>`
+    :`<div class="urgent ok"><h4>NO SHORTAGE EXPECTED</h4><p>${sub.some(r=>r.risk==='amber')?'Some nodes are delayed or thin, but every post holds until delivery.':'The network absorbs this disruption.'}</p></div>`;
+  const posts=sub.filter(r=>r.n.type==='post');
+  const delayed=posts.filter(r=>r.D>0||r.F<1);
+  $('#flow').innerHTML=`
+   <li><b>Supply delay</b>${S.delay||S.short||S.routeOut?esc(src.why.concat(S.routeOut&&S.source!=='DB'?R.DB.why:[]).join('; ')):'No delay set. Use the sliders above or Module 01.'}</li>
+   <li><b>Inventory reduction</b>${src.n.type==='depot'?`${src.n.name} holds ${fmt(src.s)} ${it.unit} (${fmt(src.s/src.c,1)} d of outflow). ${src.lateKids?`It covers ${(src.queue||[]).filter(q=>q.ok).length} of ${(src.queue||[]).length} scheduled dispatches before running dry.`:'Its buffer covers all scheduled dispatches.'}`:`${src.n.name} stock falls to ${fmt(Math.max(0,src.s-src.c*Math.min(src.A,HORIZON)))} ${it.unit} by delivery.`}</li>
+   <li><b>Potential shortage</b>${reds.length?reds.map(r=>`${r.n.name} from day ${fmt(r.Y,1)} (${fmt(r.short,1)} d)`).join(', '):'None expected within 14 days.'}</li>
+   <li><b>Downstream disruption</b>${affected.length?`${affected.length} node${affected.length>1?'s':''} downstream affected: ${affected.filter(r=>r.risk==='red').length} red, ${affected.filter(r=>r.risk==='amber').length} amber. ${delayed.length} post deliver${delayed.length===1?'y':'ies'} late or short.`:'No downstream node affected.'}</li>
+   <li><b>Recommended action</b>${urg?esc(actionFor(R,urg.n.id)):affected.length?esc(actionFor(R,affected[0].n.id)):'Continue normal schedule; monitor.'}</li>`;
+  const rows=NODES.map(n=>R[n.id]).sort((a,b)=>({red:0,amber:1,green:2}[a.risk]-{red:0,amber:1,green:2}[b.risk])||(a.Y??99)-(b.Y??99));
+  $('#impactTbl').innerHTML=`<thead><tr><th>Node</th><th>Risk</th><th class="n">Stock lasts</th><th class="n">Delivery day</th><th class="n">Time to shortage</th><th class="n">P(stock-out)</th><th>Reason</th><th>Recommended action</th></tr></thead><tbody>${rows.map(r=>{
+    const post=r.n.type==='post';
+    return `<tr><td><b>${r.n.name}</b><br><span style="font-size:11.5px;color:var(--muted)">${r.n.role}</span></td><td>${badge(r.risk)}</td>
+     <td class="n">${post?fmt(r.Y,1)+' d':fmt(r.s/r.c,1)+' d'}</td><td class="n">${Number.isFinite(r.A)&&r.A<=HORIZON?'day '+r.A:'none ≤14 d'}${r.D>0&&Number.isFinite(r.D)?`<br><span style="color:var(--crit-ink);font-size:11px">+${r.D} d</span>`:''}</td>
+     <td class="n">${post?(r.short>0?'day '+fmt(r.Y,1):'—'):'—'}</td><td class="n">${post?fmt(r.P*100)+'%':'—'}</td>
+     <td class="reason">${esc(explain(R,r.n.id).join(' → ')||'Not on the disrupted path; schedule unchanged.')}</td><td style="font-size:12.5px">${esc(actionFor(R,r.n.id))}</td></tr>`}).join('')}</tbody>`;
+}
+
+/* ============ render: module 3 ============ */
+let lastRun=null;
+function renderStress(){
+  const it=ITEMS[S.item];
+  $('#stSrcHelp').textContent=`Applied at ${BYID[S.source].name} (shared source). Change it in Module 01 or 02.`;
+  document.querySelectorAll('#stDelay button').forEach(b=>b.setAttribute('aria-pressed',+b.dataset.d===S.delay));
+  const RA=simulate(S,{});const mA=metrics(RA,0);
+  const pB=buildPlan(S.planB);const RB_=simulate(S,pB);const mB=metrics(RB_,pB.cost);
+  const [win,why]=decide(mA,mB);
+  const [sA,sB]=score([mA,mB]);
+  const names={reroute:'Reroute via Route-2',air:'Emergency airlift',realloc:'Lateral reallocation',combo:'Reroute + airlift'};
+  const bName=names[S.planB];
+  const W=mA, L_=mB;
+  // recommendation
+  const wm=win==='A'?mA:mB, lm=win==='A'?mB:mA;
+  const trade=[];
+  if(mB.cost>mA.cost)trade.push(`Plan B costs ₹${fmt(mB.cost-mA.cost,1)} lakh more (illustrative)`);
+  if(mB.avgArr<mA.avgArr)trade.push(`Plan B brings average next delivery ${fmt(mA.avgArr-mB.avgArr,1)} d earlier`);
+  if(mB.avgArr>mA.avgArr)trade.push(`Plan B delivers ${fmt(mB.avgArr-mA.avgArr,1)} d later on average`);
+  if(mB.sumShort<mA.sumShort)trade.push(`Plan B removes ${fmt(mA.sumShort-mB.sumShort,1)} post-days of shortage`);
+  if(mB.sumShort>mA.sumShort)trade.push(`Plan B leaves ${fmt(mB.sumShort-mA.sumShort,1)} more post-days of shortage`);
+  pB.notes.forEach(n=>trade.push(n));
+  const noShortage=mA.stockouts===0&&mB.stockouts===0;
+  let html=`<div class="reco"><h4>RECOMMENDATION · ESTIMATE · COMMANDER DECIDES</h4><div class="big">${win==='A'?'Plan A: keep current schedule':'Plan B: '+bName}</div>
+    <ul><li><b>Why:</b> ${why}. ${win==='A'?'Plan A':'Plan B'} leaves ${wm.stockouts} post${wm.stockouts===1?'':'s'} short against ${lm.stockouts}; weighted score ${fmt((win==='A'?sA:sB).total,2)} vs ${fmt((win==='A'?sB:sA).total,2)}.</li>
+    ${trade.length?`<li><b>Trade-offs:</b> ${trade.join('; ')}.</li>`:''}
+    ${noShortage?'<li>Neither plan has a shortage in this scenario; the choice rests on time and cost.</li>':''}</ul></div>`;
+  const best=Math.min(mA.stockouts,mB.stockouts);
+  if(best>0){
+    const Rw=win==='A'?RA:RB_;const rem=POSTS.map(p=>Rw[p.id]).filter(r=>r.short>0);
+    const units=rem.reduce((a,r)=>a+r.short*r.c,0);const sorties=Math.ceil(units*it.kg/SORTIE_KG);
+    const consCut=Math.max(...rem.map(r=>(1-r.Y/Math.min(r.A,HORIZON))*100));
+    html+=`<div class="limit"><b>No plan meets all constraints.</b> ${rem.map(r=>r.n.name).join(', ')} still ${rem.length>1?'run':'runs'} short (${fmt(units)} ${it.unit} in total). To close the gap, any one of these would be needed: <b>${sorties} more airlift sortie${sorties>1?'s':''}</b> of 2,000 kg; a consumption cut of about <b>${fmt(Math.min(99,consCut))}%</b> at the worst post; or the disruption cleared ${fmt(Math.max(...rem.map(r=>r.short)),1)} d earlier.</div>`;
+  }
+  $('#reco').innerHTML=html;
+  // comparison table
+  const rowsDef=[
+    ['Posts with stock-out (est.)',m=>m.stockouts,v=>v,'low'],
+    ['Shortage (post-days)',m=>m.sumShort,v=>fmt(v,1),'low'],
+    ['Shortage volume',m=>m.shortUnits,v=>fmt(v)+' '+it.unit,'low'],
+    ['Highest stock-out probability',m=>m.maxP,v=>fmt(v*100)+'%','low'],
+    ['Avg. next delivery (day)',m=>m.avgArr,v=>fmt(v,1),'low'],
+    ['Lowest margin (days)',m=>m.minMargin,v=>fmt(v,1),'high'],
+    ['Extra cost (₹ lakh, illustrative)',m=>m.cost,v=>fmt(v,1),'low'],
+    ['Weighted score (lower better)',(m,i)=>i===0?sA.total:sB.total,v=>fmt(v,2),'low'],
+  ];
+  $('#cmpTbl').innerHTML=`<thead><tr><th>Metric</th><th class="n">Plan A · current schedule</th><th class="n">Plan B · ${esc(bName)}</th></tr></thead><tbody>${rowsDef.map(([l,f,fm,dir])=>{
+    const a=f(mA,0),b=f(mB,1);const eq=Math.abs(a-b)<1e-9;const aB=!eq&&(dir==='low'?a<b:a>b),bB=!eq&&!aB;
+    return `<tr><td>${l}</td><td class="n ${aB?'better':''}">${fm(a)}</td><td class="n ${bB?'better':''}">${fm(b)}</td></tr>`}).join('')}</tbody>`;
+  drawBars(RA,RB_);
+  // all alternatives
+  const alts=['reroute','air','realloc','combo'].map(k=>{const p=buildPlan(k);const R=simulate(S,p);return {k,m:metrics(R,p.cost),notes:p.notes}});
+  const all=[{k:'A',m:mA,notes:[]},...alts];const sc=score(all.map(a=>a.m));
+  const bestIdx=all.map((a,i)=>i).sort((i,j)=>all[i].m.stockouts-all[j].m.stockouts||sc[i].total-sc[j].total)[0];
+  $('#altTbl').innerHTML=`<thead><tr><th>Option</th><th class="n">Short</th><th class="n">Cost</th><th class="n">Score</th></tr></thead><tbody>${all.map((a,i)=>`<tr${i===bestIdx?' style="background:var(--navy-100)"':''}><td>${a.k==='A'?'Plan A · current':names[a.k]}${i===bestIdx?' <span class="fact">BEST</span>':''}${a.notes.length?`<br><span class="na" style="font-size:11.5px">${esc(a.notes[0])}</span>`:''}</td><td class="n">${a.m.stockouts}</td><td class="n">${fmt(a.m.cost,1)}</td><td class="n">${fmt(sc[i].total,2)}</td></tr>`).join('')}</tbody>`;
+  lastRun={mA,mB,win,bName};
+}
+function drawBars(RA,RB_){
+  const svg=$('#barChart');svg.innerHTML='';const W=520,H=250,ml=40,mr=8,mt=12,mb=40;
+  const ps=POSTS.map(p=>({n:p,a:RA[p.id].margin,b:RB_[p.id].margin}));
+  const vals=ps.flatMap(p=>[p.a,p.b]).filter(Number.isFinite);const mx=Math.min(30,Math.max(4,...vals)),mn=Math.max(-20,Math.min(-2,...vals));
+  const Y=v=>mt+(H-mt-mb)*(mx-v)/(mx-mn);const gw=(W-ml-mr)/ps.length;const bw=Math.min(22,gw/3);
+  for(let v=Math.ceil(mn/2)*2;v<=mx;v+=2){svgEl('line',{x1:ml,x2:W-mr,y1:Y(v),y2:Y(v),stroke:v===0?'#14202E':'#E6EAF0','stroke-width':v===0?1.2:1},svg);svgEl('text',{x:ml-5,y:Y(v)+4,'text-anchor':'end','font-size':10,fill:'#6B7887','font-family':'IBM Plex Mono'},svg).textContent=v}
+  const tip=$('#tip2');
+  ps.forEach((p,i)=>{const cx=ml+gw*i+gw/2;
+    [[p.a,'#17365D',-1,'Plan A'],[p.b,'#5B8DD6',1,'Plan B']].forEach(([v,c,s,lab])=>{
+      const x=cx+s*(bw/2+1)-bw/2;const y0=Y(0),y1=Y(Math.max(mn,Math.min(mx,v)));
+      const rct=svgEl('rect',{x,y:Math.min(y0,y1),width:bw,height:Math.max(1,Math.abs(y1-y0)),fill:c},svg);
+      if(v<0)svgEl('rect',{x,y:Math.min(y0,y1),width:bw,height:Math.max(1,Math.abs(y1-y0)),fill:'none',stroke:'#C62828','stroke-width':1.5},svg);
+      const show=e=>{const r=svg.getBoundingClientRect();tip.style.display='block';tip.innerHTML=`${p.n.name}<br>${lab}: ${fmt(v,1)} d ${v<0?'(shortage)':'margin'}`;tip.style.left=Math.min(r.width-150,(x+bw)*r.width/W+6)+'px';tip.style.top=(Math.min(y0,y1)*r.height/H)+'px'};
+      rct.addEventListener('mousemove',show);rct.addEventListener('mouseleave',()=>tip.style.display='none');
+    });
+    svgEl('text',{x:cx,y:H-mb+16,'text-anchor':'middle','font-size':10.5,fill:'#14202E','font-family':'IBM Plex Sans'},svg).textContent=p.n.name.replace('Post ','');
+    const worst=Math.min(p.a,p.b);if(worst<0)svgEl('text',{x:cx,y:H-mb+29,'text-anchor':'middle','font-size':9.5,fill:'#A61F1F','font-family':'IBM Plex Mono'},svg).textContent='short';
+  });
+}
+
+/* ============ history ============ */
+let HIST=[];
+try{HIST=JSON.parse(localStorage.getItem('fsi_hist')||'[]')}catch(e){HIST=[]}
+const saveHist=()=>{try{localStorage.setItem('fsi_hist',JSON.stringify(HIST))}catch(e){}};
+function renderHist(){
+  const t=$('#histTbl');
+  if(!HIST.length){t.innerHTML='<tbody><tr><td class="empty" style="border:0">No runs yet. Set up a scenario in Module 03 and press “Save run to history”.</td></tr></tbody>';return}
+  t.innerHTML=`<thead><tr><th>#</th><th>Saved</th><th>Scenario</th><th class="n">Short A</th><th class="n">Short B</th><th>Recommended</th><th></th></tr></thead><tbody>${HIST.map((h,i)=>`<tr><td class="n">${HIST.length-i}</td><td style="font-family:var(--mono);font-size:12px">${h.at}</td>
+   <td style="font-size:12.5px">${ITEMS[h.sc.item].name} · ${BYID[h.sc.source].name} · +${h.sc.delay} d · use ${h.sc.cons>=0?'+':''}${h.sc.cons}% · stock −${h.sc.inv}%${h.sc.short?` · short ${h.sc.short}%`:''}${h.sc.routeOut?' · Route-1 closed':''}</td>
+   <td class="n">${h.a}</td><td class="n">${h.b}</td><td>${esc(h.reco)}</td><td><button type="button" class="btn sm" data-restore="${i}">Restore</button></td></tr>`).join('')}</tbody>`;
+  t.querySelectorAll('[data-restore]').forEach(b=>b.onclick=()=>{const h=HIST[+b.dataset.restore];Object.assign(S,JSON.parse(JSON.stringify(h.sc)));syncControls();renderAll();location.hash='#m3'});
+}
+
+/* ============ dataset table ============ */
+function renderDataset(){
+  const it=ITEMS[S.item];
+  $('#dsHint').textContent=`${it.name} · units: ${it.unit}`;
+  $('#dsTbl').innerHTML=`<thead><tr><th>Node</th><th>Type</th><th>Supplied by / route</th><th class="n">Personnel</th><th class="n">Altitude (ft)</th><th class="n">Daily use</th><th class="n">Stock</th><th class="n">Days of stock</th><th class="n">Next delivery</th><th class="n">Load size</th></tr></thead><tbody>${NODES.map(n=>{const v=nodeVals(n);return `<tr><td><b>${n.name}</b></td><td>${n.role}</td><td style="font-size:12.5px">${n.parent?BYID[n.parent].name+' · ':''}${n.route||(n.parent?'':'')}${n.type==='post'?`${BYID[n.parent].name===undefined?'':''}`:''}</td><td class="n">${n.troops??'—'}</td><td class="n">${n.alt?fmt(n.alt):'—'}</td><td class="n">${fmt(v.c,1)}</td><td class="n">${fmt(v.s)}</td><td class="n">${fmt(v.s/v.c,1)}</td><td class="n">day ${v.L}</td><td class="n">${fmt(v.q)}</td></tr>`}).join('')}</tbody>`;
+}
+NODES.forEach(n=>{if(n.type==='post')n.route=n.parent==='DB'?'track from Depot-B':'valley track'});
+
+/* ============ wiring ============ */
+function syncControls(){
+  $('#itemSel').value=S.item;
+  $('#rSrc').value=S.source;
+  $('#rDelay').value=S.delay;$('#orDelay').textContent=`+${S.delay} d`;
+  $('#rShort').value=S.short;$('#orShort').textContent=`${S.short}%`;
+  $('#stCons').value=S.cons;$('#ostCons').textContent=`${S.cons>=0?'+':''}${S.cons}%`;
+  $('#stInv').value=S.inv;$('#ostInv').textContent=`−${S.inv}%`;
+  $('#stRoute').checked=S.routeOut;$('#planB').value=S.planB;$('#prio').value=S.prio;
+  ['#f-stock','#f-cons','#f-lead'].forEach(f=>$(f).classList.remove('invalid'));simValid=true;
+}
+function renderAll(){
+  renderBar();renderSimForm();
+  const R=simulate(S,{});
+  renderSimOut();renderOverview(R);renderRipple(R);renderStress();renderHist();renderDataset();
+}
+// populate selects
+$('#itemSel').innerHTML=Object.entries(ITEMS).map(([k,v])=>`<option value="${k}">${v.name} (${v.unit})</option>`).join('');
+const nodeOpts=NODES.map(n=>`<option value="${n.id}">${n.name} · ${n.role}</option>`).join('');
+$('#simNode').innerHTML=nodeOpts;$('#rSrc').innerHTML=nodeOpts;
+$('#stDelay').innerHTML=[0,3,5,7].map(d=>`<button type="button" data-d="${d}" aria-pressed="false">${d?'+'+d+' d':'None'}</button>`).join('');
+
+$('#itemSel').onchange=e=>{S.item=e.target.value;syncControls();renderAll()};
+$('#simNode').onchange=e=>{S.source=e.target.value;syncControls();renderAll()};
+['#inStock','#inCons','#inLead'].forEach(id=>$(id).addEventListener('input',()=>{if(readSim()){const R=simulate(S,{});renderBar();renderSimOut();renderOverview(R);renderRipple(R);renderStress();renderDataset()}else renderSimOut()}));
+$('#inDelay').oninput=e=>{S.delay=+e.target.value;syncControls();renderAll()};
+$('#inChg').oninput=e=>{S.cons=+e.target.value;syncControls();renderAll()};
+$('#resetSim').onclick=()=>{delete S.ovr[ovKey(S.source)];S.delay=0;S.cons=0;syncControls();renderAll()};
+$('#toRipple').onclick=()=>{document.getElementById('m2').scrollIntoView()};
+$('#rSrc').onchange=e=>{S.source=e.target.value;syncControls();renderAll()};
+$('#rDelay').oninput=e=>{S.delay=+e.target.value;syncControls();renderAll()};
+$('#rShort').oninput=e=>{S.short=+e.target.value;syncControls();renderAll()};
+$('#resetRipple').onclick=()=>{S.delay=0;S.short=0;S.source='DB';syncControls();renderAll()};
+$('#stDelay').onclick=e=>{const b=e.target.closest('button');if(!b)return;S.delay=+b.dataset.d;syncControls();renderAll()};
+$('#stCons').oninput=e=>{S.cons=+e.target.value;syncControls();renderAll()};
+$('#stInv').oninput=e=>{S.inv=+e.target.value;syncControls();renderAll()};
+$('#stRoute').onchange=e=>{S.routeOut=e.target.checked;syncControls();renderAll()};
+$('#planB').onchange=e=>{S.planB=e.target.value;renderAll()};
+$('#prio').onchange=e=>{S.prio=e.target.value;renderAll()};
+$('#resetStress').onclick=()=>{S.cons=0;S.inv=0;S.routeOut=false;S.planB='reroute';S.prio='balanced';syncControls();renderAll()};
+$('#saveRun').onclick=()=>{if(!lastRun)return;const d=new Date();
+  HIST.unshift({at:d.toLocaleString('en-IN',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'}),sc:JSON.parse(JSON.stringify(S)),a:lastRun.mA.stockouts,b:lastRun.mB.stockouts,reco:lastRun.win==='A'?'Plan A · current schedule':'Plan B · '+lastRun.bName});
+  HIST=HIST.slice(0,20);saveHist();renderHist()};
+$('#clearHist').onclick=()=>{HIST=[];saveHist();renderHist()};
+
+syncControls();renderAll();
+</script>
+</body>
+</html>
