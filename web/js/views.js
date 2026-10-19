@@ -78,9 +78,10 @@
     const counts = Object.fromEntries(ITEM_KEYS.map(k => [k, E.decisionClock(st, k).filter(r => r.status !== 'covered').length]));
     const rows = E.decisionClock(st, item).sort((a, b) => (a.status === 'covered') - (b.status === 'covered') || a.actBy - b.actBy);
     root.innerHTML = `
-      <p class="intro">Risk scores tell you <i>that</i> a post is in trouble. The Decision Clock tells you <b>by when you must act, and with what</b>. For every post it works back from the conservative stock-out time (90% sure stock lasts until then) to the latest moment each resupply option can still be ordered. Cheaper options close first.</p>
+      <p class="intro">For every post: <b>the latest time to order each kind of resupply</b> so it arrives before stock runs out. Cheaper options close first.</p>
+      <details class="howto"><summary>How is this worked out?</summary>We take the time by which stock is 90% sure to last ("safe until"), then subtract each option's travel time. Air maintenance counts only days the real forecast shows as flyable. A rush convoy needs spare stock at the depot.</details>
       <div class="itabs" role="tablist" aria-label="Supply class">${ITEM_KEYS.map(k => `<button type="button" role="tab" aria-selected="${k === item}" data-k="${k}">${ITEMS[k].name}${counts[k] ? `<span class="cnt">${counts[k]}</span>` : ''}</button>`).join('')}</div>
-      <div class="legend" style="margin:-4px 0 10px"><span><b style="font-family:var(--mono)">T C D A</b> = latest time to order: lateral Transfer · expedite Convoy · Detour via Pass-2 · Air maintenance</span><span>▼ scheduled delivery</span><span><i style="border-color:#C62828"></i>conservative stock-out (90%)</span><span><i class="box" style="background:repeating-linear-gradient(135deg,rgba(198,40,40,.5) 0 3px,transparent 3px 6px)"></i>no option arrives in time</span></div>
+      <div class="legend" style="margin:-4px 0 10px"><span><b style="font-family:var(--mono)">T C D A</b> = latest time to order: lateral Transfer · expedite Convoy · Detour via Pass-2 · Air maintenance</span><span>▼ next scheduled delivery</span><span><i style="border-color:#C62828"></i>safe until (stock may run out after this)</span><span><i class="box" style="background:repeating-linear-gradient(135deg,rgba(198,40,40,.5) 0 3px,transparent 3px 6px)"></i>no option arrives in time</span></div>
       <div class="clock">${rows.map(row => clockRow(st, row, it)).join('')}</div>
       <p class="note">Lead times: lateral transfer 1 d · expedite convoy = road time (+ porter / animal transport leg where needed) + 0.5 d, only if the depot has free stock · detour = Route-2 to Depot-B + road · air maintenance 1 d, only on days the <b>real Open-Meteo forecast</b> shows flyable (snow &lt; 1 cm, rain &lt; 2 mm, wind &lt; 40 km/h). Costs are illustrative.</p>`;
     rows.forEach(row => drawTimeline(ui.$('#tl-' + row.n.id), row));
@@ -96,7 +97,7 @@
     const logged = (st.decisions || []).filter(d => d.post === n.name && d.item === it.name);
     return `<div class="crow ${row.status}" id="row-${n.id}">
       <div class="who"><b>${esc(n.name)}</b> ${ui.statusTag(row.status)}
-        <div class="meta">${fmt(r.sEff)} ${it.unit} · ${fmt(r.c, 1)} ${it.unit}/day · lasts ${fmt(r.Y, 1)} d (safe ${fmt(r.Yc, 1)} d)</div>
+        <div class="meta">${fmt(r.sEff)} ${it.unit} in stock · uses ${fmt(r.c, 0)} ${it.unit}/day · lasts about ${fmt(r.Y, 1)} days</div>
         <div class="meta">Next delivery ${Number.isFinite(r.A) && r.A <= CONFIG.horizon ? ui.when(r.A) : 'none in 14 d'} · report ${rep.ageH} h old${fr !== 'fresh' ? ` <b style="color:var(--warn-ink)">(${fr})</b>` : ''}</div></div>
       <div class="tl"><svg class="fluid" id="tl-${n.id}" viewBox="0 0 620 78" role="img" aria-label="Timeline for ${esc(n.name)}"></svg></div>
       <div class="dec"><div class="head">${row.status === 'covered' ? 'No action needed' : row.status === 'late' ? 'Shortage unavoidable' : esc(row.first.label)}
@@ -128,7 +129,7 @@
     const defs = s('defs', {}); const pat = ui.svg('pattern', { id: 'hatch-' + row.n.id, width: 6, height: 6, patternUnits: 'userSpaceOnUse', patternTransform: 'rotate(45)' }, defs);
     ui.svg('rect', { width: 3, height: 6, fill: 'rgba(198,40,40,.45)' }, pat);
     if (r.Yc < H) { s('line', { x1: X(r.Yc), x2: X(r.Yc), y1: 22, y2: 50, stroke: '#C62828', 'stroke-width': 2 });
-      s('text', { x: X(r.Yc) + 3, y: 76, 'font-size': 9.5, 'font-family': 'IBM Plex Mono', fill: '#A61F1F', 'text-anchor': X(r.Yc) > W - 90 ? 'end' : 'start' }).textContent = 'stock-out risk ' + ui.when(r.Yc).replace(/^\w+ /, ''); }
+      s('text', { x: X(r.Yc) + 3, y: 76, 'font-size': 9.5, 'font-family': 'IBM Plex Mono', fill: '#A61F1F', 'text-anchor': X(r.Yc) > W - 90 ? 'end' : 'start' }).textContent = 'safe until ' + ui.when(r.Yc).replace(/^\w+ /, ''); }
     if (Number.isFinite(r.A) && r.A <= H) { s('path', { d: `M${X(r.A) - 6} 18 L${X(r.A) + 6} 18 L${X(r.A)} 28Z`, fill: '#17365D' });
       s('text', { x: X(r.A), y: 12, 'text-anchor': 'middle', 'font-size': 9.5, 'font-family': 'IBM Plex Mono', fill: '#17365D' }).textContent = 'delivery'; }
     // act-by flags for open options (stacked when close together)
@@ -148,7 +149,7 @@
   V.reports = (root, st) => {
     const samples = FSI.SAMPLE_SITREPS.map(s => s.replace('{DTG}', ui.dtg()));
     root.innerHTML = `
-      <p class="intro">Forward posts often have only HF radio, satellite text or a patchy phone link, not a live sensor feed. They can send <b>one short coded line</b>. The system parses it, checks it against what it expected, and tracks how fresh every post's figures are. Old figures widen the uncertainty, which pulls deadlines earlier on the Decision Clock.</p>
+      <p class="intro">Posts with only radio or satellite text send <b>one short line</b>. Paste it below. The system reads it, checks the numbers, and updates the post. Posts that have not reported for a while get earlier deadlines, because their figures are less certain.</p>
       <div class="grid r-main">
         <div class="panel"><div class="ph"><h3>Receive a SITREP</h3></div><div class="pb">
           <div class="fmt">SITREP &lt;POST&gt; &lt;DDHHMM&gt; F&lt;SKO L&gt; R&lt;rations kg&gt; M&lt;medical kits&gt; S&lt;MT spares&gt; [STR&lt;strength&gt;]<br>

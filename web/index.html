@@ -7,26 +7,27 @@
 <meta name="description" content="Decision-support prototype for forward logistics: act-by deadlines, disruption simulation and plan comparison. Synthetic data.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans+Condensed:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/app.css?v=5">
+<link rel="stylesheet" href="css/app.css?v=7">
 </head>
 <body>
 <div class="shell">
   <aside class="side" id="side" aria-label="Main navigation">
     <div class="brand"><b>FORWARD SUPPLY<br>INTELLIGENCE</b><span>SIH26251 · TEAM VAN GUARD</span></div>
     <nav id="nav">
-      <div class="grp">SITUATION</div>
-      <a href="#/overview"><span class="k">00</span>Command overview</a>
-      <a href="#/clock"><span class="k">01</span>Decision Clock<span class="new">KEY</span></a>
-      <a href="#/reports"><span class="k">02</span>Field reports</a>
-      <a href="#/weather"><span class="k">02b</span>Weather (real)<span class="new">LIVE</span></a>
-      <div class="grp">SIMULATE</div>
-      <a href="#/whatif"><span class="k">03</span>What-If simulator</a>
-      <a href="#/ripple"><span class="k">04</span>Ripple-effect analyzer</a>
-      <a href="#/stress"><span class="k">05</span>Stress test &amp; plans</a>
-      <a href="#/winter"><span class="k">06</span>Advance Winter Stocking</a>
-      <div class="grp">OUTPUT</div>
-      <a href="#/brief"><span class="k">07</span>Commander's brief</a>
-      <a href="#/methods"><span class="k">08</span>Methods &amp; data</a>
+      <div class="grp">DAILY USE</div>
+      <a href="#/overview"><span class="k">●</span>Today</a>
+      <a href="#/map"><span class="k">●</span>Sector map</a>
+      <a href="#/clock"><span class="k">●</span>Action deadlines</a>
+      <a href="#/reports"><span class="k">●</span>Field reports (SITREP)</a>
+      <a href="#/winter"><span class="k">●</span>Winter stocking (AWS)</a>
+      <a href="#/brief"><span class="k">●</span>Commander's brief</a>
+      <details id="tools"><summary>PLANNING TOOLS</summary>
+        <a href="#/whatif"><span class="k">○</span>What-if: one delay</a>
+        <a href="#/ripple"><span class="k">○</span>Knock-on effects</a>
+        <a href="#/stress"><span class="k">○</span>Compare plans</a>
+        <a href="#/weather"><span class="k">○</span>Weather (real data)</a>
+        <a href="#/methods"><span class="k">○</span>How it works</a>
+      </details>
     </nav>
     <div class="foot">Prototype. Synthetic logistics data, fictional sites. <a href="https://open-meteo.com/" target="_blank" rel="noopener" style="color:#C9D6E6">Weather data by Open-Meteo.com</a> (CC BY 4.0). Recommendations only: a human decides.</div>
   </aside>
@@ -37,20 +38,22 @@
       <span class="sp"></span>
       <div><label for="itemSel">Supply class</label><select id="itemSel"></select></div>
       <span class="dtg" id="dtg"></span>
-      <span class="demo" title="Logistics data and sites are fictional; weather is real">SYNTHETIC LOGISTICS · REAL WEATHER</span>
+      <span class="demo" title="Logistics data and sites are fictional; weather is real">DEMO DATA · REAL WEATHER</span>
     </header>
     <div class="scbar" id="scbar" aria-label="Shared scenario"></div>
     <main class="main" id="view" tabindex="-1"></main>
   </div>
 </div>
-<script src="js/data.js?v=5"></script>
-<script src="js/weather-data.js?v=5"></script>
-<script src="js/weather.js?v=5"></script>
-<script src="js/engine.js?v=5"></script>
-<script src="js/ui.js?v=5"></script>
-<script src="js/views.js?v=5"></script>
-<script src="js/views-sim.js?v=5"></script>
-<script src="js/views-weather.js?v=5"></script>
-<script src="js/app.js?v=5"></script>
+<script src="js/data.js?v=7"></script>
+<script src="js/weather-data.js?v=7"></script>
+<script src="js/weather.js?v=7"></script>
+<script src="js/engine.js?v=7"></script>
+<script src="js/ui.js?v=7"></script>
+<script src="js/views.js?v=7"></script>
+<script src="js/views-sim.js?v=7"></script>
+<script src="js/views-weather.js?v=7"></script>
+<script src="js/map.js?v=7"></script>
+<script src="js/today.js?v=7"></script>
+<script src="js/app.js?v=7"></script>
 </body>
 </html>

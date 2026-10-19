@@ -13,33 +13,33 @@ FSI.ITEMS = {
 // net: position in the network diagram; map: position on the schematic sector map
 FSI.NODES = [
   { id: 'DA', code: 'DPA', name: 'Depot-A', role: 'Rear supply depot (ASC / AOC)', type: 'depot', parent: null, L: 4, tr: 2,
-    route: 'Railhead (off-map)', stockDays: 20, qtyDays: 14, net: { x: 30, y: 195 }, map: { x: 70, y: 390 } },
+    route: 'Railhead (off-map)', stockDays: 20, qtyDays: 14, net: { x: 30, y: 195 }, map: { x: 60, y: 400 } },
   { id: 'DB', code: 'DPB', name: 'Depot-B', role: 'Forward supply depot', type: 'depot', parent: 'DA', L: 3, tr: 2,
-    route: 'Route-1 via Pass-1', stockDays: 5, qtyDays: 10, net: { x: 300, y: 110 }, map: { x: 420, y: 165 },
+    route: 'Route-1 via Pass-1', stockDays: 5, qtyDays: 10, labelLeft: true, net: { x: 300, y: 110 }, map: { x: 390, y: 175 },
     alt: { route: 'Route-2 via Pass-2', L: 5, cap: 0.6 } },
   { id: 'TH', code: 'HT1', name: 'Transit Camp T-1', role: 'Transit camp', type: 'depot', parent: 'DA', L: 2, tr: 1,
-    route: 'Valley road', stockDays: 6, qtyDays: 10, net: { x: 300, y: 330 }, map: { x: 330, y: 345 } },
+    route: 'Valley road', stockDays: 6, qtyDays: 10, net: { x: 300, y: 330 }, map: { x: 300, y: 355 } },
   { id: 'P1', cell: 'W1', code: 'KES', name: 'Post Kestrel', role: 'Forward post', type: 'post', parent: 'DB', L: 3, tr: 1,
     troops: 120, alt: 15200, prio: 2, stock: { F: 5, R: 7, M: 9, S: 12 }, qtyDays: 10,
-    net: { x: 610, y: 18 }, map: { x: 555, y: 85 } },
+    net: { x: 610, y: 18 }, map: { x: 560, y: 80 } },
   { id: 'P2', cell: 'W1', code: 'FAL', name: 'Post Falcon', role: 'Forward post', type: 'post', parent: 'DB', L: 5, tr: 2,
     lastMile: 'porter / animal transport', troops: 80, alt: 16100, prio: 3, stock: { F: 6, R: 8, M: 5, S: 9 }, qtyDays: 10,
-    net: { x: 610, y: 96 }, map: { x: 625, y: 165 } },
+    net: { x: 610, y: 96 }, map: { x: 520, y: 190 } },
   { id: 'P3', cell: 'W3', code: 'HER', name: 'Post Heron', role: 'Forward post', type: 'post', parent: 'DB', L: 4, tr: 1,
     troops: 100, alt: 14800, prio: 2, stock: { F: 9, R: 10, M: 12, S: 14 }, qtyDays: 10,
-    net: { x: 610, y: 174 }, map: { x: 565, y: 245 } },
+    net: { x: 610, y: 174 }, map: { x: 560, y: 280 } },
   { id: 'P4', cell: 'W3', code: 'OSP', name: 'Post Osprey', role: 'Forward post', type: 'post', parent: 'DB', L: 6, tr: 2,
     lastMile: 'porter / animal transport', troops: 60, alt: 17400, prio: 3, stock: { F: 7, R: 9, M: 8, S: 6 }, qtyDays: 10,
-    net: { x: 610, y: 252 }, map: { x: 440, y: 50 } },
+    net: { x: 610, y: 252 }, map: { x: 300, y: 70 } },
   { id: 'P5', cell: 'W2', code: 'KIT', name: 'Post Kite', role: 'Valley post', type: 'post', parent: 'TH', L: 2, tr: 1,
     troops: 140, alt: 11200, prio: 1, stock: { F: 8, R: 9, M: 10, S: 11 }, qtyDays: 10,
-    net: { x: 610, y: 330 }, map: { x: 480, y: 340 } },
+    net: { x: 610, y: 330 }, map: { x: 430, y: 410 } },
   { id: 'P6', cell: 'W2', code: 'MER', name: 'Post Merlin', role: 'Valley post', type: 'post', parent: 'TH', L: 4, tr: 1,
     troops: 90, alt: 12600, prio: 1, stock: { F: 7, R: 6, M: 9, S: 8 }, qtyDays: 10,
-    net: { x: 610, y: 408 }, map: { x: 610, y: 380 } },
+    net: { x: 610, y: 408 }, map: { x: 600, y: 370 } },
 ];
 FSI.LATERAL = [['P2', 'P3'], ['P5', 'P6']];
-FSI.PASSES = { P1: { x: 300, y: 250, label: 'Pass-1' }, P2: { x: 210, y: 110, label: 'Pass-2' } };
+FSI.PASSES = { P1: { x: 250, y: 270, label: 'Pass-1' }, P2: { x: 180, y: 130, label: 'Pass-2' } };
 
 FSI.CONFIG = {
   horizon: 14,          // days

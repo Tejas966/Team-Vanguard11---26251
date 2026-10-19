@@ -13,23 +13,36 @@
   const save = () => { try { localStorage.setItem(KEY, JSON.stringify(st)); } catch (e) { } };
 
   const PAGES = {
-    overview: ['Command overview', 'Where the sector stands and which decisions are due first'],
-    clock: ['Decision Clock', 'Latest time to act, per post and per option'],
+    overview: ['Today', 'What needs doing, where, and by when'],
+    map: ['Sector map', 'Click a post to see its supplies and next action'],
+    clock: ['Action deadlines', 'The latest time to act, for every post and supply'],
     reports: ['Field reports', 'Low-bandwidth SITREPs and how fresh each figure is'],
-    whatif: ['What-If simulator', 'Normal vs delayed delivery for one node'],
-    ripple: ['Ripple-effect analyzer', 'How one disruption spreads through the network'],
-    stress: ['Stress test & plans', 'Plan A vs Plan B under disruption'],
+    whatif: ['What-if: one delay', 'Normal vs delayed delivery for one node'],
+    ripple: ['Knock-on effects', 'How one disruption spreads through the network'],
+    stress: ['Compare plans', 'Plan A vs Plan B under disruption'],
     weather: ['Weather (real data)', 'Open-Meteo forecast and history driving demand and flying days'],
     winter: ['Advance Winter Stocking', 'Can we push enough up before the pass closes?'],
     brief: ["Commander's brief", 'One printable page from the current scenario'],
-    methods: ['Methods & data', 'Calculations, rules, references and the demo dataset'],
+    methods: ['How it works', 'Calculations, rules, references and the demo dataset'],
   };
   const route = () => { const r = (location.hash.replace(/^#\/?/, '') || 'overview').split('?')[0]; return PAGES[r] ? r : 'overview'; };
 
+  const TOOLS = ['whatif', 'ripple', 'stress', 'weather', 'methods'];
   function scenarioBar() {
+    const bar = ui.$('#scbar'), r = route(), active = st.delay || st.cons || st.short || st.inv || st.routeOut || st.wxStorm;
+    if (!TOOLS.includes(r)) {
+      bar.className = active ? 'banner' : ''; bar.style.display = active ? '' : 'none';
+      if (active) {
+        const parts = [st.delay ? `${E.BYID[st.source].name} resupply late by ${st.delay} day${st.delay > 1 ? 's' : ''}` : '', st.routeOut ? 'Route-1 via Pass-1 closed' : '', st.cons ? `use ${st.cons > 0 ? 'up' : 'down'} ${Math.abs(st.cons)}%` : '', st.inv ? `stock ${st.inv}% lower` : '', st.short ? `incoming loads ${st.short}% short` : '', st.wxStorm ? 'simulated snowstorm at W3' : ''].filter(Boolean);
+        bar.innerHTML = `<span><b>Situation in use:</b> ${parts.join(' · ')}</span><a class="btn sm" href="#/stress">Change</a><button type="button" class="btn sm" id="clearScn">Clear</button>`;
+        ui.$('#clearScn').onclick = () => FSI.set({ delay: 0, cons: 0, short: 0, inv: 0, routeOut: false, wxStorm: null });
+      }
+      return;
+    }
+    bar.className = 'scbar'; bar.style.display = '';
     const it = ITEMS[st.item], src = E.BYID[st.source];
     const c = (on, bad, t) => `<span class="chip ${bad ? 'bad' : on ? 'on' : ''}">${t}</span>`;
-    ui.$('#scbar').innerHTML = `<span class="lbl">SHARED SCENARIO</span>${c(1, 0, 'Class: ' + it.name)}${c(1, 0, 'Source: ' + src.name)}${c(0, st.delay, `Delay +${st.delay} d`)}${c(0, st.cons, `Use ${st.cons >= 0 ? '+' : ''}${st.cons}%`)}${c(0, st.short, `Incoming −${st.short}%`)}${c(0, st.inv, `Stock −${st.inv}%`)}${c(0, st.routeOut, 'Route-1 ' + (st.routeOut ? 'CLOSED' : 'open'))}${Object.keys(st.ovr).length ? c(1, 0, Object.keys(st.ovr).length + ' figure(s) updated') : ''}${st.wxStorm ? c(0, 1, 'Simulated storm at W3, day 1–4') : ''}
+    bar.innerHTML = `<span class="lbl">SHARED SCENARIO</span>${c(1, 0, 'Class: ' + it.name)}${c(1, 0, 'Source: ' + src.name)}${c(0, st.delay, `Delay +${st.delay} d`)}${c(0, st.cons, `Use ${st.cons >= 0 ? '+' : ''}${st.cons}%`)}${c(0, st.short, `Incoming −${st.short}%`)}${c(0, st.inv, `Stock −${st.inv}%`)}${c(0, st.routeOut, 'Route-1 ' + (st.routeOut ? 'CLOSED' : 'open'))}${Object.keys(st.ovr).length ? c(1, 0, Object.keys(st.ovr).length + ' figure(s) updated') : ''}${st.wxStorm ? c(0, 1, 'Simulated storm at W3, day 1–4') : ''}
       <span style="flex:1"></span><button type="button" class="btn sm" id="clearScn">Clear disruption</button><button type="button" class="btn sm" id="resetDemo" title="Restore the original demo data">Reset demo</button>`;
     ui.$('#clearScn').onclick = () => FSI.set({ delay: 0, cons: 0, short: 0, inv: 0, routeOut: false, wxStorm: null });
     ui.$('#resetDemo').onclick = () => { st = DEFAULT(); FSI.state = st; save(); render(true); };
@@ -41,6 +54,7 @@
     ui.$('#pageTitle').textContent = PAGES[r][0]; ui.$('#pageSub').textContent = PAGES[r][1];
     document.title = PAGES[r][0] + ' · Forward Supply Intelligence';
     ui.$$('#nav a').forEach(a => a.getAttribute('href') === '#/' + r ? a.setAttribute('aria-current', 'page') : a.removeAttribute('aria-current'));
+    if (TOOLS.includes(r)) ui.$('#tools').open = true;
     ui.$('#itemSel').value = st.item;
     ui.$('#dtg').textContent = 'As of ' + ui.when(0);
     scenarioBar();

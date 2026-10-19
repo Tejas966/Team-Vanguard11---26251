@@ -7,18 +7,17 @@ Decision-support prototype for forward logistics. **Logistics data is synthetic 
 - Or serve the folder: `python -m http.server 8765 --directory web` and open http://localhost:8765
 
 ## Pages
-| # | Page | What it answers |
-|---|---|---|
-| 00 | Command overview | Where is the trouble, and which decision is due first? |
-| 01 | **Decision Clock** | By when must I act, with which option, and what is the fallback? |
-| 02 | Field reports | Low-bandwidth SITREP parsing, anomaly checks, report freshness |
-| 02b | Weather (real) | Open-Meteo forecast + 2023–26 history driving SKO demand and flyable days |
-| 03 | What-If simulator | Normal vs delayed delivery for one node |
-| 04 | Ripple-effect analyzer | How one disruption spreads along real network links |
-| 05 | Stress test & plans | Plan A vs Plan B, with a written decision rule |
-| 06 | Advance Winter Stocking | Can we push enough up before the pass closes? Weekly push plan |
-| 07 | Commander's brief | One printable page from the current scenario |
-| 08 | Methods & data | Every formula, rule, reference and the demo dataset |
+**Daily use** (what a duty officer needs):
+| Page | What it answers |
+|---|---|
+| Today | What needs doing, where, and by when (action cards with Approve) |
+| Sector map | Where is the trouble? Click a post for its four supplies, next action and weather |
+| Action deadlines | Latest time to order each resupply option, per post and supply |
+| Field reports (SITREP) | Paste a one-line coded report; it is checked and applied |
+| Winter stocking (AWS) | Truckloads still needed before Pass-1 closes; weekly push plan |
+| Commander's brief | One printable page |
+
+**Planning tools** (collapsed in the menu): What-if (one delay) · Knock-on effects · Compare plans · Weather (real data) · How it works.
 
 All pages share one scenario (top bar), so a change anywhere updates everything. State is kept in the browser's local storage; **Reset demo** restores the original data.
 
