@@ -4,14 +4,14 @@
   const KEYS = Object.keys(ITEMS);
   const LEVEL = { late: 0, now: 0, soon: 1, plan: 2, covered: 3 };
   const WORD = { late: 'TOO LATE', now: 'ACT NOW', soon: 'ACT SOON', plan: 'PLAN AHEAD', covered: 'OK' };
-  const COLOR = { late: '#C62828', now: '#C62828', soon: '#E0A100', plan: '#2A5687', covered: '#2E9E4A' };
+  const COLOR = { late: '#C62828', now: '#C62828', soon: '#E0A100', plan: '#2A5687', covered: '#2E9E4A' }; // same tiers as Today
   const ICON = { late: '✕', now: '!', soon: '!', plan: 'i', covered: '✓' };
   FSI.STATUS = { WORD, COLOR, ICON };
   ui.statusTag = s => ui.tag({ late: 'red', now: 'red', soon: 'amber', plan: 'blue', covered: 'green' }[s], ICON[s], WORD[s]);
 
   // Every post, all four supply classes, worst first.
   FSI.postStatus = st => {
-    const rows = KEYS.flatMap(k => E.decisionClock(st, k));
+    const rows = E.statusCounts(st).rows; // same rows as Today and Action deadlines
     const out = {};
     E.POSTS.forEach(n => {
       const items = rows.filter(r => r.n.id === n.id).sort((a, b) => LEVEL[a.status] - LEVEL[b.status] || a.actBy - b.actBy);
@@ -89,19 +89,19 @@
       ui.svg('text', { y: 5, 'text-anchor': 'middle', 'font-size': 14, 'font-weight': 700, fill: s.status === 'soon' ? '#2B1D00' : '#FFFFFF', 'font-family': 'IBM Plex Mono' }, g).textContent = ICON[s.status];
       const snow3 = [1, 2, 3].some(d => (FSI.wx.get(n.cell, 'snow', d).v || 0) >= 1);
       if (snow3) ui.svg('text', { x: 12, y: -10, 'font-size': 13, fill: '#2A5687' }, g).textContent = '❄';
-      const line2 = s.status === 'covered' || s.status === 'plan' ? `OK · ${fmt(s.minDays, 0)} d of stock` : s.status === 'late' ? `${ITEMS[s.worst.item].short} · TOO LATE` : `${ITEMS[s.worst.item].short} · act by ${ui.when(s.worst.first.actBy).replace(/^\w+, /, '')}`;
+      const line2 = s.status === 'covered' ? `OK · ${fmt(s.minDays, 0)} d of stock` : s.status === 'plan' ? `${ITEMS[s.worst.item].short} · plan by ${ui.when(s.worst.first.actBy).replace(/^\w+, /, '')}` : s.status === 'late' ? `${ITEMS[s.worst.item].short} · TOO LATE` : `${ITEMS[s.worst.item].short} · act by ${ui.when(s.worst.first.actBy).replace(/^\w+, /, '')}`;
       const w = Math.max(n.name.length * 7.2, line2.length * 6.1) + 16, left = x + 22 + w > 815;
       const lx = left ? -22 - w : 22;
       ui.svg('rect', { x: lx, y: -19, width: w, height: 36, rx: 3, fill: '#FFFFFF', stroke: isSel ? '#17365D' : col, 'stroke-width': isSel ? 2 : 1.2 }, g);
       ui.svg('text', { x: lx + 8, y: -4, 'font-size': 12, 'font-weight': 600, 'font-family': 'IBM Plex Sans', fill: '#14202E' }, g).textContent = n.name;
-      ui.svg('text', { x: lx + 8, y: 10, 'font-size': 10.5, 'font-family': 'IBM Plex Mono', fill: s.status === 'soon' ? '#7D5300' : s.status === 'covered' || s.status === 'plan' ? '#1C6B31' : '#A61F1F' }, g).textContent = line2;
+      ui.svg('text', { x: lx + 8, y: 10, 'font-size': 10.5, 'font-family': 'IBM Plex Mono', fill: s.status === 'soon' ? '#7D5300' : s.status === 'covered' ? '#1C6B31' : s.status === 'plan' ? '#17365D' : '#A61F1F' }, g).textContent = line2;
       const pick = () => opts.onPick && opts.onPick(n.id);
       g.addEventListener('click', pick); g.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); pick(); } });
     });
     ui.svg('text', { x: 10, y: 462, 'font-size': 10, 'font-family': 'IBM Plex Mono', fill: '#6B7887' }, svg).textContent = 'SCHEMATIC · NOT TO SCALE · FICTIONAL SITES · NO BORDERS SHOWN';
   };
   FSI.mapLegend = () => `<div class="maplegend">
-    <span><i class="dot" style="background:#C62828"></i>Act now</span><span><i class="dot" style="background:#E0A100"></i>Act soon (≤ 3 days)</span><span><i class="dot" style="background:#2E9E4A"></i>OK</span>
+    <span><i class="dot" style="background:#C62828"></i>Act now</span><span><i class="dot" style="background:#E0A100"></i>Act soon (≤ 3 days)</span><span><i class="dot" style="background:#2A5687"></i>Plan ahead</span><span><i class="dot" style="background:#2E9E4A"></i>OK</span>
     <span><i class="sq"></i>Supply depot</span><span><i class="ln"></i>Main road</span><span><i class="ln dash"></i>Route-2, light vehicles</span><span><i class="ln dot2"></i>Porter / animal transport</span><span>❄ snow forecast (3 days)</span></div>`;
 
   // Detail card for one post: all four supplies, next action, weather.
@@ -111,7 +111,7 @@
     const fly = [1, 2, 3].map(d => FSI.wx.flyable(n.cell, d).ok);
     const act = s.items.find(r => r.status !== 'covered');
     return `<div class="pcard">
-      <div class="pc-head"><div><b>${esc(n.name)}</b><span>${fmt(n.alt)} ft · ${n.troops} personnel · supplied by ${E.BYID[n.parent].name}${n.lastMile ? ' + ' + n.lastMile : ''}</span></div>${ui.statusTag(s.status)}</div>
+      <div class="pc-head"><div><b>${esc(n.name)}</b> ${FSI.dqTag(E.dataQuality(st, n.id))}<span>${fmt(n.alt)} ft · ${n.troops} personnel · supplied by ${E.BYID[n.parent].name}${n.lastMile ? ' + ' + n.lastMile : ''}</span></div>${ui.statusTag(s.status)}</div>
       <div class="pc-sec">Stock</div>
       ${s.items.map(r => { const it = ITEMS[r.item], days = r.r.Y, pct = Math.min(100, days / 14 * 100), col = COLOR[r.status];
         return `<div class="srow"><span class="sname">${it.short}</span><span class="sbar"><span style="width:${pct}%;background:${col}"></span></span><span class="sdays"><b>${fmt(days, 1)}</b> d</span>
@@ -119,6 +119,7 @@
       <div class="pc-sec">Next action</div>
       ${act ? `<p class="pc-act">${ui.statusTag(act.status)} ${FSI.actionSentence(act)}</p>${act.first ? `<button type="button" class="btn primary sm" data-approve="${n.id}|${act.item}|${act.first.key}">Approve: ${esc(act.first.label)}</button>` : ''} <a class="btn sm" href="#/clock" data-focus="${n.id}|${act.item}">All options</a>`
         : '<p class="pc-act">No action needed. Every supply lasts until its next delivery.</p>'}
+      ${act ? FSI.whyBox(st, act) : ''}
       <div class="pc-sec">Conditions</div>
       <p class="pc-small">Night temperature about <b>${fmt(t, 0)} °C</b> (real forecast, adjusted for altitude). Air maintenance next 3 days: ${fly.map((f, i) => `${ui.dayDate(i + 1).toLocaleDateString('en-IN', { weekday: 'short' })} ${f ? '✓' : '✕'}`).join(' · ')}.<br>
       Last stock report ${rep.ageH} h ago by ${rep.via}${fr !== 'fresh' ? ` <b style="color:var(--warn-ink)">(old, so figures are less certain)</b>` : ''}.</p>

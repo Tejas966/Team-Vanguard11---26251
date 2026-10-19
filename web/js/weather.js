@@ -4,7 +4,12 @@
   const W = FSI.WEATHER, RULE = FSI.POL_RULE, FLY = FSI.FLY_RULE, DAY = 86400000;
   const byId = Object.fromEntries(W.cells.map(c => [c.id, c]));
   const isoLocal = d => { const z = new Date(d.getTime() - d.getTimezoneOffset() * 60000); return z.toISOString().slice(0, 10); };
-  const today = new Date(); today.setHours(0, 0, 0, 0);
+  const realToday = new Date(); realToday.setHours(0, 0, 0, 0);
+  let today = realToday, frozen = false;
+  // A copy of the bundled snapshot. The demo uses it (and its date) so results are repeatable.
+  const SNAP = W.cells.map(c => JSON.parse(JSON.stringify(c.fc)));
+  const snapDay = new Date(W.cells[0].fc.t0 + 'T00:00');
+  const fcOf = c => frozen ? SNAP[W.cells.indexOf(c)] : c.fc;
   const dayIndex = (t0, d) => Math.round((new Date(isoLocal(new Date(today.getTime() + d * DAY)) + 'T00:00').getTime() - new Date(t0 + 'T00:00').getTime()) / DAY);
 
   // climatology: mean of the same calendar day (+/-3 days) across all years in the archive
@@ -18,23 +23,23 @@
   }
   // value for a cell on day offset d (0 = today); source tells the UI where it came from
   function get(cellId, key, d) {
-    const c = byId[cellId], i = dayIndex(c.fc.t0, d);
+    const c = byId[cellId], fc = fcOf(c), i = dayIndex(fc.t0, d);
     // demo control: a clearly labelled simulated storm overrides the real values
     const sm = FSI.state && FSI.state.wxStorm;
     if (sm && sm.cell === cellId && d >= sm.from && d <= sm.to) {
-      const base = c.fc[key] && i >= 0 && i < c.fc[key].length ? c.fc[key][i] : clim(c, key, d);
+      const base = fc[key] && i >= 0 && i < fc[key].length ? fc[key][i] : clim(c, key, d);
       return { v: { snow: 25, prcp: 18, wind: 55, tmin: (base == null ? -10 : base) - 6, tmax: (base == null ? -2 : base) - 6 }[key], src: 'simulated' };
     }
-    if (c.fc[key] && i >= 0 && i < c.fc[key].length && c.fc[key][i] != null) return { v: c.fc[key][i], src: 'forecast' };
+    if (fc[key] && i >= 0 && i < fc[key].length && fc[key][i] != null) return { v: fc[key][i], src: frozen ? 'snapshot' : 'forecast' };
     if (key === 'wind') return { v: null, src: 'none' };
     return { v: clim(c, key, d), src: 'climatology' };
   }
   const postTemp = (n, d) => { const c = byId[n.cell]; return get(n.cell, 'tmin', d).v - RULE.lapse * (n.alt * 0.3048 - c.elev) / 1000; };
   const polPerPerson = T => Math.min(RULE.cap, RULE.base + RULE.slope * Math.max(0, RULE.ref - T));
-  // average SKO litres per person per day over the next `days` days
-  function polRate(n, days) {
-    days = days || FSI.CONFIG.horizon; let s = 0;
-    for (let d = 0; d < days; d++) s += polPerPerson(postTemp(n, d));
+  // average SKO litres per person per day over days [start, start + days)
+  function polRate(n, days, start) {
+    days = days || FSI.CONFIG.horizon; start = start || 0; let s = 0;
+    for (let d = start; d < start + days; d++) s += polPerPerson(postTemp(n, d));
     return s / days;
   }
   function flyable(cellId, d) {
@@ -43,7 +48,7 @@
     return { ok, src: sn.src, snow: sn.v, prcp: pr.v, wind: wi.v };
   }
   function coverage() { // how many of the next 14 days the forecast covers
-    const c = W.cells[0]; let n = 0; for (let d = 0; d < FSI.CONFIG.horizon; d++) { const i = dayIndex(c.fc.t0, d); if (i >= 0 && i < c.fc.tmin.length) n++; } return n;
+    const c = W.cells[0], fc = fcOf(c); let n = 0; for (let d = 0; d < FSI.CONFIG.horizon; d++) { const i = dayIndex(fc.t0, d); if (i >= 0 && i < fc.tmin.length) n++; } return n;
   }
   function winters() { // per winter (Oct-May): total snow, first week with >=10 cm, coldest night
     return W.cells.map(c => {
@@ -61,7 +66,9 @@
       return { cell: c, rows: out };
     });
   }
-  FSI.wx = { byId, get, postTemp, polPerPerson, polRate, flyable, coverage, winters, live: false, liveAt: null };
+  // freeze(true): use the bundled snapshot and treat its first day as today (repeatable demo)
+  function freeze(on) { frozen = !!on; today = frozen ? snapDay : realToday; }
+  FSI.wx = { byId, get, postTemp, polPerPerson, polRate, flyable, coverage, winters, freeze, isFrozen: () => frozen, snapshotDate: W.cells[0].fc.t0, live: false, liveAt: null };
 
   // Try to refresh the forecast live (Open-Meteo allows browser requests). Silent fallback to the snapshot.
   FSI.wx.refresh = function (done) {

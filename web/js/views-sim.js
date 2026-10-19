@@ -3,7 +3,6 @@
   const E = FSI.engine, ui = FSI.ui, { ITEMS, NODES, LATERAL, CONFIG } = FSI;
   const { fmt, esc, badge } = ui, H = CONFIG.horizon;
   const V = FSI.views;
-  const NAMES = { reroute: 'Reroute via Route-2', air: 'Air maintenance', realloc: 'Lateral reallocation', combo: 'Reroute + air maintenance' };
 
   function actionFor(st, R, id) {
     const r = R[id], n = r.n, it = ITEMS[st.item];
@@ -21,9 +20,12 @@
 
   /* ================= 03 WHAT-IF ================= */
   V.whatif = (root, st) => {
-    const n = E.BYID[st.source], v = E.nodeVals(st, n), it = ITEMS[st.item];
+    const n = E.BYID[st.source], base = E.nodeVals(st, n), it = ITEMS[st.item];
+    // Edits on this page are a sandbox: they never change the stock figures other pages use.
+    const wi = st.whatif && st.whatif.node === n.id && st.whatif.item === st.item ? st.whatif : null;
+    const v = { s: wi ? wi.s : base.s, c: wi && n.type === 'post' ? wi.c : base.c, L: wi ? wi.L : base.L, q: base.q };
     root.innerHTML = `
-      <p class="intro">Compare normal delivery with a delayed one for a single node. The node you choose here becomes the <b>disruption source</b> for the Ripple and Stress pages. Your delay and consumption change carry over too.</p>
+      <p class="intro">Compare normal delivery with a delayed one for a single node. The node, delay and consumption change you set here are shared with the other planning tools. <b>Stock and delivery figures you type here stay on this page</b> and never change the real figures.</p>${wi ? `<p class="note" style="margin-top:-8px">Using your edited figures (real: ${fmt(base.s)} ${it.unit}, ${fmt(base.c, 1)} ${it.unit}/day, delivery day ${base.L}).</p>` : ''}
       <div class="grid m1">
         <div class="panel"><div class="ph"><h3>Inputs</h3></div><div class="pb form">
           <div class="field"><label for="wNode">Node (disruption source)</label><select id="wNode">${NODES.map(x => `<option value="${x.id}">${x.name} · ${x.role}</option>`).join('')}</select><div class="help">${n.role}. Supplied by ${n.parent ? E.BYID[n.parent].name : 'railhead'} via ${n.route || 'track'}.</div></div>
@@ -40,29 +42,31 @@
     ui.$('#wNode').onchange = e => FSI.set({ source: e.target.value });
     ui.$('#wD').onchange = e => FSI.set({ delay: +e.target.value });
     ui.$('#wX').onchange = e => FSI.set({ cons: +e.target.value });
-    ui.$('#wReset').onclick = () => { const o = Object.assign({}, st.ovr); delete o[E.ovKey(n.id, st.item)]; FSI.set({ ovr: o, delay: 0, cons: 0 }); };
+    ui.$('#wReset').onclick = () => FSI.set({ whatif: null, delay: 0, cons: 0 });
     const read = () => {
       const s = parseFloat(ui.$('#wS').value), c = parseFloat(ui.$('#wC').value), L = parseFloat(ui.$('#wL').value);
       const bad = { 'f-s': !(s >= 0), 'f-c': !(c > 0), 'f-l': !(L >= 0 && L <= 30) };
       Object.entries(bad).forEach(([id, b]) => ui.$('#' + id).classList.toggle('invalid', b));
       if (Object.values(bad).some(Boolean)) { ui.$('#wOut').innerHTML = '<div class="empty" style="padding:30px 0;text-align:center">Fix the highlighted inputs to see the comparison.</div>'; return; }
-      const o = Object.assign({}, st.ovr), k = E.ovKey(n.id, st.item);
-      o[k] = Object.assign({}, o[k], { s, L: Math.round(L) }); if (n.type === 'post') o[k].c = c;
-      FSI.set({ ovr: o }, { quiet: true }); out();
+      FSI.set({ whatif: { node: n.id, item: st.item, s, c: n.type === 'post' ? c : base.c, L: Math.max(n.tr, Math.round(L)) } }, { quiet: true }); out();
     };
     ['wS', 'wC', 'wL'].forEach(id => ui.$('#' + id).addEventListener('change', read));
     ['wS', 'wC', 'wL'].forEach(id => ui.$('#' + id).addEventListener('input', () => { clearTimeout(V._t); V._t = setTimeout(read, 250); }));
     out();
     function out() {
-      const st2 = FSI.state, v2 = E.nodeVals(st2, n), s = v2.s * (1 - st2.inv / 100), c = v2.c, c2 = c * (1 + st2.cons / 100), L = v2.L, d = st2.delay, A = L + d;
-      const remN = s - c * L, remD = s - c2 * A, tN = s / c, tD = s / c2, mN = tN - L, mD = tD - A;
+      const st2 = FSI.state, w2 = st2.whatif && st2.whatif.node === n.id && st2.whatif.item === st2.item ? st2.whatif : null;
+      const v2 = { s: w2 ? w2.s : base.s, c: w2 ? w2.c : base.c, L: w2 ? w2.L : base.L, q: base.q };
+      const s = v2.s * (1 - st2.inv / 100), c = v2.c, c2 = c * (1 + st2.cons / 100), L = v2.L, d = st2.delay, A = L + d;
+      // same projection the network simulation uses
+      const pN = E.project(s, c, [], L), pD = E.project(s, c2, [], A);
+      const remN = pN.short > 0 ? -pN.short * c : pN.end, remD = pD.short > 0 ? -pD.short * c2 : pD.end, tN = pN.Y, tD = pD.Y, mN = tN - L, mD = tD - A;
       const sev = m => m >= 2 ? ['green', 'LOW', `stock outlasts delivery by ${fmt(m, 1)} d`] : m >= 0 ? ['amber', 'WATCH', `only ${fmt(m, 1)} d of margin`] : m > -2 ? ['red', 'HIGH', `runs out ${fmt(-m, 1)} d before delivery`] : ['red', 'CRITICAL', `runs out ${fmt(-m, 1)} d before delivery`];
       const [cN, lN, tNt] = sev(mN), [cD, lD, tDt] = sev(mD);
       const shortU = Math.max(0, -remD), cost = shortU * it.kg * CONFIG.airRate / 1e5, sSd = n.type === 'post' ? E.stockSd(st2, n.id) : 0;
-      const P = (T, cc) => E.pStockout(s, cc, it.cv, sSd, T);
+      const P = (T, cc) => E.riskClass(E.riskIndex(s, cc, it.cv, sSd, T));
       const card = (cls, title, Ad, rem, t, p, c_, l_, tx) => `<div class="card ${cls}"><h4>${title} <span class="est">EST.</span></h4><dl class="kv">
         <dt>Delivery arrives</dt><dd>${ui.when(Ad)}</dd><dt>Stock at arrival</dt><dd>${rem >= 0 ? fmt(rem) : 0} ${it.unit}</dd><dt>Time to stock-out</dt><dd>${fmt(t, 1)} d</dd>
-        <dt>P(stock-out before arrival)</dt><dd>${fmt(p * 100)}%</dd><dt>Shortage</dt><dd>${rem < 0 ? fmt(-rem) + ' ' + it.unit : 'none'}</dd></dl><div style="margin-top:8px">${badge(c_)} <span style="font-size:12.5px">${l_} · ${tx}</span></div></div>`;
+        <dt>Risk class (rule-based)</dt><dd>${p}</dd><dt>Shortage</dt><dd>${rem < 0 ? fmt(-rem) + ' ' + it.unit : 'none'}</dd></dl><div style="margin-top:8px">${badge(c_)} <span style="font-size:12.5px">${l_} · ${tx}</span></div></div>`;
       ui.$('#wOut').innerHTML = `<div class="cmp2">${card('nor', 'Normal delivery', L, remN, tN, P(L, c), cN, lN, tNt)}${card('dis', `Disrupted (+${d} d, ${st2.cons >= 0 ? '+' : ''}${st2.cons}% use)`, A, remD, tD, P(A, c2), cD, lD, tDt)}</div>
         <div class="verdict ${cD}">${badge(cD)}<p><b>Estimated impact:</b> ${remD < 0 ? `${n.name} would run out of ${it.name.toLowerCase()} on ${ui.when(tD)}, ${fmt(A - tD, 1)} d before the delivery on ${ui.when(A)}. The gap is ${fmt(shortU)} ${it.unit}; covering it by air maintenance costs about <b>₹${fmt(cost, 1)} lakh</b> <span class="est">ILLUSTRATIVE ₹${CONFIG.airRate}/kg</span>.` : mD < 2 ? `No stock-out expected, but the margin shrinks from ${fmt(mN, 1)} d to ${fmt(mD, 1)} d.` : `Delay absorbed: stock lasts ${fmt(mD, 1)} d beyond delivery.`}</p></div>
         ${n.type === 'depot' ? '<p class="note">For a depot, a shortage here means dispatches fall behind. The Ripple page shows which posts are hit.</p>' : ''}
@@ -118,10 +122,10 @@
           </ol></div></div>
       </div>
       <div class="panel" style="margin-top:12px"><div class="ph"><h3>Node-by-node impact</h3><span class="est">ESTIMATES</span></div><div class="pb scroll" style="padding-top:0"><table class="t">
-        <thead><tr><th>Node</th><th>Risk</th><th class="n">Stock lasts</th><th class="n">Delivery</th><th class="n">P(stock-out)</th><th>Reason</th><th>Recommended action</th></tr></thead><tbody>
+        <thead><tr><th>Node</th><th>Risk</th><th class="n">Stock lasts</th><th class="n">Delivery</th><th>Risk class<br><span style="text-transform:none">rule-based</span></th><th>Reason</th><th>Recommended action</th></tr></thead><tbody>
         ${rows.map(r => { const p = r.n.type === 'post'; return `<tr><td><b>${r.n.name}</b><br><span style="font-size:11.5px;color:var(--muted)">${r.n.role}</span></td><td>${badge(r.risk)}</td>
           <td class="n">${fmt(p ? r.Y : r.s / r.c, 1)} d</td><td class="n">${Number.isFinite(r.A) && r.A <= H ? ui.when(r.A) : 'none ≤14 d'}${r.D > 0 && Number.isFinite(r.D) ? `<br><span style="color:var(--crit-ink);font-size:11px">+${r.D} d</span>` : ''}</td>
-          <td class="n">${p ? fmt(r.P * 100) + '%' : '—'}</td><td class="reason">${esc(E.explain(st, R, r.n.id).join(' → ') || 'Not on the disrupted path; schedule unchanged.')}</td><td style="font-size:12.5px">${esc(actionFor(st, R, r.n.id))}</td></tr>`; }).join('')}
+          <td>${p ? r.riskClass : '—'}</td><td class="reason">${esc(E.explain(st, R, r.n.id).join(' → ') || 'Not on the disrupted path; schedule unchanged.')}</td><td style="font-size:12.5px">${esc(actionFor(st, R, r.n.id))}</td></tr>`; }).join('')}
       </tbody></table></div></div>`;
     ui.$('#rSrc').value = st.source;
     ui.$('#rSrc').onchange = e => FSI.set({ source: e.target.value });
@@ -161,61 +165,62 @@
     });
   }
 
-  /* ================= 05 STRESS ================= */
+  /* ================= 05 COMPARE PLANS ================= */
+  // Every number here comes from one call: E.evaluatePlans(st). The recommendation, the options
+  // table and the side-by-side comparison all read the same evaluated candidates.
   V.stress = (root, st) => {
-    const it = ITEMS[st.item], RA = E.simulate(st, {}), mA = E.metrics(RA, 0), pB = E.buildPlan(st, st.planB), RB = E.simulate(st, pB), mB = E.metrics(RB, pB.cost);
-    const [win, why] = E.decide(st, mA, mB), [sA, sB] = E.score(st, [mA, mB]), bName = NAMES[st.planB];
-    const wm = win === 'A' ? mA : mB, lm = win === 'A' ? mB : mA, trade = [];
-    if (mB.cost > mA.cost) trade.push(`Plan B costs ₹${fmt(mB.cost - mA.cost, 1)} lakh more (illustrative)`);
-    if (mB.avgArr < mA.avgArr) trade.push(`Plan B brings the average next delivery ${fmt(mA.avgArr - mB.avgArr, 1)} d earlier`);
-    if (mB.avgArr > mA.avgArr) trade.push(`Plan B delivers ${fmt(mB.avgArr - mA.avgArr, 1)} d later on average`);
-    if (mB.sumShort < mA.sumShort) trade.push(`Plan B removes ${fmt(mA.sumShort - mB.sumShort, 1)} post-days of shortage`);
-    if (mB.sumShort > mA.sumShort) trade.push(`Plan B leaves ${fmt(mB.sumShort - mA.sumShort, 1)} more post-days of shortage`);
-    pB.notes.forEach(x => trade.push(x));
+    const it = ITEMS[st.item], ev = E.evaluatePlans(st), A = ev.A, best = ev.best;
+    const cmpKey = st.planB && st.planB !== 'A' ? st.planB : 'reroute', B = ev.cands.find(c => c.key === cmpKey);
+    const mA = A.m, mB = B.m;
+    const shortTxt = m => m.shortList.length ? m.shortList.map(x => `${x.name} from day ${fmt(x.from, 1)} (${fmt(x.days, 1)} d, ${fmt(x.units)} ${it.unit})`).join('; ') : 'none';
     let limit = '';
-    if (Math.min(mA.stockouts, mB.stockouts) > 0) {
-      const Rw = win === 'A' ? RA : RB, rem = E.POSTS.map(p => Rw[p.id]).filter(r => r.short > 0), units = rem.reduce((a, r) => a + r.short * r.c, 0);
-      const sorties = Math.ceil(units * it.kg / CONFIG.sortieKg), cut = Math.max(...rem.map(r => (1 - r.Y / Math.min(r.A, H)) * 100));
-      limit = `<div class="limit"><b>No plan meets every constraint.</b> ${rem.map(r => r.n.name).join(', ')} still ${rem.length > 1 ? 'run' : 'runs'} short (${fmt(units)} ${it.unit}). Any one of these would close the gap: <b>${sorties} more air maintenance sortie${sorties > 1 ? 's' : ''}</b>; a consumption cut of about <b>${fmt(Math.min(99, cut))}%</b> at the worst post; or the disruption cleared ${fmt(Math.max(...rem.map(r => r.short)), 1)} d sooner.</div>`;
+    if (best.m.stockouts > 0) {
+      const units = best.m.shortUnits, sorties = Math.ceil(units * it.kg / CONFIG.sortieKg);
+      const rem = best.m.shortList, cut = Math.max(...rem.map(x => { const r = best.R[x.id]; return (1 - r.Y / Math.min(r.A, CONFIG.horizon)) * 100; }));
+      limit = `<div class="limit"><b>No evaluated plan removes every shortage.</b> Still short with the recommendation: ${esc(shortTxt(best.m))}. Any one of these would close the gap: <b>${sorties} more air sortie${sorties > 1 ? 's' : ''}</b> of 2 t (if flyable); a consumption cut of about <b>${fmt(Math.min(99, cut))}%</b> at the worst post; or the disruption cleared ${fmt(Math.max(...rem.map(x => x.days)), 1)} d sooner.</div>`;
     }
     const rowsDef = [['Posts with stock-out', m => m.stockouts, v => v, 'low'], ['Shortage (post-days)', m => m.sumShort, v => fmt(v, 1), 'low'], ['Shortage volume', m => m.shortUnits, v => fmt(v) + ' ' + it.unit, 'low'],
-      ['Highest stock-out probability', m => m.maxP, v => fmt(v * 100) + '%', 'low'], ['Average next delivery (day)', m => m.avgArr, v => fmt(v, 1), 'low'], ['Lowest margin (days)', m => m.minMargin, v => fmt(v, 1), 'high'],
-      ['Extra cost (₹ lakh, illustrative)', m => m.cost, v => fmt(v, 1), 'low'], ['Weighted score', (m, i) => i ? sB.total : sA.total, v => fmt(v, 2), 'low']];
-    const alts = ['reroute', 'air', 'realloc', 'combo'].map(k => { const p = E.buildPlan(st, k); return { k, m: E.metrics(E.simulate(st, p), p.cost), notes: p.notes }; });
-    const all = [{ k: 'A', m: mA, notes: [] }, ...alts], sc = E.score(st, all.map(a => a.m));
-    const best = all.map((a, i) => i).sort((i, j) => all[i].m.stockouts - all[j].m.stockouts || sc[i].total - sc[j].total)[0];
+      ['First stock-out (day)', m => m.firstOut == null ? 99 : m.firstOut, v => v === 99 ? 'none' : fmt(v, 1), 'high'], ['Average next delivery (day)', m => m.avgArr, v => fmt(v, 1), 'low'],
+      ['Extra cost (₹ lakh, illustrative)', m => m.cost, v => fmt(v, 1), 'low']];
+    const scoreCell = c => c.applicable ? fmt(c.score.total, 2) : '—';
     root.innerHTML = `
-      <p class="intro">Stress the current scenario, then compare <b>Plan A (current schedule)</b> with <b>Plan B (a permitted alternative)</b>. The recommendation follows written rules and a weighted score, both shown on the Methods page.</p>
+      <p class="intro">Stress the current situation, then let the system evaluate <b>every</b> permitted plan with the same simulation and the same score. The recommendation is the best of all of them. The side-by-side table lets you look at any one plan against the current schedule.</p>
       <div class="grid m3">
         <div class="panel"><div class="ph"><h3>Scenario builder</h3></div><div class="pb form">
           <div class="field"><label id="sDL">Delivery delayed by</label><div class="chips" role="group" aria-labelledby="sDL">${[0, 3, 5, 7].map(d => `<button type="button" data-d="${d}" aria-pressed="${st.delay === d}">${d ? '+' + d + ' d' : 'None'}</button>`).join('')}</div><div class="help">Applied at ${E.BYID[st.source].name}, the shared source.</div></div>
           <div class="field"><label for="sC">Increased consumption</label><div class="row"><input type="range" id="sC" data-fmt="pct" min="-30" max="60" step="5" value="${st.cons}"><output class="val">${st.cons >= 0 ? '+' : ''}${st.cons}%</output></div></div>
           <div class="field"><label for="sI">Reduced inventory availability</label><div class="row"><input type="range" id="sI" data-fmt="neg" min="0" max="60" step="5" value="${st.inv}"><output class="val">−${st.inv}%</output></div><div class="help">Spoilage, damage or a count correction in the disrupted area.</div></div>
-          <label class="check"><input type="checkbox" id="sR" ${st.routeOut ? 'checked' : ''}> <span><b>Route-1 via Pass-1 unavailable</b><br><span style="color:var(--muted);font-size:12px">Depot-B gets no road resupply within 14 days.</span></span></label>
-          <div class="field"><label for="sB">Plan B</label><select id="sB">${Object.entries(NAMES).map(([k, v]) => `<option value="${k}" ${st.planB === k ? 'selected' : ''}>${v}</option>`).join('')}</select></div>
+          <label class="check"><input type="checkbox" id="sR" ${st.routeOut ? 'checked' : ''}> <span><b>Route-1 via Pass-1 unavailable</b><br><span style="color:var(--muted);font-size:12px">Depot-B gets no road resupply on Route-1 within 14 days. No plan may use Route-1.</span></span></label>
           <div class="field"><label for="sP">Decision priority</label><select id="sP"><option value="balanced">Balanced (risk 60 · time 25 · cost 15)</option><option value="risk">Minimise shortage (80 · 15 · 5)</option><option value="cost">Minimise cost (40 · 20 · 40)</option></select></div>
           <div style="display:flex;gap:8px;flex-wrap:wrap"><button type="button" class="btn primary" id="sSave">Save run to history</button><button type="button" class="btn" id="sReset">Reset stress</button></div>
         </div></div>
-        <div class="panel"><div class="ph"><h3>Plan comparison · ${it.name}</h3><span class="est">ESTIMATES · COSTS ILLUSTRATIVE</span></div><div class="pb">
-          <div class="reco"><h4>RECOMMENDATION · COMMANDER DECIDES</h4><div class="big">${win === 'A' ? 'Plan A: keep the current schedule' : 'Plan B: ' + bName}</div>
-            <ul><li><b>Why:</b> ${why}. ${win === 'A' ? 'Plan A' : 'Plan B'} leaves ${wm.stockouts} post${wm.stockouts === 1 ? '' : 's'} short against ${lm.stockouts}; score ${fmt((win === 'A' ? sA : sB).total, 2)} vs ${fmt((win === 'A' ? sB : sA).total, 2)}.</li>${trade.length ? `<li><b>Trade-offs:</b> ${esc(trade.join('; '))}.</li>` : ''}${!mA.stockouts && !mB.stockouts ? '<li>Neither plan has a shortage here; the choice rests on time and cost.</li>' : ''}${all[best].k !== 'A' && all[best].k !== st.planB ? `<li><b>Better option found:</b> ${NAMES[all[best].k]} leaves ${all[best].m.stockouts} post${all[best].m.stockouts === 1 ? '' : 's'} short at ₹${fmt(all[best].m.cost, 1)} lakh. <button type="button" class="btn sm primary" id="pickBest" data-k="${all[best].k}">Compare it as Plan B</button></li>` : ''}</ul></div>
+        <div class="panel"><div class="ph"><h3>Recommendation · ${it.name}</h3><span class="est">ESTIMATES · COSTS ILLUSTRATIVE</span></div><div class="pb">
+          <div class="reco"><h4>RECOMMENDED · BEST OF ${ev.ranked.length} APPLICABLE PLANS · COMMANDER DECIDES</h4><div class="big">${esc(best.name)}</div>
+            <ul><li><b>Why:</b> ${esc(ev.reason)}.</li><li><b>Posts still short:</b> ${esc(shortTxt(best.m))}.</li>${best.key !== 'A' ? `<li><b>Cost:</b> ₹${fmt(best.m.cost, 1)} lakh extra (illustrative).</li>` : ''}${best.notes.length ? `<li><b>Note:</b> ${esc(best.notes.join('; '))}.</li>` : ''}</ul>
+            ${FSI.whyPlanBox(st, ev)}</div>
           ${limit}
-          <div class="scroll" style="margin-top:12px"><table class="t cmp"><thead><tr><th>Metric</th><th class="n">Plan A · current</th><th class="n">Plan B · ${esc(bName)}</th></tr></thead><tbody>
-            ${rowsDef.map(([l, f, fm, dir]) => { const a = f(mA, 0), b = f(mB, 1), eq = Math.abs(a - b) < 1e-9, aB = !eq && (dir === 'low' ? a < b : a > b); return `<tr><td>${l}</td><td class="n ${aB ? 'better' : ''}">${fm(a)}</td><td class="n ${!eq && !aB ? 'better' : ''}">${fm(b)}</td></tr>`; }).join('')}</tbody></table></div>
-          <div class="charts2">
-            <div><div style="font-size:12.5px;font-weight:600;margin-bottom:4px">Days of margin per post (below zero = shortage)</div><div class="chart-wrap"><svg class="fluid" id="sBars" viewBox="0 0 520 250" role="img" aria-label="Margin per post"></svg><div class="tip" id="sTip"></div></div>
-              <div class="legend"><span><i class="box" style="background:var(--planA)"></i>Plan A</span><span><i class="box" style="background:var(--planB)"></i>Plan B</span></div></div>
-            <div><div style="font-size:12.5px;font-weight:600;margin-bottom:4px">All options evaluated (lower score is better)</div><div class="scroll"><table class="t"><thead><tr><th>Option</th><th class="n">Short</th><th class="n">₹ L</th><th class="n">Score</th></tr></thead><tbody>
-              ${all.map((a, i) => `<tr${i === best ? ' style="background:var(--navy-100)"' : ''}><td>${a.k === 'A' ? 'Plan A · current' : NAMES[a.k]}${i === best ? ' <span class="fact">BEST</span>' : ''}${a.notes.length ? `<br><span class="na" style="font-size:11.5px">${esc(a.notes[0])}</span>` : ''}</td><td class="n">${a.m.stockouts}</td><td class="n">${fmt(a.m.cost, 1)}</td><td class="n">${fmt(sc[i].total, 2)}</td></tr>`).join('')}</tbody></table></div></div>
-          </div></div></div>
+          <div style="font-size:12.5px;font-weight:600;margin:14px 0 4px">All plans evaluated · same simulation, same score (lower is better)</div>
+          <div class="scroll"><table class="t"><thead><tr><th>Plan</th><th class="n">Posts short</th><th class="n">Shortage post-days</th><th class="n">First stock-out</th><th class="n">₹ lakh</th><th class="n">Score</th><th></th></tr></thead><tbody>
+            ${ev.cands.map(c => `<tr${c === best ? ' style="background:var(--navy-100)"' : ''}><td>${esc(c.name)}${c.notes.length ? `<br><span class="na" style="font-size:11.5px">${esc(c.notes[0])}</span>` : ''}</td>
+              <td class="n">${c.applicable ? c.m.stockouts : '—'}</td><td class="n">${c.applicable ? fmt(c.m.sumShort, 1) : '—'}</td><td class="n">${c.applicable ? (c.m.firstOut == null ? 'none' : 'day ' + fmt(c.m.firstOut, 1)) : '—'}</td><td class="n">${c.applicable ? fmt(c.m.cost, 1) : '—'}</td><td class="n">${scoreCell(c)}</td>
+              <td>${c === best ? '<span class="fact">RECOMMENDED</span>' : !c.applicable ? '<span class="na">not applicable</span>' : `<button type="button" class="btn sm" data-cmp="${c.key}">Compare</button>`}</td></tr>`).join('')}</tbody></table></div>
+          <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:16px 0 6px"><b style="font-size:12.5px">Side by side:</b><span style="font-size:12.5px">Plan A · current schedule vs</span>
+            <select id="sB" aria-label="Plan to compare with Plan A">${ev.cands.filter(c => c.key !== 'A').map(c => `<option value="${c.key}" ${c.key === cmpKey ? 'selected' : ''}>${esc(c.name)}${c === best ? ' (recommended)' : ''}</option>`).join('')}</select></div>
+          ${B.applicable ? '' : `<p class="note" style="margin-top:0">${esc(B.name)} is not applicable in this situation: ${esc(B.notes.join('; '))}. It is shown identical to Plan A.</p>`}
+          <div class="scroll"><table class="t cmp"><thead><tr><th>Metric</th><th class="n">Plan A · current</th><th class="n">${esc(B.name)}</th></tr></thead><tbody>
+            ${rowsDef.map(([l, f, fm, dir]) => { const a = f(mA), b = f(mB), eq = Math.abs(a - b) < 1e-9, aB = !eq && (dir === 'low' ? a < b : a > b); return `<tr><td>${l}</td><td class="n ${aB ? 'better' : ''}">${fm(a)}</td><td class="n ${!eq && !aB ? 'better' : ''}">${fm(b)}</td></tr>`; }).join('')}
+            <tr><td>Score (same scale as the table above)</td><td class="n">${scoreCell(A)}</td><td class="n">${scoreCell(B)}</td></tr></tbody></table></div>
+          <div style="font-size:12.5px;font-weight:600;margin:12px 0 4px">Days of margin per post (below zero = shortage)</div><div class="chart-wrap"><svg class="fluid" id="sBars" viewBox="0 0 520 250" role="img" aria-label="Margin per post"></svg><div class="tip" id="sTip"></div></div>
+          <div class="legend"><span><i class="box" style="background:var(--planA)"></i>Plan A · current</span><span><i class="box" style="background:var(--planB)"></i>${esc(B.name)}</span></div>
+        </div></div>
       </div>
       <div class="panel" style="margin-top:12px"><div class="ph"><h3>Scenario history</h3><button type="button" class="btn sm" id="hClear" style="margin-left:auto">Clear</button></div><div class="pb scroll" style="padding-top:0"><table class="t">
-        ${(st.hist || []).length ? `<thead><tr><th>#</th><th>Saved</th><th>Scenario</th><th class="n">Short A</th><th class="n">Short B</th><th>Recommended</th><th></th></tr></thead><tbody>${st.hist.map((h, i) => `<tr><td class="n">${st.hist.length - i}</td><td style="font-family:var(--mono);font-size:12px">${esc(h.at)}</td>
+        ${(st.hist || []).length ? `<thead><tr><th>#</th><th>Saved</th><th>Scenario</th><th class="n">Short (current)</th><th class="n">Short (recommended)</th><th>Recommended</th><th></th></tr></thead><tbody>${st.hist.map((h, i) => `<tr><td class="n">${st.hist.length - i}</td><td style="font-family:var(--mono);font-size:12px">${esc(h.at)}</td>
           <td style="font-size:12.5px">${ITEMS[h.sc.item].name} · ${E.BYID[h.sc.source].name} · +${h.sc.delay} d · use ${h.sc.cons >= 0 ? '+' : ''}${h.sc.cons}% · stock −${h.sc.inv}%${h.sc.routeOut ? ' · Route-1 closed' : ''}</td><td class="n">${h.a}</td><td class="n">${h.b}</td><td>${esc(h.reco)}</td><td><button type="button" class="btn sm" data-restore="${i}">Restore</button></td></tr>`).join('')}</tbody>`
           : '<tbody><tr><td class="empty" style="border:0">No saved runs yet.</td></tr></tbody>'}</table></div></div>`;
     ui.$('#sP').value = st.prio;
-    const pb = ui.$('#pickBest'); if (pb) pb.onclick = () => FSI.set({ planB: pb.dataset.k });
     root.querySelectorAll('[data-d]').forEach(b => b.onclick = () => FSI.set({ delay: +b.dataset.d }));
+    root.querySelectorAll('[data-cmp]').forEach(b => b.onclick = () => FSI.set({ planB: b.dataset.cmp }));
     ui.$('#sC').onchange = e => FSI.set({ cons: +e.target.value });
     ui.$('#sI').onchange = e => FSI.set({ inv: +e.target.value });
     ui.$('#sR').onchange = e => FSI.set({ routeOut: e.target.checked });
@@ -224,12 +229,12 @@
     ui.$('#sReset').onclick = () => FSI.set({ cons: 0, inv: 0, routeOut: false, planB: 'reroute', prio: 'balanced' });
     ui.$('#sSave').onclick = () => {
       const sc0 = { item: st.item, source: st.source, delay: st.delay, cons: st.cons, short: st.short, inv: st.inv, routeOut: st.routeOut, planB: st.planB, prio: st.prio };
-      const h = [{ at: new Date().toLocaleString('en-IN', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' }), sc: sc0, a: mA.stockouts, b: mB.stockouts, reco: win === 'A' ? 'Plan A · current' : 'Plan B · ' + bName }].concat(st.hist || []).slice(0, 20);
+      const h = [{ at: new Date().toLocaleString('en-IN', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' }), sc: sc0, a: mA.stockouts, b: best.m.stockouts, reco: best.name }].concat(st.hist || []).slice(0, 20);
       FSI.set({ hist: h });
     };
     ui.$('#hClear').onclick = () => FSI.set({ hist: [] });
     root.querySelectorAll('[data-restore]').forEach(b => b.onclick = () => FSI.set(Object.assign({}, st.hist[+b.dataset.restore].sc)));
-    bars(ui.$('#sBars'), RA, RB);
+    bars(ui.$('#sBars'), A.R, B.R);
   };
   function bars(svg, RA, RB) {
     const W = 520, Hh = 250, ml = 40, mr = 8, mt = 12, mb = 40, ps = E.POSTS.map(p => ({ n: p, a: RA[p.id].margin, b: RB[p.id].margin }));

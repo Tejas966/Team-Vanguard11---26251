@@ -1,15 +1,17 @@
 /* App shell: shared state, persistence, router, scenario bar. */
 (function () {
   const E = FSI.engine, ui = FSI.ui, { ITEMS } = FSI;
-  const KEY = 'fsi_state_v1';
+  const KEY = 'fsi_state_v2'; // v2: what-if edits are sandboxed; old saved overrides are discarded
   const DEFAULT = () => ({
     item: 'F', source: 'DB', delay: 3, cons: 0, short: 0, inv: 0, routeOut: false, planB: 'reroute', prio: 'balanced',
-    ovr: {}, reports: JSON.parse(JSON.stringify(FSI.REPORTS)), inbox: [], hist: [], decisions: [],
+    ovr: {}, strength: {}, whatif: null, demo: false, replay: null, reports: JSON.parse(JSON.stringify(FSI.REPORTS)), inbox: [], hist: [], decisions: [],
     winterZ: 1.6449, winterW: 120, clockItem: null, focus: null,
   });
   let st = DEFAULT();
   try { const saved = JSON.parse(localStorage.getItem(KEY) || 'null'); if (saved) st = Object.assign(DEFAULT(), saved, { focus: null }); } catch (e) { /* storage blocked: run with defaults */ }
   FSI.state = st;
+  FSI.DEFAULT = DEFAULT;
+  FSI.wx.freeze(!!st.demo);
   const save = () => { try { localStorage.setItem(KEY, JSON.stringify(st)); } catch (e) { } };
 
   const PAGES = {
@@ -33,9 +35,9 @@
     if (!TOOLS.includes(r)) {
       bar.className = active ? 'banner' : ''; bar.style.display = active ? '' : 'none';
       if (active) {
-        const parts = [st.delay ? `${E.BYID[st.source].name} resupply late by ${st.delay} day${st.delay > 1 ? 's' : ''}` : '', st.routeOut ? 'Route-1 via Pass-1 closed' : '', st.cons ? `use ${st.cons > 0 ? 'up' : 'down'} ${Math.abs(st.cons)}%` : '', st.inv ? `stock ${st.inv}% lower` : '', st.short ? `incoming loads ${st.short}% short` : '', st.wxStorm ? 'simulated snowstorm at W3' : ''].filter(Boolean);
+        const parts = [st.demo ? 'DEMO (weather snapshot)' : '', st.delay ? `${E.BYID[st.source].name} resupply late by ${st.delay} day${st.delay > 1 ? 's' : ''}` : '', st.routeOut ? 'Route-1 via Pass-1 closed' : '', st.cons ? `use ${st.cons > 0 ? 'up' : 'down'} ${Math.abs(st.cons)}%` : '', st.inv ? `stock ${st.inv}% lower` : '', st.short ? `incoming loads ${st.short}% short` : '', st.wxStorm ? 'simulated snowstorm at W3' : ''].filter(Boolean);
         bar.innerHTML = `<span><b>Situation in use:</b> ${parts.join(' · ')}</span><a class="btn sm" href="#/stress">Change</a><button type="button" class="btn sm" id="clearScn">Clear</button>`;
-        ui.$('#clearScn').onclick = () => FSI.set({ delay: 0, cons: 0, short: 0, inv: 0, routeOut: false, wxStorm: null });
+        ui.$('#clearScn').onclick = () => st.demo ? FSI.resetAll() : FSI.set({ delay: 0, cons: 0, short: 0, inv: 0, routeOut: false, wxStorm: null });
       }
       return;
     }
@@ -45,7 +47,7 @@
     bar.innerHTML = `<span class="lbl">SHARED SCENARIO</span>${c(1, 0, 'Class: ' + it.name)}${c(1, 0, 'Source: ' + src.name)}${c(0, st.delay, `Delay +${st.delay} d`)}${c(0, st.cons, `Use ${st.cons >= 0 ? '+' : ''}${st.cons}%`)}${c(0, st.short, `Incoming −${st.short}%`)}${c(0, st.inv, `Stock −${st.inv}%`)}${c(0, st.routeOut, 'Route-1 ' + (st.routeOut ? 'CLOSED' : 'open'))}${Object.keys(st.ovr).length ? c(1, 0, Object.keys(st.ovr).length + ' figure(s) updated') : ''}${st.wxStorm ? c(0, 1, 'Simulated storm at W3, day 1–4') : ''}
       <span style="flex:1"></span><button type="button" class="btn sm" id="clearScn">Clear disruption</button><button type="button" class="btn sm" id="resetDemo" title="Restore the original demo data">Reset demo</button>`;
     ui.$('#clearScn').onclick = () => FSI.set({ delay: 0, cons: 0, short: 0, inv: 0, routeOut: false, wxStorm: null });
-    ui.$('#resetDemo').onclick = () => { st = DEFAULT(); FSI.state = st; save(); render(true); };
+    ui.$('#resetDemo').onclick = () => FSI.resetAll();
   }
 
   let lastRoute = null;
@@ -73,13 +75,20 @@
     FSI.set({ decisions: (st.decisions || []).concat([d]).slice(-30) });
   };
   FSI.acceptSitrep = p => {
-    const ovr = Object.assign({}, st.ovr), n = p.post;
-    if (p.str != null) Object.keys(ITEMS).forEach(k => { const key = E.ovKey(n.id, k); ovr[key] = Object.assign({}, ovr[key], { c: E.baseCons(n, k) * p.str / n.troops }); });
-    Object.entries(p.values).forEach(([k, v]) => { const key = E.ovKey(n.id, k); ovr[key] = Object.assign({}, ovr[key], { s: v }); });
-    const reports = Object.assign({}, st.reports, { [n.id]: { ageH: 0, via: 'SITREP' } });
+    const patch = E.applySitrep(st, p), n = p.post;
     const msg = { raw: p.raw, at: new Date().toLocaleString('en-IN', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' }), status: p.warns.length ? 'flagged' : 'accepted',
       note: p.warns.length ? p.warns.join(' · ') : `${n.name} figures updated; report age reset` };
-    FSI.set({ ovr, reports, inbox: [msg].concat(st.inbox || []).slice(0, 40) });
+    FSI.set(Object.assign(patch, { inbox: [msg].concat(st.inbox || []).slice(0, 40) }));
+  };
+  // Restores the exact original baseline (also used by "Reset demo").
+  FSI.resetAll = () => { st = DEFAULT(); FSI.state = st; FSI.demoResult = null; FSI.demoStep = 0; FSI.wx.freeze(false); save(); render(true); };
+  // One-click demo: fixed scenario, frozen weather snapshot, every number from the engine.
+  FSI.startDemo = () => {
+    st = DEFAULT(); FSI.state = st; FSI.wx.freeze(true);
+    const d = E.runDemo(st); FSI.demoResult = d;
+    Object.assign(st, d.patch, { demo: true, replay: { title: 'Demo: Pass-1 closed by snow', at: new Date().toLocaleString('en-IN', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' }), snapshot: d.snapshot, steps: d.steps } });
+    save(); scenarioBar();
+    return d;
   };
   FSI.rejectSitrep = p => {
     const msg = { raw: p.raw, at: new Date().toLocaleString('en-IN', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' }), status: 'rejected', note: p.errors.join(' · ') };

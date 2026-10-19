@@ -48,6 +48,8 @@ FSI.CONFIG = {
   sortieKg: 2000,       // kg per sortie (assumption)
   airRate: 200,         // ₹ per kg by air (illustrative)
   cost: { reroute: 1.5, sortie: 4.0, transfer: 0.4, expedite: 0.6 }, // ₹ lakh, illustrative
+  costRef: 10,          // ₹ lakh: fixed cost scale used in plan scores
+  airSorties: 2,        // air maintenance sorties available per plan (assumption)
   winter: { p10: 31, median: 38, p90: 47 }, // days until Pass-1 closes (illustrative)
   truckT: 5,            // tonnes per truckload
   loadsPerDay: 1.6,     // Pass-1 convoy capacity before closure (assumption)
