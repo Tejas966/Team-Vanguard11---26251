@@ -198,7 +198,7 @@
         </div></div>
         <div class="panel"><div class="ph"><h3>Plan comparison · ${it.name}</h3><span class="est">ESTIMATES · COSTS ILLUSTRATIVE</span></div><div class="pb">
           <div class="reco"><h4>RECOMMENDATION · COMMANDER DECIDES</h4><div class="big">${win === 'A' ? 'Plan A: keep the current schedule' : 'Plan B: ' + bName}</div>
-            <ul><li><b>Why:</b> ${why}. ${win === 'A' ? 'Plan A' : 'Plan B'} leaves ${wm.stockouts} post${wm.stockouts === 1 ? '' : 's'} short against ${lm.stockouts}; score ${fmt((win === 'A' ? sA : sB).total, 2)} vs ${fmt((win === 'A' ? sB : sA).total, 2)}.</li>${trade.length ? `<li><b>Trade-offs:</b> ${esc(trade.join('; '))}.</li>` : ''}${!mA.stockouts && !mB.stockouts ? '<li>Neither plan has a shortage here; the choice rests on time and cost.</li>' : ''}</ul></div>
+            <ul><li><b>Why:</b> ${why}. ${win === 'A' ? 'Plan A' : 'Plan B'} leaves ${wm.stockouts} post${wm.stockouts === 1 ? '' : 's'} short against ${lm.stockouts}; score ${fmt((win === 'A' ? sA : sB).total, 2)} vs ${fmt((win === 'A' ? sB : sA).total, 2)}.</li>${trade.length ? `<li><b>Trade-offs:</b> ${esc(trade.join('; '))}.</li>` : ''}${!mA.stockouts && !mB.stockouts ? '<li>Neither plan has a shortage here; the choice rests on time and cost.</li>' : ''}${all[best].k !== 'A' && all[best].k !== st.planB ? `<li><b>Better option found:</b> ${NAMES[all[best].k]} leaves ${all[best].m.stockouts} post${all[best].m.stockouts === 1 ? '' : 's'} short at ₹${fmt(all[best].m.cost, 1)} lakh. <button type="button" class="btn sm primary" id="pickBest" data-k="${all[best].k}">Compare it as Plan B</button></li>` : ''}</ul></div>
           ${limit}
           <div class="scroll" style="margin-top:12px"><table class="t cmp"><thead><tr><th>Metric</th><th class="n">Plan A · current</th><th class="n">Plan B · ${esc(bName)}</th></tr></thead><tbody>
             ${rowsDef.map(([l, f, fm, dir]) => { const a = f(mA, 0), b = f(mB, 1), eq = Math.abs(a - b) < 1e-9, aB = !eq && (dir === 'low' ? a < b : a > b); return `<tr><td>${l}</td><td class="n ${aB ? 'better' : ''}">${fm(a)}</td><td class="n ${!eq && !aB ? 'better' : ''}">${fm(b)}</td></tr>`; }).join('')}</tbody></table></div>
@@ -214,6 +214,7 @@
           <td style="font-size:12.5px">${ITEMS[h.sc.item].name} · ${E.BYID[h.sc.source].name} · +${h.sc.delay} d · use ${h.sc.cons >= 0 ? '+' : ''}${h.sc.cons}% · stock −${h.sc.inv}%${h.sc.routeOut ? ' · Route-1 closed' : ''}</td><td class="n">${h.a}</td><td class="n">${h.b}</td><td>${esc(h.reco)}</td><td><button type="button" class="btn sm" data-restore="${i}">Restore</button></td></tr>`).join('')}</tbody>`
           : '<tbody><tr><td class="empty" style="border:0">No saved runs yet.</td></tr></tbody>'}</table></div></div>`;
     ui.$('#sP').value = st.prio;
+    const pb = ui.$('#pickBest'); if (pb) pb.onclick = () => FSI.set({ planB: pb.dataset.k });
     root.querySelectorAll('[data-d]').forEach(b => b.onclick = () => FSI.set({ delay: +b.dataset.d }));
     ui.$('#sC').onchange = e => FSI.set({ cons: +e.target.value });
     ui.$('#sI').onchange = e => FSI.set({ inv: +e.target.value });

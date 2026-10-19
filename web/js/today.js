@@ -33,7 +33,7 @@
           <svg class="fluid" id="tMap" viewBox="0 0 820 470" role="img" aria-label="Sector map"></svg>${FSI.mapLegend()}</div>
       </div>
       <div class="grid today-low">
-        <a class="mini" href="#/weather"><b>Weather · next 7 days</b><span>Coldest: ${esc(ws.coldest.n.name)} ~${fmt(ws.coldest.t, 0)} °C. Snow: ${ws.snow.filter(x => x.cm >= 1).map(x => x.c.id).join(', ') || 'none forecast'}. No-fly days: ${ws.noFly.reduce((a, x) => a + x.days.length, 0) || 'none'}.</span></a>
+        <a class="mini" href="#/weather"><b>Weather · next 7 days</b><span>Coldest: ${esc(ws.coldest.n.name)}, about ${fmt(ws.coldest.t, 0)} °C. Snow: ${ws.snow.filter(x => x.cm >= 1).map(x => x.c.id).join(', ') || 'none forecast'}. No-fly days: ${ws.noFly.reduce((a, x) => a + x.days.length, 0) || 'none'}.</span></a>
         <a class="mini ${wp.short > 0 ? 'bad' : ''}" href="#/winter"><b>Winter stocking</b><span>${wp.short > 0 ? `${wp.short} truckloads short before Pass-1 closes (~${wp.early} days).` : `On track before Pass-1 closes (~${wp.early} days).`}</span></a>
         <a class="mini ${stale.length ? 'bad' : ''}" href="#/reports"><b>Stock reports</b><span>${stale.length ? `${stale.map(p => p.name).join(', ')}: no report for over 3 days. Ask for a SITREP.` : 'All posts reported in the last 3 days.'}</span></a>
       </div>`;
