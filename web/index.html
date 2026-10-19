@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Forward Supply Intelligence</title>
+<meta name="description" content="Decision-support prototype for forward logistics: act-by deadlines, disruption simulation and plan comparison. Synthetic data.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans+Condensed:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/app.css?v=3">
+</head>
+<body>
+<div class="shell">
+  <aside class="side" id="side" aria-label="Main navigation">
+    <div class="brand"><b>FORWARD SUPPLY<br>INTELLIGENCE</b><span>SIH26251 · TEAM VAN GUARD</span></div>
+    <nav id="nav">
+      <div class="grp">SITUATION</div>
+      <a href="#/overview"><span class="k">00</span>Command overview</a>
+      <a href="#/clock"><span class="k">01</span>Decision Clock<span class="new">KEY</span></a>
+      <a href="#/reports"><span class="k">02</span>Field reports</a>
+      <div class="grp">SIMULATE</div>
+      <a href="#/whatif"><span class="k">03</span>What-If simulator</a>
+      <a href="#/ripple"><span class="k">04</span>Ripple-effect analyzer</a>
+      <a href="#/stress"><span class="k">05</span>Stress test &amp; plans</a>
+      <a href="#/winter"><span class="k">06</span>Winter stocking</a>
+      <div class="grp">OUTPUT</div>
+      <a href="#/brief"><span class="k">07</span>Commander's brief</a>
+      <a href="#/methods"><span class="k">08</span>Methods &amp; data</a>
+    </nav>
+    <div class="foot">Prototype. Synthetic data, fictional sites. Recommendations only: a human decides.</div>
+  </aside>
+  <div>
+    <header class="top">
+      <button type="button" class="btn sm menu-btn" id="menuBtn" aria-controls="side" aria-expanded="false">☰ Menu</button>
+      <div><h1 id="pageTitle">Command overview</h1><div class="sub" id="pageSub"></div></div>
+      <span class="sp"></span>
+      <div><label for="itemSel">Supply class</label><select id="itemSel"></select></div>
+      <span class="dtg" id="dtg"></span>
+      <span class="demo" title="All sites and numbers are fictional">SYNTHETIC DATA</span>
+    </header>
+    <div class="scbar" id="scbar" aria-label="Shared scenario"></div>
+    <main class="main" id="view" tabindex="-1"></main>
+  </div>
+</div>
+<script src="js/data.js?v=3"></script>
+<script src="js/engine.js?v=3"></script>
+<script src="js/ui.js?v=3"></script>
+<script src="js/views.js?v=3"></script>
+<script src="js/views-sim.js?v=3"></script>
+<script src="js/app.js?v=3"></script>
+</body>
+</html>
