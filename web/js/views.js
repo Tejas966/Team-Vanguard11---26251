@@ -47,6 +47,7 @@
         <a class="tile ${atRisk.length ? 'warn' : 'good'}" href="#/ripple"><div class="l">Posts at risk · ${ITEMS[st.item].name}</div><div class="v">${atRisk.length}<small>/ ${posts.length}</small></div><div class="s">${posts.filter(r => r.risk === 'red').length} red · ${posts.filter(r => r.risk === 'amber').length} amber under current scenario</div></a>
         <a class="tile ${stale.length ? 'warn' : 'good'}" href="#/reports"><div class="l">Stock reports not fresh</div><div class="v">${stale.length}<small>/ ${E.POSTS.length}</small></div><div class="s">${stale.length ? stale.map(p => p.name.replace('Post ', '')).join(', ') + ': wider uncertainty' : 'All posts reported in 24 h'}</div></a>
       </div>
+      ${FSI.weatherStrip()}
       <div class="grid ov-main">
         <div class="panel"><div class="ph"><h3>Sector picture</h3><span class="hint">Click a post to open its Decision Clock</span></div>
           <svg class="fluid" id="ovMap" viewBox="0 0 760 445" role="img" aria-label="Schematic sector map"></svg>
@@ -79,9 +80,9 @@
     root.innerHTML = `
       <p class="intro">Risk scores tell you <i>that</i> a post is in trouble. The Decision Clock tells you <b>by when you must act, and with what</b>. For every post it works back from the conservative stock-out time (90% sure stock lasts until then) to the latest moment each resupply option can still be ordered. Cheaper options close first.</p>
       <div class="itabs" role="tablist" aria-label="Supply class">${ITEM_KEYS.map(k => `<button type="button" role="tab" aria-selected="${k === item}" data-k="${k}">${ITEMS[k].name}${counts[k] ? `<span class="cnt">${counts[k]}</span>` : ''}</button>`).join('')}</div>
-      <div class="legend" style="margin:-4px 0 10px"><span><b style="font-family:var(--mono)">T C D A</b> = latest time to order: Transfer · rush Convoy · Detour via Pass-2 · Airlift</span><span>▼ scheduled delivery</span><span><i style="border-color:#C62828"></i>conservative stock-out (90%)</span><span><i class="box" style="background:repeating-linear-gradient(135deg,rgba(198,40,40,.5) 0 3px,transparent 3px 6px)"></i>no option arrives in time</span></div>
+      <div class="legend" style="margin:-4px 0 10px"><span><b style="font-family:var(--mono)">T C D A</b> = latest time to order: lateral Transfer · expedite Convoy · Detour via Pass-2 · Air maintenance</span><span>▼ scheduled delivery</span><span><i style="border-color:#C62828"></i>conservative stock-out (90%)</span><span><i class="box" style="background:repeating-linear-gradient(135deg,rgba(198,40,40,.5) 0 3px,transparent 3px 6px)"></i>no option arrives in time</span></div>
       <div class="clock">${rows.map(row => clockRow(st, row, it)).join('')}</div>
-      <p class="note">Lead times: transfer 1 d · rush convoy = track time + 0.5 d (only if the depot has free stock) · detour = Route-2 to Depot-B + track · airlift 1 d, weather permitting (${Math.round(CONFIG.airGo * 100)}% flyable days assumed). Costs are illustrative.</p>`;
+      <p class="note">Lead times: lateral transfer 1 d · expedite convoy = road time (+ porter / animal transport leg where needed) + 0.5 d, only if the depot has free stock · detour = Route-2 to Depot-B + road · air maintenance 1 d, only on days the <b>real Open-Meteo forecast</b> shows flyable (snow &lt; 1 cm, rain &lt; 2 mm, wind &lt; 40 km/h). Costs are illustrative.</p>`;
     rows.forEach(row => drawTimeline(ui.$('#tl-' + row.n.id), row));
     root.querySelectorAll('.itabs button').forEach(b => b.onclick = () => FSI.set({ clockItem: b.dataset.k }));
     root.querySelectorAll('[data-approve]').forEach(b => b.onclick = () => {
@@ -150,7 +151,7 @@
       <p class="intro">Forward posts often have only HF radio, satellite text or a patchy phone link, not a live sensor feed. They can send <b>one short coded line</b>. The system parses it, checks it against what it expected, and tracks how fresh every post's figures are. Old figures widen the uncertainty, which pulls deadlines earlier on the Decision Clock.</p>
       <div class="grid r-main">
         <div class="panel"><div class="ph"><h3>Receive a SITREP</h3></div><div class="pb">
-          <div class="fmt">SITREP &lt;POST&gt; &lt;DDHHMM&gt; F&lt;fuel L&gt; R&lt;rations kg&gt; M&lt;med kits&gt; S&lt;spares&gt; [STR&lt;strength&gt;]<br>
+          <div class="fmt">SITREP &lt;POST&gt; &lt;DDHHMM&gt; F&lt;SKO L&gt; R&lt;rations kg&gt; M&lt;medical kits&gt; S&lt;MT spares&gt; [STR&lt;strength&gt;]<br>
           Post codes: ${E.POSTS.map(p => `<b>${p.code}</b> ${p.name.replace('Post ', '')}`).join(' · ')}</div>
           <div class="field" style="margin-top:10px"><label for="sitrep">Message text</label><textarea id="sitrep" rows="2" spellcheck="false" placeholder="SITREP KES ${ui.dtg()} F600 R840"></textarea></div>
           <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px"><span style="font-size:12px;color:var(--muted);align-self:center">Samples:</span>${samples.map((s, i) => `<button type="button" class="btn sm" data-sample="${i}">${esc(s.split(' ')[1])}</button>`).join('')}</div>
@@ -198,14 +199,14 @@
     const remainT = Object.values(wp.left).reduce((a, b) => a + b, 0) * CONFIG.truckT;
     const sorties = Math.ceil(remainT * 1000 / CONFIG.sortieKg);
     root.innerHTML = `
-      <p class="intro">Pass-1 closes for months each winter, and air resupply carries only a small share of road capacity. The question is: <b>can we push enough stock up before the pass shuts?</b> This works out the requirement for every post beyond the pass, compares it with convoy capacity, and builds a week-by-week push plan.</p>
+      <p class="intro"><b>Advance Winter Stocking (AWS).</b> Pass-1 closes for months each winter, and air maintenance carries only a small share of road capacity. The question is: <b>can we push enough stock up before the pass shuts?</b> This works out the requirement for every post beyond the pass, compares it with convoy capacity, and builds a week-by-week push plan.</p>
       <div class="grid w-top" style="margin-bottom:12px">
         <div class="panel"><div class="pb"><div class="tile" style="border:0;padding:0"><div class="l">Days until Pass-1 closes</div></div>
           <div class="big-num" style="margin-top:4px">${W.p10}<small>early estimate</small></div><p class="note">Median ${W.median} d · late ${W.p90} d. Planning uses the early date (10% chance it closes sooner). <span class="est">ILLUSTRATIVE</span></p></div></div>
         <div class="panel"><div class="pb"><div class="tile" style="border:0;padding:0"><div class="l">Truckloads still to push</div></div>
           <div class="big-num" style="margin-top:4px">${wp.totLoads}<small>loads of ${CONFIG.truckT} t</small></div><p class="note">Capacity before closure: ${wp.cap} loads (${CONFIG.loadsPerDay}/day, assumption).</p></div></div>
         <div class="panel"><div class="pb"><div class="tile" style="border:0;padding:0"><div class="l">Verdict</div></div>
-          <div style="margin-top:8px">${wp.short > 0 ? `${badge('red')} <b>${wp.short} loads short.</b><p style="margin:6px 0 0;font-size:13px">About ${fmt(remainT)} t would have to go by air, roughly <b>${sorties} sorties</b> of 2 t. Start Pass-2 runs now or pre-book airlift.</p>` : `${badge('green')} <b>On track</b><p style="margin:6px 0 0;font-size:13px">${-wp.short} loads of spare capacity.</p>`}</div></div></div>
+          <div style="margin-top:8px">${wp.short > 0 ? `${badge('red')} <b>${wp.short} loads short.</b><p style="margin:6px 0 0;font-size:13px">About ${fmt(remainT)} t would have to go by air, roughly <b>${sorties} sorties</b> of 2 t. Start Pass-2 runs now or pre-book air maintenance.</p>` : `${badge('green')} <b>On track</b><p style="margin:6px 0 0;font-size:13px">${-wp.short} loads of spare capacity.</p>`}</div></div></div>
       </div>
       <div class="panel" style="margin-bottom:12px"><div class="pb" style="display:flex;gap:18px;flex-wrap:wrap;align-items:end">
         <div class="field"><label for="wConf">Confidence stock lasts the winter</label><select id="wConf"><option value="1.2816">90%</option><option value="1.6449">95%</option><option value="2.3263">99%</option></select></div>
@@ -221,7 +222,7 @@
           <div class="wk">${wp.weeks.map(w => `<div class="c"><b class="h">WEEK ${w.w} · ${ui.when(w.from).split(' ').slice(1, 3).join(' ')}–${ui.when(w.to).split(' ').slice(1, 3).join(' ')}</b>
             ${Object.entries(w.alloc).map(([id, k]) => `${E.BYID[id].name.replace('Post ', '')}: <b>${k}</b>`).join('<br>') || '<span class="na">nothing left to send</span>'}${w.spare ? `<br><span style="color:var(--good-ink)">${w.spare} spare slots</span>` : ''}</div>`).join('')}</div>
           <p class="note">Each week the next convoy slot goes to the post with the largest remaining gap × priority. Not delivered before closure: ${Object.entries(wp.left).filter(([, v]) => v > 0).map(([id, v]) => `${E.BYID[id].name.replace('Post ', '')} ${v}`).join(', ') || 'none'}.</p></div></div>
-      </div>`;
+      </div>${FSI.snowHistoryPanel()}`;
     ui.$('#wConf').value = String(st.winterZ); ui.$('#wLen').value = String(st.winterW);
     ui.$('#wConf').onchange = e => FSI.set({ winterZ: +e.target.value });
     ui.$('#wLen').onchange = e => FSI.set({ winterW: +e.target.value });
@@ -231,7 +232,7 @@
   V.brief = (root, st) => {
     const due = dueList(st).slice(0, 6), R = E.simulate(st, {}), it = ITEMS[st.item], wp = E.winterPlan(st);
     const pB = E.buildPlan(st, st.planB), RB = E.simulate(st, pB), mA = E.metrics(R, 0), mB = E.metrics(RB, pB.cost), [win, why] = E.decide(st, mA, mB);
-    const names = { reroute: 'reroute Depot-B resupply via Route-2', air: 'emergency airlift to the most urgent posts', realloc: 'lateral reallocation between posts', combo: 'reroute plus airlift' };
+    const names = { reroute: 'reroute Depot-B resupply via Route-2', air: 'air maintenance to the most urgent posts', realloc: 'lateral reallocation between posts', combo: 'reroute plus air maintenance' };
     const stale = E.POSTS.filter(p => E.freshness(st, p.id) !== 'fresh');
     root.innerHTML = `<div class="noprint" style="display:flex;gap:8px;margin-bottom:12px"><button type="button" class="btn primary" onclick="window.print()">Print / save as PDF</button><span class="note" style="margin:0;align-self:center">One page for the commander, generated from the current scenario.</span></div>
     <div class="brief">
@@ -246,7 +247,7 @@
       <ol>${due.map(r => `<li><b>${esc(r.n.name)} · ${ITEMS[r.item].name}:</b> ${r.status === 'late' ? 'no option arrives in time; shortage from ' + ui.when(r.r.Yc) : `${esc(r.first.label)}, order by ${ui.when(r.first.actBy)}${r.last && r.last !== r.first ? `; fallback ${esc(r.last.label.toLowerCase())} until ${ui.when(r.last.actBy)}` : ''}`}.</li>`).join('') || '<li>No decisions due within 14 days.</li>'}</ol>
       <h3>3. Recommended plan · ${it.name}</h3>
       <p>${win === 'A' ? 'Keep the current schedule' : 'Adopt Plan B: ' + names[st.planB]} (${why}). Posts short: Plan A ${mA.stockouts}, Plan B ${mB.stockouts}. Extra cost ₹${fmt(mB.cost - mA.cost, 1)} lakh (illustrative).</p>
-      <h3>4. Winter stocking</h3>
+      <h3>4. Advance Winter Stocking</h3>
       <p>${wp.totLoads} truckloads still needed before the early closure estimate in ${wp.early} days; capacity ${wp.cap}. ${wp.short > 0 ? `<b>${wp.short} loads short.</b>` : 'On track.'}</p>
       <h3>5. Decisions recorded</h3>
       <ul>${(st.decisions || []).slice(-8).map(d => `<li>${esc(d.at)}: ${esc(d.post)} · ${esc(d.item)}: ${esc(d.option)} (deadline ${esc(d.actBy)})</li>`).join('') || '<li>None yet.</li>'}</ul>
@@ -262,6 +263,7 @@
       <div class="grid m5">
         <div class="panel"><div class="ph"><h3>How every number is produced</h3></div><div class="pb method">
           <h4>Decision Clock</h4><p>Conservative stock-out day T<sub>90</sub> solves <code>stock − use·T − 1.28·√(CV²·use²·T + (σ<sub>report</sub>·stock)²) = 0</code>: a 90% chance stock lasts at least that long. For each option, <b>latest order time = T<sub>90</sub> − lead time</b>, and an option is open only if it can start by then (a rush convoy needs free depot stock). Options are ranked cheapest first, so the clock shows which window closes next and what the fallback is.</p>
+          <h4>Real weather → demand and flying</h4><p>Daily minimum temperature, snowfall, rain and wind come from Open-Meteo for three public grid points in the western Himalaya (W1–W3). Each post takes its cell's temperature adjusted by <code>−6.5 °C per km</code> of extra altitude. SKO use per person per day = <code>1.0 + 0.09 × max(0, 8 − T)</code>, capped at 3.6 L, averaged over the next 14 days. It is anchored so that about −12 °C gives 2.8 L, the figure derived from ThePrint (2020). A day is flyable if snow &lt; 1 cm, rain &lt; 2 mm and wind &lt; 40 km/h. Beyond the forecast the model uses the 2023–2026 average for that date.</p>
           <h4>Field reports</h4><p>A SITREP is checked for format, post code and time. Each value is compared with expected stock; a gap over 25% and over 2 days of use is flagged "check count". Accepting it replaces the stock figure and resets the report age. Report age adds stock uncertainty: under 24 h none, 24–72 h ±8%, over 72 h ±20%.</p>
           <h4>What-If and Ripple</h4><p>Stock at arrival = <code>inventory − use × (lead + delay)</code>. In the network, each depot ships its children's scheduled loads in date order while stock lasts. A load it cannot fill waits for the depot's own resupply, so delays travel only along real links. Red: stock runs out before delivery. Amber: delayed, under 2 d margin, under 5 d cover after delivery, or ≥ 20% chance of running out.</p>
           <h4>Stress test decision rule</h4><ol><li>Fewer posts short wins.</li><li>Otherwise the lowest weighted score of risk, time and cost, each scaled 0–1, wins. Weights are set by the chosen priority.</li><li>If no plan removes every shortage, the page says so and works out what would close the gap.</li></ol>
@@ -276,13 +278,13 @@
           <li>CAPS (2024), logistics information systems in the Indian armed forces — <a href="https://capssindia.org/?p=13949" target="_blank" rel="noopener">capssindia.org</a><span class="tag-used">USED</span><span class="use">Problem framing: fragmented, delayed visibility across systems.</span></li>
           <li>ThePrint (2020), winter readiness for high-altitude troops — <a href="https://theprint.in/defence/heres-how-army-is-getting-30000-additional-troops-winter-ready-in-ladakh/464301/" target="_blank" rel="noopener">theprint.in</a><span class="tag-used">USED</span><span class="use">Ration anchor (~2.5 kg per person per day) and the winter-stocking problem.</span></li>
           <li>CAG Report No. 16, press brief — <a href="https://www.cag.gov.in/uploads/PressRelease/PR-Press-Brief-Report-no-16-05f19941ebcdbc7-81616480.pdf" target="_blank" rel="noopener">cag.gov.in</a><span class="tag-used">USED</span><span class="use">Ration scales rise with altitude band; used as ratios only.</span></li>
-          <li>Open-Meteo historical weather API (CC BY 4.0) — <a href="https://open-meteo.com/en/docs/historical-weather-api" target="_blank" rel="noopener">open-meteo.com</a><span class="tag-plan">PLANNED</span><span class="use">Real temperature and snowfall as demand and closure drivers.</span></li>
+          <li>Open-Meteo historical weather API (CC BY 4.0) — <a href="https://open-meteo.com/en/docs/historical-weather-api" target="_blank" rel="noopener">open-meteo.com</a><span class="tag-used">USED</span><span class="use">Real daily temperature, snow, rain and wind (2023–2026 archive + 16-day forecast) drive SKO demand and flyable days.</span></li>
           <li>Google OR-Tools vehicle routing — <a href="https://developers.google.com/optimization/routing/vrptw" target="_blank" rel="noopener">developers.google.com</a><span class="tag-plan">PLANNED</span><span class="use">Full routing with capacities and time windows.</span></li>
         </ul><p class="note">Please check each citation's exact title and link before submission.</p></div></div>
       </div>
       <div class="panel" style="margin-top:12px"><div class="ph"><h3>Synthetic demo dataset · ${it.name} (${it.unit})</h3><span class="hint">Fictional</span></div>
         <div class="pb scroll" style="padding-top:0"><table class="t"><thead><tr><th>Node</th><th>Role</th><th>Supplied by</th><th class="n">Personnel</th><th class="n">Altitude ft</th><th class="n">Daily use</th><th class="n">Stock</th><th class="n">Days</th><th class="n">Next delivery</th><th class="n">Load</th></tr></thead><tbody>
         ${NODES.map(n => { const v = E.nodeVals(st, n); return `<tr><td><b>${n.name}</b></td><td>${n.role}</td><td>${n.parent ? E.BYID[n.parent].name : 'railhead'}</td><td class="n">${n.troops || '—'}</td><td class="n">${n.alt ? fmt(n.alt) : '—'}</td><td class="n">${fmt(v.c, 1)}</td><td class="n">${fmt(v.s)}</td><td class="n">${fmt(v.s / v.c, 1)}</td><td class="n">day ${v.L}</td><td class="n">${fmt(v.q)}</td></tr>`; }).join('')}
-        </tbody></table><p class="note">Use = personnel × scale × altitude factor (bands &lt;9,000 / 9–12,000 / &gt;12,000 ft). Scales anchored on public reporting; multipliers, stock, lead times and costs are assumptions.</p></div></div>`;
+        </tbody></table><p class="note">Rations = personnel × 2.5 kg × altitude band factor (&lt;9,000 / 9–12,000 / &gt;12,000 ft). SKO = personnel × weather-driven litres per person (real Open-Meteo temperature). Scales are anchored on public reporting; multipliers, stock, lead times and costs are assumptions.</p></div></div>`;
   };
 })();

@@ -1,6 +1,6 @@
 # Forward Supply Intelligence — web prototype (SIH26251)
 
-Decision-support prototype for forward logistics. **All data is synthetic; all sites are fictional.**
+Decision-support prototype for forward logistics. **Logistics data is synthetic and all sites are fictional. Weather is real (Open-Meteo, CC BY 4.0).** Refresh the snapshot with `python data/fetch_weather.py`; the app also tries to fetch the latest forecast live when online.
 
 ## Run it
 - Easiest: double-click `index.html` (works offline; fonts fall back if there is no internet).
@@ -12,10 +12,11 @@ Decision-support prototype for forward logistics. **All data is synthetic; all s
 | 00 | Command overview | Where is the trouble, and which decision is due first? |
 | 01 | **Decision Clock** | By when must I act, with which option, and what is the fallback? |
 | 02 | Field reports | Low-bandwidth SITREP parsing, anomaly checks, report freshness |
+| 02b | Weather (real) | Open-Meteo forecast + 2023–26 history driving SKO demand and flyable days |
 | 03 | What-If simulator | Normal vs delayed delivery for one node |
 | 04 | Ripple-effect analyzer | How one disruption spreads along real network links |
 | 05 | Stress test & plans | Plan A vs Plan B, with a written decision rule |
-| 06 | Winter stocking | Can we push enough up before the pass closes? Weekly push plan |
+| 06 | Advance Winter Stocking | Can we push enough up before the pass closes? Weekly push plan |
 | 07 | Commander's brief | One printable page from the current scenario |
 | 08 | Methods & data | Every formula, rule, reference and the demo dataset |
 
@@ -27,4 +28,4 @@ All pages share one scenario (top bar), so a change anywhere updates everything.
 - `js/ui.js`, `js/views*.js`, `js/app.js` — rendering, routing, shared state
 
 ## Honest limits
-Demand comes from ration/fuel scales, not yet from a trained forecaster. Probabilities use a normal approximation. Costs, closure dates and airlift availability are illustrative. The system recommends; a human decides.
+Demand comes from ration scales and a weather-driven SKO rule, not yet from a trained forecaster. Probabilities use a normal approximation. Costs, closure dates and airlift availability are illustrative. The system recommends; a human decides.

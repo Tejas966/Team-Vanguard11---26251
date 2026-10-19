@@ -23,7 +23,7 @@
   function baseCons(n, it) {
     if (n.type === 'depot') return kids(n.id).reduce((a, k) => a + baseCons(k, it), 0);
     if (it === 'R') return n.troops * 2.5 * altMult(n.alt);
-    if (it === 'F') return n.troops * 2.4 * (1 + (n.alt - 10000) / 20000);
+    if (it === 'F') return n.troops * FSI.wx.polRate(n); // SKO: real weather, adjusted to post altitude
     if (it === 'M') return n.troops * 0.02;
     return n.troops * 0.025;
   }
@@ -152,21 +152,26 @@
     if (lat) {
       const o = lat[0] === id ? lat[1] : lat[0], ro = R[o];
       const surplus = ro.s - ro.c * (Math.min(ro.A, H) + 3);
-      opts.push({ key: 'lateral', label: `Transfer from ${BYID[o].name}`, lead: 1, cost: CONFIG.cost.transfer,
+      opts.push({ key: 'lateral', label: `Lateral transfer from ${BYID[o].name}`, lead: 1, cost: CONFIG.cost.transfer,
         ok: ro.risk === 'green' && surplus > r.c * 2, why: ro.risk !== 'green' ? `${BYID[o].name} is at risk itself` : surplus > r.c * 2 ? `surplus ≈ ${fmt(surplus)} ${it.unit}` : 'neighbour has no spare stock' });
     }
     // Depot stock not already committed to on-time scheduled loads
     const free = p.s - (p.queue || []).filter(q => q.ok).reduce((a, q) => a + R[q.id].q, 0);
     const waitDepot = free >= r.q * 0.5 ? 0 : (Number.isFinite(p.A) && p.A <= H ? p.A : null);
-    opts.push({ key: 'expedite', label: `Rush convoy from ${p.n.name}`, lead: n.tr + 0.5, earliest: waitDepot || 0, cost: CONFIG.cost.expedite,
+    opts.push({ key: 'expedite', label: `Expedite convoy from ${p.n.name}`, lead: n.tr + 0.5, earliest: waitDepot || 0, cost: CONFIG.cost.expedite,
       ok: waitDepot != null, why: waitDepot == null ? `${p.n.name} has no free stock and no resupply within 14 days`
-        : waitDepot === 0 ? `${n.tr} d on the track plus half a day to load` : `must wait for ${p.n.name}'s resupply (day ${p.A}), then ${n.tr} d on the track` });
+        : waitDepot === 0 ? `${n.tr} d by road${n.lastMile ? ' and ' + n.lastMile : ''}, plus half a day to load` : `must wait for ${p.n.name}'s resupply (day ${p.A}), then ${n.tr} d on the track` });
     if (n.parent === 'DB') opts.push({ key: 'detour', label: 'Resupply via Route-2 (Pass-2)', lead: BYID.DB.alt.L + n.tr, cost: CONFIG.cost.reroute,
       ok: true, why: `${BYID.DB.alt.L} d to Depot-B at 60% load, plus ${n.tr} d to the post` });
-    opts.push({ key: 'air', label: 'Airlift', lead: 1, cost: CONFIG.cost.sortie, ok: true,
-      why: `1 d lead, flyable on about ${Math.round(CONFIG.airGo * 100)}% of winter days (assumption)` });
+    // Air maintenance: only on flyable days at the post's weather cell (snow, rain, wind rule).
+    const fly = []; for (let d = 1; d <= Math.min(H, Math.floor(r.Yc)); d++) if (FSI.wx.flyable(n.cell, d).ok) fly.push(d);
+    const bad = []; for (let d = 1; d <= Math.min(7, H); d++) if (!FSI.wx.flyable(n.cell, d).ok) bad.push(d);
+    const airOpt = { key: 'air', label: 'Air maintenance (air-drop)', lead: 1, cost: CONFIG.cost.sortie, ok: fly.length > 0, flyDays: fly,
+      why: fly.length ? `latest flyable day before stock-out: day ${fly[fly.length - 1]}${bad.length ? `; not flyable on day ${bad.join(', ')} (snow, rain or wind in forecast)` : '; forecast clear'}` : 'no flyable day in the forecast before stock runs out' };
+    opts.push(airOpt);
     opts.forEach(o => {
       o.earliest = o.earliest || 0; o.actBy = r.Yc - o.lead;
+      if (o.key === 'air' && o.flyDays && o.flyDays.length) o.actBy = Math.min(o.actBy, o.flyDays[o.flyDays.length - 1] - 0.5); // order 12 h before the flight
       if (o.ok && o.actBy < o.earliest) { o.ok = false; o.why += ' — too late to arrive before stock runs out'; }
     });
     return opts;
@@ -198,8 +203,8 @@
     if (kind === 'air' || kind === 'combo') {
       const R0 = simulate(st, { reroute: plan.reroute }), u = urgentPosts(R0);
       u.slice(0, 2).forEach(r => { const units = Math.min(CONFIG.sortieKg / it.kg, 6 * r.c);
-        plan.extras.push({ to: r.n.id, units, label: `airlift of ${fmt(units)} ${it.unit} lands day 1` }); plan.cost += CONFIG.cost.sortie; });
-      if (!u.length) plan.notes.push('No red posts, so no airlift is needed');
+        plan.extras.push({ to: r.n.id, units, label: `air maintenance drop of ${fmt(units)} ${it.unit}, day 1` }); plan.cost += CONFIG.cost.sortie; });
+      if (!u.length) plan.notes.push('No red posts, so no air maintenance is needed');
     }
     if (kind === 'realloc') {
       const R0 = simulate(st, {});

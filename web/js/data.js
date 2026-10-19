@@ -4,37 +4,37 @@
 window.FSI = window.FSI || {};
 
 FSI.ITEMS = {
-  F: { name: 'Heating fuel',   unit: 'L',     cv: 0.15, kg: 0.85 },
-  R: { name: 'Rations',        unit: 'kg',    cv: 0.08, kg: 1 },
-  M: { name: 'Medical kits',   unit: 'kits',  cv: 0.5,  kg: 4 },
-  S: { name: 'Vehicle spares', unit: 'units', cv: 0.6,  kg: 6 },
+  F: { name: 'POL · SKO (kerosene)', short: 'SKO', unit: 'L', cv: 0.15, kg: 0.8 },
+  R: { name: 'Rations', short: 'Rations', unit: 'kg', cv: 0.08, kg: 1 },
+  M: { name: 'Medical stores', short: 'Medical', unit: 'kits', cv: 0.5, kg: 4 },
+  S: { name: 'MT spares', short: 'MT spares', unit: 'units', cv: 0.6, kg: 6 },
 };
 
 // net: position in the network diagram; map: position on the schematic sector map
 FSI.NODES = [
-  { id: 'DA', code: 'DPA', name: 'Depot-A', role: 'Rear base depot', type: 'depot', parent: null, L: 4, tr: 2,
+  { id: 'DA', code: 'DPA', name: 'Depot-A', role: 'Rear supply depot (ASC / AOC)', type: 'depot', parent: null, L: 4, tr: 2,
     route: 'Railhead (off-map)', stockDays: 20, qtyDays: 14, net: { x: 30, y: 195 }, map: { x: 70, y: 390 } },
-  { id: 'DB', code: 'DPB', name: 'Depot-B', role: 'Forward depot', type: 'depot', parent: 'DA', L: 3, tr: 2,
+  { id: 'DB', code: 'DPB', name: 'Depot-B', role: 'Forward supply depot', type: 'depot', parent: 'DA', L: 3, tr: 2,
     route: 'Route-1 via Pass-1', stockDays: 5, qtyDays: 10, net: { x: 300, y: 110 }, map: { x: 420, y: 165 },
     alt: { route: 'Route-2 via Pass-2', L: 5, cap: 0.6 } },
-  { id: 'TH', code: 'HT1', name: 'Hub T-1', role: 'Transit hub', type: 'depot', parent: 'DA', L: 2, tr: 1,
+  { id: 'TH', code: 'HT1', name: 'Transit Camp T-1', role: 'Transit camp', type: 'depot', parent: 'DA', L: 2, tr: 1,
     route: 'Valley road', stockDays: 6, qtyDays: 10, net: { x: 300, y: 330 }, map: { x: 330, y: 345 } },
-  { id: 'P1', code: 'KES', name: 'Post Kestrel', role: 'Forward post', type: 'post', parent: 'DB', L: 3, tr: 1,
+  { id: 'P1', cell: 'W1', code: 'KES', name: 'Post Kestrel', role: 'Forward post', type: 'post', parent: 'DB', L: 3, tr: 1,
     troops: 120, alt: 15200, prio: 2, stock: { F: 5, R: 7, M: 9, S: 12 }, qtyDays: 10,
     net: { x: 610, y: 18 }, map: { x: 555, y: 85 } },
-  { id: 'P2', code: 'FAL', name: 'Post Falcon', role: 'Forward post', type: 'post', parent: 'DB', L: 5, tr: 2,
-    troops: 80, alt: 16100, prio: 3, stock: { F: 6, R: 8, M: 5, S: 9 }, qtyDays: 10,
+  { id: 'P2', cell: 'W1', code: 'FAL', name: 'Post Falcon', role: 'Forward post', type: 'post', parent: 'DB', L: 5, tr: 2,
+    lastMile: 'porter / animal transport', troops: 80, alt: 16100, prio: 3, stock: { F: 6, R: 8, M: 5, S: 9 }, qtyDays: 10,
     net: { x: 610, y: 96 }, map: { x: 625, y: 165 } },
-  { id: 'P3', code: 'HER', name: 'Post Heron', role: 'Forward post', type: 'post', parent: 'DB', L: 4, tr: 1,
+  { id: 'P3', cell: 'W3', code: 'HER', name: 'Post Heron', role: 'Forward post', type: 'post', parent: 'DB', L: 4, tr: 1,
     troops: 100, alt: 14800, prio: 2, stock: { F: 9, R: 10, M: 12, S: 14 }, qtyDays: 10,
     net: { x: 610, y: 174 }, map: { x: 565, y: 245 } },
-  { id: 'P4', code: 'OSP', name: 'Post Osprey', role: 'Forward post', type: 'post', parent: 'DB', L: 6, tr: 2,
-    troops: 60, alt: 17400, prio: 3, stock: { F: 7, R: 9, M: 8, S: 6 }, qtyDays: 10,
+  { id: 'P4', cell: 'W3', code: 'OSP', name: 'Post Osprey', role: 'Forward post', type: 'post', parent: 'DB', L: 6, tr: 2,
+    lastMile: 'porter / animal transport', troops: 60, alt: 17400, prio: 3, stock: { F: 7, R: 9, M: 8, S: 6 }, qtyDays: 10,
     net: { x: 610, y: 252 }, map: { x: 440, y: 50 } },
-  { id: 'P5', code: 'KIT', name: 'Post Kite', role: 'Valley post', type: 'post', parent: 'TH', L: 2, tr: 1,
+  { id: 'P5', cell: 'W2', code: 'KIT', name: 'Post Kite', role: 'Valley post', type: 'post', parent: 'TH', L: 2, tr: 1,
     troops: 140, alt: 11200, prio: 1, stock: { F: 8, R: 9, M: 10, S: 11 }, qtyDays: 10,
     net: { x: 610, y: 330 }, map: { x: 480, y: 340 } },
-  { id: 'P6', code: 'MER', name: 'Post Merlin', role: 'Valley post', type: 'post', parent: 'TH', L: 4, tr: 1,
+  { id: 'P6', cell: 'W2', code: 'MER', name: 'Post Merlin', role: 'Valley post', type: 'post', parent: 'TH', L: 4, tr: 1,
     troops: 90, alt: 12600, prio: 1, stock: { F: 7, R: 6, M: 9, S: 8 }, qtyDays: 10,
     net: { x: 610, y: 408 }, map: { x: 610, y: 380 } },
 ];
@@ -54,6 +54,13 @@ FSI.CONFIG = {
   // report age (hours) -> extra stock uncertainty (fraction of stock)
   fresh: [{ h: 24, sd: 0 }, { h: 72, sd: 0.08 }, { h: Infinity, sd: 0.2 }],
 };
+
+// Weather-driven POL rule: SKO litres per person per day = 1.0 + 0.09 x max(0, 8 - Tmin at post),
+// capped at 3.6; Tmin at post = cell Tmin - 6.5 C per km of extra altitude. Anchored so that
+// about -12 C gives ~2.8 L (derived from ThePrint 2020: 15,000 kL / 30,000 troops / 180 days).
+FSI.POL_RULE = { base: 1.0, slope: 0.09, ref: 8, cap: 3.6, lapse: 6.5 };
+// A day is flyable for air maintenance if snowfall < 1 cm, precipitation < 2 mm and max wind < 40 km/h (our rule).
+FSI.FLY_RULE = { snow: 1, prcp: 2, wind: 40 };
 
 // Last report per post, in hours before "now", and the channel it came by
 FSI.REPORTS = {

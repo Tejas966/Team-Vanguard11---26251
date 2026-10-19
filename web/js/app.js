@@ -19,7 +19,8 @@
     whatif: ['What-If simulator', 'Normal vs delayed delivery for one node'],
     ripple: ['Ripple-effect analyzer', 'How one disruption spreads through the network'],
     stress: ['Stress test & plans', 'Plan A vs Plan B under disruption'],
-    winter: ['Winter stocking', 'Can we push enough up before the pass closes?'],
+    weather: ['Weather (real data)', 'Open-Meteo forecast and history driving demand and flying days'],
+    winter: ['Advance Winter Stocking', 'Can we push enough up before the pass closes?'],
     brief: ["Commander's brief", 'One printable page from the current scenario'],
     methods: ['Methods & data', 'Calculations, rules, references and the demo dataset'],
   };
@@ -28,9 +29,9 @@
   function scenarioBar() {
     const it = ITEMS[st.item], src = E.BYID[st.source];
     const c = (on, bad, t) => `<span class="chip ${bad ? 'bad' : on ? 'on' : ''}">${t}</span>`;
-    ui.$('#scbar').innerHTML = `<span class="lbl">SHARED SCENARIO</span>${c(1, 0, 'Class: ' + it.name)}${c(1, 0, 'Source: ' + src.name)}${c(0, st.delay, `Delay +${st.delay} d`)}${c(0, st.cons, `Use ${st.cons >= 0 ? '+' : ''}${st.cons}%`)}${c(0, st.short, `Incoming −${st.short}%`)}${c(0, st.inv, `Stock −${st.inv}%`)}${c(0, st.routeOut, 'Route-1 ' + (st.routeOut ? 'CLOSED' : 'open'))}${Object.keys(st.ovr).length ? c(1, 0, Object.keys(st.ovr).length + ' figure(s) updated') : ''}
+    ui.$('#scbar').innerHTML = `<span class="lbl">SHARED SCENARIO</span>${c(1, 0, 'Class: ' + it.name)}${c(1, 0, 'Source: ' + src.name)}${c(0, st.delay, `Delay +${st.delay} d`)}${c(0, st.cons, `Use ${st.cons >= 0 ? '+' : ''}${st.cons}%`)}${c(0, st.short, `Incoming −${st.short}%`)}${c(0, st.inv, `Stock −${st.inv}%`)}${c(0, st.routeOut, 'Route-1 ' + (st.routeOut ? 'CLOSED' : 'open'))}${Object.keys(st.ovr).length ? c(1, 0, Object.keys(st.ovr).length + ' figure(s) updated') : ''}${st.wxStorm ? c(0, 1, 'Simulated storm at W3, day 1–4') : ''}
       <span style="flex:1"></span><button type="button" class="btn sm" id="clearScn">Clear disruption</button><button type="button" class="btn sm" id="resetDemo" title="Restore the original demo data">Reset demo</button>`;
-    ui.$('#clearScn').onclick = () => FSI.set({ delay: 0, cons: 0, short: 0, inv: 0, routeOut: false });
+    ui.$('#clearScn').onclick = () => FSI.set({ delay: 0, cons: 0, short: 0, inv: 0, routeOut: false, wxStorm: null });
     ui.$('#resetDemo').onclick = () => { st = DEFAULT(); FSI.state = st; save(); render(true); };
   }
 
@@ -85,4 +86,5 @@
   ui.$('#nav').addEventListener('click', e => { if (e.target.closest('a')) { side.classList.remove('open'); mb.setAttribute('aria-expanded', 'false'); } });
   window.addEventListener('hashchange', () => render());
   render(true);
+  FSI.wx.refresh(() => render());
 })();

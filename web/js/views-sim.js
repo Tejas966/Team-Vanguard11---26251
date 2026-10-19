@@ -3,17 +3,17 @@
   const E = FSI.engine, ui = FSI.ui, { ITEMS, NODES, LATERAL, CONFIG } = FSI;
   const { fmt, esc, badge } = ui, H = CONFIG.horizon;
   const V = FSI.views;
-  const NAMES = { reroute: 'Reroute via Route-2', air: 'Emergency airlift', realloc: 'Lateral reallocation', combo: 'Reroute + airlift' };
+  const NAMES = { reroute: 'Reroute via Route-2', air: 'Air maintenance', realloc: 'Lateral reallocation', combo: 'Reroute + air maintenance' };
 
   function actionFor(st, R, id) {
     const r = R[id], n = r.n, it = ITEMS[st.item];
     if (r.risk === 'green') return '—';
-    if (n.type === 'depot') return n.id === 'DB' && (st.routeOut || st.source === 'DB') ? 'Expedite resupply via Route-2 (Pass-2) or request airlift' : `Prioritise ${n.name}'s replenishment; dispatch to highest-priority posts first`;
+    if (n.type === 'depot') return n.id === 'DB' && (st.routeOut || st.source === 'DB') ? 'Expedite resupply via Route-2 (Pass-2) or request air maintenance' : `Prioritise ${n.name}'s replenishment; dispatch to highest-priority posts first`;
     if (r.risk === 'red') {
       const lat = LATERAL.find(l => l.includes(id));
       if (lat) { const o = lat[0] === id ? lat[1] : lat[0], ro = R[o], sur = ro.s - ro.c * (Math.min(ro.A, H) + 3);
         if (ro.risk === 'green' && sur > 0) return `Reallocate up to ${fmt(Math.min(sur, r.short * r.c + 2 * r.c))} ${it.unit} from ${E.BYID[o].name} (lateral link, 1 d)`; }
-      return `Prioritise replenishment before ${ui.when(Math.max(0, r.Y))}: airlift or first slot on the next convoy`;
+      return `Prioritise replenishment before ${ui.when(Math.max(0, r.Y))}: air maintenance or first slot on the next convoy`;
     }
     if (r.cover < 5 && Number.isFinite(r.A)) return 'Top up the next delivery; buffer after delivery is thin';
     return 'Monitor daily; pre-position stock at the parent depot';
@@ -64,7 +64,7 @@
         <dt>Delivery arrives</dt><dd>${ui.when(Ad)}</dd><dt>Stock at arrival</dt><dd>${rem >= 0 ? fmt(rem) : 0} ${it.unit}</dd><dt>Time to stock-out</dt><dd>${fmt(t, 1)} d</dd>
         <dt>P(stock-out before arrival)</dt><dd>${fmt(p * 100)}%</dd><dt>Shortage</dt><dd>${rem < 0 ? fmt(-rem) + ' ' + it.unit : 'none'}</dd></dl><div style="margin-top:8px">${badge(c_)} <span style="font-size:12.5px">${l_} · ${tx}</span></div></div>`;
       ui.$('#wOut').innerHTML = `<div class="cmp2">${card('nor', 'Normal delivery', L, remN, tN, P(L, c), cN, lN, tNt)}${card('dis', `Disrupted (+${d} d, ${st2.cons >= 0 ? '+' : ''}${st2.cons}% use)`, A, remD, tD, P(A, c2), cD, lD, tDt)}</div>
-        <div class="verdict ${cD}">${badge(cD)}<p><b>Estimated impact:</b> ${remD < 0 ? `${n.name} would run out of ${it.name.toLowerCase()} on ${ui.when(tD)}, ${fmt(A - tD, 1)} d before the delivery on ${ui.when(A)}. The gap is ${fmt(shortU)} ${it.unit}; covering it by air costs about <b>₹${fmt(cost, 1)} lakh</b> <span class="est">ILLUSTRATIVE ₹${CONFIG.airRate}/kg</span>.` : mD < 2 ? `No stock-out expected, but the margin shrinks from ${fmt(mN, 1)} d to ${fmt(mD, 1)} d.` : `Delay absorbed: stock lasts ${fmt(mD, 1)} d beyond delivery.`}</p></div>
+        <div class="verdict ${cD}">${badge(cD)}<p><b>Estimated impact:</b> ${remD < 0 ? `${n.name} would run out of ${it.name.toLowerCase()} on ${ui.when(tD)}, ${fmt(A - tD, 1)} d before the delivery on ${ui.when(A)}. The gap is ${fmt(shortU)} ${it.unit}; covering it by air maintenance costs about <b>₹${fmt(cost, 1)} lakh</b> <span class="est">ILLUSTRATIVE ₹${CONFIG.airRate}/kg</span>.` : mD < 2 ? `No stock-out expected, but the margin shrinks from ${fmt(mN, 1)} d to ${fmt(mD, 1)} d.` : `Delay absorbed: stock lasts ${fmt(mD, 1)} d beyond delivery.`}</p></div>
         ${n.type === 'depot' ? '<p class="note">For a depot, a shortage here means dispatches fall behind. The Ripple page shows which posts are hit.</p>' : ''}
         <div class="chart-wrap" style="margin-top:10px"><svg class="fluid" id="wChart" viewBox="0 0 640 230" role="img" aria-label="Projected stock"></svg><div class="tip" id="wTip"></div></div>
         <div class="legend"><span><i style="border-color:var(--navy-500)"></i>Normal</span><span><i style="border-color:var(--dis);border-top-style:dashed"></i>Disrupted</span><span><i class="box" style="background:rgba(198,40,40,.15)"></i>shortage window</span><span>▼ delivery</span></div>`;
@@ -176,7 +176,7 @@
     if (Math.min(mA.stockouts, mB.stockouts) > 0) {
       const Rw = win === 'A' ? RA : RB, rem = E.POSTS.map(p => Rw[p.id]).filter(r => r.short > 0), units = rem.reduce((a, r) => a + r.short * r.c, 0);
       const sorties = Math.ceil(units * it.kg / CONFIG.sortieKg), cut = Math.max(...rem.map(r => (1 - r.Y / Math.min(r.A, H)) * 100));
-      limit = `<div class="limit"><b>No plan meets every constraint.</b> ${rem.map(r => r.n.name).join(', ')} still ${rem.length > 1 ? 'run' : 'runs'} short (${fmt(units)} ${it.unit}). Any one of these would close the gap: <b>${sorties} more airlift sortie${sorties > 1 ? 's' : ''}</b>; a consumption cut of about <b>${fmt(Math.min(99, cut))}%</b> at the worst post; or the disruption cleared ${fmt(Math.max(...rem.map(r => r.short)), 1)} d sooner.</div>`;
+      limit = `<div class="limit"><b>No plan meets every constraint.</b> ${rem.map(r => r.n.name).join(', ')} still ${rem.length > 1 ? 'run' : 'runs'} short (${fmt(units)} ${it.unit}). Any one of these would close the gap: <b>${sorties} more air maintenance sortie${sorties > 1 ? 's' : ''}</b>; a consumption cut of about <b>${fmt(Math.min(99, cut))}%</b> at the worst post; or the disruption cleared ${fmt(Math.max(...rem.map(r => r.short)), 1)} d sooner.</div>`;
     }
     const rowsDef = [['Posts with stock-out', m => m.stockouts, v => v, 'low'], ['Shortage (post-days)', m => m.sumShort, v => fmt(v, 1), 'low'], ['Shortage volume', m => m.shortUnits, v => fmt(v) + ' ' + it.unit, 'low'],
       ['Highest stock-out probability', m => m.maxP, v => fmt(v * 100) + '%', 'low'], ['Average next delivery (day)', m => m.avgArr, v => fmt(v, 1), 'low'], ['Lowest margin (days)', m => m.minMargin, v => fmt(v, 1), 'high'],

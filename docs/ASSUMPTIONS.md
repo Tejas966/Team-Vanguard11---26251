@@ -50,3 +50,14 @@ The risk is that a model trained and tested on data from our own formula just re
 3. **We report both.** Scores on A-holdout and on B are shown side by side. We expect B to be worse and say so. That gap is our honest estimate of the error we would see when moving to real data.
 4. **Fixed seeds.** One `config.yaml` holds all seeds, so every number in the UI and the docs can be regenerated with one command.
 5. **What we do not claim.** We do not claim real-world accuracy. We claim the *pipeline* (forecast → uncertainty → days-of-supply risk → resilience test) is sound and calibrated on data it was not built from.
+
+## E. Web prototype additions (2026-10-19)
+
+| # | Assumption | Reason | Source | Conf. |
+|---|---|---|---|---|
+| E1 | SKO (kerosene) per person per day = 1.0 + 0.09 × max(0, 8 − T<sub>post</sub>), capped at 3.6 L. | Gives ~2.8 L at −12 °C, matching the figure derived from public reporting; shape is ours. | ThePrint 2020 (derived) | M (level), L (shape) |
+| E2 | Post night temperature = weather-cell minimum − 6.5 °C per km of extra altitude. | Standard environmental lapse rate. | Textbook value | M |
+| E3 | A day is flyable for air maintenance if snow < 1 cm, rain < 2 mm and wind < 40 km/h. | We have no cloud/visibility data. | Ours | L |
+| E4 | Report age widens stock uncertainty: < 24 h none, 24–72 h ±8%, > 72 h ±20%. | Older counts are less reliable. | Ours | L |
+| E5 | Decision Clock uses the 90% conservative stock-out time and fixed option lead times (transfer 1 d, convoy = road + 0.5 d, detour 5 d + road, air 1 d). | Transparent and explainable. | Ours | M |
+| E6 | Weather points W1–W3 are public civilian grid points; posts are fictional and only *assigned* to a cell. | Real weather without exposing locations. | Team rule | H |
