@@ -8,3 +8,8 @@ dist/
 .pytest_cache/
 data/generated/
 *.log
+
+# Third-party design skills (installed locally; versions pinned in skills-lock.json)
+.claude/skills/
+.claude/agents/
+.impeccable/
