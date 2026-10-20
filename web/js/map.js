@@ -78,7 +78,7 @@
       ui.svg('text', { y: 4, 'text-anchor': 'middle', 'font-size': 11, 'font-weight': 700, fill: '#FFFFFF', 'font-family': 'IBM Plex Mono' }, g).textContent = 'D';
       const left = n.labelLeft || n.map.x > 660;
       ui.svg('text', { x: left ? -16 : 16, y: -2, 'text-anchor': left ? 'end' : 'start', 'font-size': 12, 'font-weight': 600, 'font-family': 'IBM Plex Sans', fill: '#14202E', 'paint-order': 'stroke', stroke: '#EFF3EE', 'stroke-width': 3 }, g).textContent = n.name;
-      ui.svg('text', { x: left ? -16 : 16, y: 11, 'text-anchor': left ? 'end' : 'start', 'font-size': 9.5, 'font-family': 'IBM Plex Mono', fill: '#44515F', 'paint-order': 'stroke', stroke: '#EFF3EE', 'stroke-width': 3 }, g).textContent = n.role.split(' (')[0];
+      ui.svg('text', { x: left ? -16 : 16, y: 11, 'text-anchor': left ? 'end' : 'start', 'font-size': 10, 'font-family': 'IBM Plex Mono', fill: '#44515F', 'paint-order': 'stroke', stroke: '#EFF3EE', 'stroke-width': 3 }, g).textContent = n.role.split(' (')[0];
     });
     // posts: big status marker + label card
     E.POSTS.forEach(n => {
@@ -92,9 +92,15 @@
       const line2 = s.status === 'covered' ? `OK · ${fmt(s.minDays, 0)} d of stock` : s.status === 'plan' ? `${ITEMS[s.worst.item].short} · plan by ${ui.when(s.worst.first.actBy).replace(/^\w+, /, '')}` : s.status === 'late' ? `${ITEMS[s.worst.item].short} · TOO LATE` : `${ITEMS[s.worst.item].short} · act by ${ui.when(s.worst.first.actBy).replace(/^\w+, /, '')}`;
       const w = Math.max(n.name.length * 7.2, line2.length * 6.1) + 16, left = x + 22 + w > 815;
       const lx = left ? -22 - w : 22;
-      ui.svg('rect', { x: lx, y: -19, width: w, height: 36, rx: 3, fill: '#FFFFFF', stroke: isSel ? '#17365D' : col, 'stroke-width': isSel ? 2 : 1.2 }, g);
-      ui.svg('text', { x: lx + 8, y: -4, 'font-size': 12, 'font-weight': 600, 'font-family': 'IBM Plex Sans', fill: '#14202E' }, g).textContent = n.name;
-      ui.svg('text', { x: lx + 8, y: 10, 'font-size': 10.5, 'font-family': 'IBM Plex Mono', fill: s.status === 'soon' ? '#7D5300' : s.status === 'covered' ? '#1C6B31' : s.status === 'plan' ? '#17365D' : '#A61F1F' }, g).textContent = line2;
+      const box = ui.svg('rect', { x: lx, y: -19, width: w, height: 36, rx: 3, fill: '#FFFFFF', stroke: isSel ? '#17365D' : col, 'stroke-width': isSel ? 2 : 1.2 }, g);
+      const t1 = ui.svg('text', { x: lx + 8, y: -4, 'font-size': 12, 'font-weight': 600, 'font-family': 'IBM Plex Sans', fill: '#14202E' }, g); t1.textContent = n.name;
+      const t2 = ui.svg('text', { x: lx + 8, y: 10, 'font-size': 10.5, 'font-family': 'IBM Plex Mono', fill: s.status === 'soon' ? '#7D5300' : s.status === 'covered' ? '#1C6B31' : s.status === 'plan' ? '#17365D' : '#A61F1F' }, g); t2.textContent = line2;
+      // Re-fit the label box to the rendered text (fonts may fall back offline); the estimate above is only a first guess.
+      try {
+        const mw = Math.max(t1.getBBox().width, t2.getBBox().width);
+        if (mw > 0) { const w2 = mw + 16, l2 = x + 22 + w2 > 815, lx2 = l2 ? -22 - w2 : 22;
+          box.setAttribute('width', w2); box.setAttribute('x', lx2); t1.setAttribute('x', lx2 + 8); t2.setAttribute('x', lx2 + 8); }
+      } catch (e) { /* not rendered yet (hidden svg): keep the estimate */ }
       const pick = () => opts.onPick && opts.onPick(n.id);
       g.addEventListener('click', pick); g.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); pick(); } });
     });

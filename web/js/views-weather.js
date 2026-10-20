@@ -23,7 +23,7 @@
     const w = wx.winters();
     return `<div class="panel" style="margin-top:12px"><div class="ph"><h3>Snow history · real data</h3><span class="hint">Open-Meteo ERA5 archive · Oct–May each winter</span></div><div class="pb scroll" style="padding-top:0">
       <table class="t"><thead><tr><th>Cell</th>${w[0].rows.map(r => `<th>Winter ${r.y}–${String(r.y + 1).slice(2)}</th>`).join('')}</tr></thead><tbody>
-      ${w.map(x => `<tr><td><b>${x.cell.id}</b> ${esc(x.cell.label)}<br><span style="font-size:11.5px;color:var(--muted)">${fmt(x.cell.elev)} m</span></td>${x.rows.map(r => `<td style="font-size:12.5px">First week ≥ 10 cm: <b>${r.first ? r.first.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : 'none'}</b><br>Total snow ${fmt(r.tot)} cm · coldest night ${fmt(r.cold, 0)} °C</td>`).join('')}</tr>`).join('')}
+      ${w.map(x => `<tr><td><b>${x.cell.id}</b> ${esc(x.cell.label)}<br><span style="font-size:var(--fs-meta);color:var(--muted)">${fmt(x.cell.elev)} m</span></td>${x.rows.map(r => `<td style="font-size:var(--fs-small)">First week ≥ 10 cm: <b>${r.first ? r.first.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : 'none'}</b><br>Total snow ${fmt(r.tot)} cm · coldest night ${fmt(r.cold, 0)} °C</td>`).join('')}</tr>`).join('')}
       </tbody></table><p class="note">The first heavy snow moved by up to four months between winters. That is why the plan uses the <b>early</b> closure estimate. Real pass-closure dates are not used: we do not model any real route.</p></div></div>`;
   };
 
@@ -32,7 +32,7 @@
     const jan = id => { const cl = wx.byId[id]; const t0 = new Date(cl.hist.t0 + 'T00:00'); const v = cl.hist.tmin.filter((x, i) => x != null && new Date(t0.getTime() + i * 86400000).getMonth() === 0); return v.reduce((a, b) => a + b, 0) / v.length; };
     root.innerHTML = `
       <p class="intro">This is the one layer of <b>real data</b> in the prototype. Daily temperature, snow, rain and wind for three public grid points in the western Himalaya come from <a href="https://open-meteo.com/" target="_blank" rel="noopener">Open-Meteo</a>, which provides ERA5 reanalysis since 2023 and a 16-day forecast. Weather drives two things: <b>how much SKO each post burns</b>, and <b>which days air maintenance can fly</b>. The points are civilian grid points and are not linked to any military site.</p>
-      <div class="panel" style="margin-bottom:12px"><div class="pb" style="display:flex;flex-wrap:wrap;gap:8px 18px;align-items:center;font-size:13px">${sourceLine()}
+      <div class="panel" style="margin-bottom:12px"><div class="pb" style="display:flex;flex-wrap:wrap;gap:8px 18px;align-items:center;font-size:var(--fs-small)">${sourceLine()}
         <button type="button" class="btn sm" id="wxRefresh">Fetch latest forecast</button>
         <label class="check" style="margin-left:auto"><input type="checkbox" id="wxStorm" ${st.wxStorm ? 'checked' : ''}> <span><b>Demo: simulate a snowstorm</b> at W3 from day 1 to day 4 (25 cm/day, wind 55 km/h, 6 °C colder). ${ui.srcTag('SIMULATED')}</span></label><span class="note" style="margin:0">Data © Open-Meteo.com, CC BY 4.0 (free non-commercial tier).</span></div></div>
       <div class="panel"><div class="ph"><h3>Weather drives SKO demand</h3>${ui.srcTag('RULE-BASED')}<span class="hint">rule anchored on public figures</span></div><div class="pb scroll" style="padding-top:0">

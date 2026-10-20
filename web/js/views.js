@@ -54,7 +54,7 @@
       ${row.status !== 'covered' ? `<div style="grid-column:1/-1;padding:0 14px 8px">${FSI.whyBox(st, row)}</div>` : ''}
       <details><summary>All options</summary>
         <table class="optt"><thead><tr><th></th><th>Option</th><th class="n">Lead</th><th>Latest order time</th><th class="n">Cost ₹ L</th><th>Status</th></tr></thead><tbody>
-        ${row.opts.map(o => `<tr class="${o.ok && o.actBy > 0 ? '' : 'no'}"><td><b style="font-family:var(--mono)">${OPT_LETTER[o.key]}</b></td><td>${esc(o.label)}<br><span style="color:var(--muted);font-size:11.5px">${esc(o.why)}</span></td><td class="n">${fmt(o.lead, 1)} d</td>
+        ${row.opts.map(o => `<tr class="${o.ok && o.actBy > 0 ? '' : 'no'}"><td><b style="font-family:var(--mono)">${OPT_LETTER[o.key]}</b></td><td>${esc(o.label)}<br><span style="color:var(--muted);font-size:var(--fs-meta)">${esc(o.why)}</span></td><td class="n">${fmt(o.lead, 1)} d</td>
           <td>${o.ok ? (o.actBy > 0 ? ui.when(o.actBy) + ` <span style="color:var(--muted)">(${ui.rel(o.actBy)})</span>` : '<b style="color:var(--crit-ink)">window closed</b>') : '—'}</td><td class="n">${fmt(o.cost, 1)}</td>
           <td>${o.ok && o.actBy > 0 ? (o === row.first ? ui.tag('blue', '★', 'PREFERRED') : ui.tag('green', '✓', 'OPEN')) : ui.tag('grey', '–', 'NOT AVAILABLE')}</td></tr>`).join('')}
         </tbody></table>
@@ -67,7 +67,7 @@
     s('rect', { x: x0, y: 30, width: x1 - x0, height: 14, fill: '#F2F6FB', stroke: '#D6DCE4' });
     for (let d = 0; d <= H; d++) {
       s('line', { x1: X(d), x2: X(d), y1: 44, y2: d % 7 === 0 ? 52 : 48, stroke: '#9AA6B4' });
-      if (d % 2 === 0) s('text', { x: X(d), y: 64, 'text-anchor': 'middle', 'font-size': 9.5, 'font-family': 'IBM Plex Mono', fill: '#5C6878' }).textContent = d === 0 ? 'now' : ui.dayDate(d).toLocaleDateString('en-IN', { weekday: 'short', day: '2-digit' });
+      if (d % 2 === 0) s('text', { x: X(d), y: 64, 'text-anchor': 'middle', 'font-size': 10, 'font-family': 'IBM Plex Mono', fill: '#5C6878' }).textContent = d === 0 ? 'now' : ui.dayDate(d).toLocaleDateString('en-IN', { weekday: 'short', day: '2-digit' });
     }
     // stock bar: green until safe stock-out, red after
     if (r.Yc > 0) s('rect', { x: x0, y: 30, width: X(r.Yc) - x0, height: 14, fill: '#CFE8D6' });
@@ -76,9 +76,9 @@
     const defs = s('defs', {}); const pat = ui.svg('pattern', { id: 'hatch-' + row.n.id, width: 6, height: 6, patternUnits: 'userSpaceOnUse', patternTransform: 'rotate(45)' }, defs);
     ui.svg('rect', { width: 3, height: 6, fill: 'rgba(198,40,40,.45)' }, pat);
     if (r.Yc < H) { s('line', { x1: X(r.Yc), x2: X(r.Yc), y1: 22, y2: 50, stroke: '#C62828', 'stroke-width': 2 });
-      s('text', { x: X(r.Yc) + 3, y: 76, 'font-size': 9.5, 'font-family': 'IBM Plex Mono', fill: '#A61F1F', 'text-anchor': X(r.Yc) > W - 90 ? 'end' : 'start' }).textContent = 'safe until ' + ui.when(r.Yc).replace(/^\w+ /, ''); }
+      s('text', { x: X(r.Yc) + 3, y: 76, 'font-size': 10, 'font-family': 'IBM Plex Mono', fill: '#A61F1F', 'text-anchor': X(r.Yc) > W - 90 ? 'end' : 'start' }).textContent = 'safe until ' + ui.when(r.Yc).replace(/^\w+ /, ''); }
     if (Number.isFinite(r.A) && r.A <= H) { s('path', { d: `M${X(r.A) - 6} 18 L${X(r.A) + 6} 18 L${X(r.A)} 28Z`, fill: '#17365D' });
-      s('text', { x: X(r.A), y: 12, 'text-anchor': 'middle', 'font-size': 9.5, 'font-family': 'IBM Plex Mono', fill: '#17365D' }).textContent = 'delivery'; }
+      s('text', { x: X(r.A), y: 12, 'text-anchor': 'middle', 'font-size': 10, 'font-family': 'IBM Plex Mono', fill: '#17365D' }).textContent = 'delivery'; }
     // act-by flags for open options (stacked when close together)
     const used = [];
     if (row.status === 'covered') return; // schedule holds: no deadlines to show
@@ -87,7 +87,7 @@
       const y = 37 - lvl * 0; const cx = x + lvl * 0;
       const g = s('g', { transform: `translate(${cx},${y})` });
       ui.svg('circle', { r: 8, fill: o === row.first ? '#17365D' : '#fff', stroke: '#17365D', 'stroke-width': 1.5, transform: `translate(0,${-lvl * 17})` }, g);
-      ui.svg('text', { y: 3.5 - lvl * 17, 'text-anchor': 'middle', 'font-size': 9.5, 'font-weight': 700, 'font-family': 'IBM Plex Mono', fill: o === row.first ? '#fff' : '#17365D' }, g).textContent = OPT_LETTER[o.key];
+      ui.svg('text', { y: 3.5 - lvl * 17, 'text-anchor': 'middle', 'font-size': 10, 'font-weight': 700, 'font-family': 'IBM Plex Mono', fill: o === row.first ? '#fff' : '#17365D' }, g).textContent = OPT_LETTER[o.key];
       ui.svg('title', {}, g).textContent = `${o.label}: order by ${ui.when(o.actBy)}`;
     });
   }
@@ -102,16 +102,16 @@
           <div class="fmt">SITREP &lt;POST&gt; &lt;DDHHMM&gt; F&lt;SKO L&gt; R&lt;rations kg&gt; M&lt;medical kits&gt; S&lt;MT spares&gt; [STR&lt;strength&gt;]<br>
           Post codes: ${E.POSTS.map(p => `<b>${p.code}</b> ${p.name.replace('Post ', '')}`).join(' · ')}</div>
           <div class="field" style="margin-top:10px"><label for="sitrep">Message text</label><textarea id="sitrep" rows="2" spellcheck="false" placeholder="SITREP KES ${ui.dtg()} F600 R840"></textarea></div>
-          <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px"><span style="font-size:12px;color:var(--muted);align-self:center">Samples:</span>${samples.map((s, i) => `<button type="button" class="btn sm" data-sample="${i}">${esc(s.split(' ')[1])}</button>`).join('')}</div>
+          <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px"><span style="font-size:var(--fs-meta);color:var(--muted);align-self:center">Samples:</span>${samples.map((s, i) => `<button type="button" class="btn sm" data-sample="${i}">${esc(s.split(' ')[1])}</button>`).join('')}</div>
           <div id="parseOut"></div>
           <div style="display:flex;gap:8px;margin-top:10px"><button type="button" class="btn primary" id="accept" disabled>Accept report</button><button type="button" class="btn" id="clearMsg">Clear</button></div>
         </div></div>
         <div class="panel"><div class="ph"><h3>Report freshness</h3><button type="button" class="btn sm" id="age12" style="margin-left:auto" title="Demo control">Demo: age reports by 12 h</button></div>
           <div class="pb scroll" style="padding-top:0"><table class="t"><thead><tr><th>Post</th><th>Last report</th><th>Via</th><th>State</th><th>Effect</th></tr></thead><tbody>
           ${E.POSTS.map(p => { const r = st.reports[p.id], f = E.freshness(st, p.id), sd = E.stockSd(st, p.id);
-            return `<tr><td><b>${p.name}</b> <span style="color:var(--muted);font-family:var(--mono);font-size:11px">${p.code}</span><br>${FSI.dqTag(E.dataQuality(st, p.id))}</td><td class="n">${r.ageH} h ago</td><td>${r.via}</td>
+            return `<tr><td><b>${p.name}</b> <span style="color:var(--muted);font-family:var(--mono);font-size:var(--fs-tag)">${p.code}</span><br>${FSI.dqTag(E.dataQuality(st, p.id))}</td><td class="n">${r.ageH} h ago</td><td>${r.via}</td>
               <td>${f === 'fresh' ? ui.tag('green', '✓', 'FRESH') : f === 'ageing' ? ui.tag('amber', '!', 'AGEING') : ui.tag('red', '✕', 'STALE')}</td>
-              <td style="font-size:12.5px">${sd ? `±${Math.round(sd * 100)}% on stock; request a report` : 'none'}</td></tr>`; }).join('')}
+              <td style="font-size:var(--fs-small)">${sd ? `±${Math.round(sd * 100)}% on stock; request a report` : 'none'}</td></tr>`; }).join('')}
           </tbody></table><p class="note">Fresh &lt; 24 h · ageing 24–72 h (±8%) · stale &gt; 72 h (±20%). Thresholds are our assumptions.</p></div></div>
       </div>
       <div class="panel" style="margin-top:12px"><div class="ph"><h3>Inbox</h3><span class="hint">${(st.inbox || []).length} messages</span></div><div class="pb" style="padding-top:2px">
@@ -154,7 +154,7 @@
         <div class="panel"><div class="pb"><div class="tile" style="border:0;padding:0"><div class="l">Truckloads still to push</div></div>
           <div class="big-num" style="margin-top:4px">${wp.totLoads}<small>loads of ${CONFIG.truckT} t</small></div><p class="note">Capacity before closure: ${wp.cap} loads (${CONFIG.loadsPerDay}/day, assumption).</p></div></div>
         <div class="panel"><div class="pb"><div class="tile" style="border:0;padding:0"><div class="l">Verdict</div></div>
-          <div style="margin-top:8px">${wp.short > 0 ? `${badge('red')} <b>${wp.short} loads short.</b><p style="margin:6px 0 0;font-size:13px">About ${fmt(remainT)} t would have to go by air, roughly <b>${sorties} sorties</b> of 2 t. Start Pass-2 runs now or pre-book air maintenance.</p>` : `${badge('green')} <b>On track</b><p style="margin:6px 0 0;font-size:13px">${-wp.short} loads of spare capacity.</p>`}</div></div></div>
+          <div style="margin-top:8px">${wp.short > 0 ? `${badge('red')} <b>${wp.short} loads short.</b><p style="margin:6px 0 0;font-size:var(--fs-small)">About ${fmt(remainT)} t would have to go by air, roughly <b>${sorties} sorties</b> of 2 t. Start Pass-2 runs now or pre-book air maintenance.</p>` : `${badge('green')} <b>On track</b><p style="margin:6px 0 0;font-size:var(--fs-small)">${-wp.short} loads of spare capacity.</p>`}</div></div></div>
       </div>
       <div class="panel" style="margin-bottom:12px"><div class="pb" style="display:flex;gap:18px;flex-wrap:wrap;align-items:end">
         <div class="field"><label for="wConf">Safety margin (assumed demand spread)</label><select id="wConf"><option value="1.2816">Normal (z 1.28)</option><option value="1.6449">High (z 1.64)</option><option value="2.3263">Very high (z 2.33)</option></select></div>
@@ -167,7 +167,7 @@
           <div class="scroll" style="margin-top:10px"><table class="t"><thead><tr><th>Post</th>${Object.keys(ITEMS).map(k => `<th class="n">${ITEMS[k].name} (t)</th>`).join('')}<th class="n">Total gap</th></tr></thead><tbody>
           ${wp.rows.map(r => `<tr><td>${r.n.name}</td>${Object.keys(ITEMS).map(k => `<td class="n">${fmt(r.by[k], 1)}</td>`).join('')}<td class="n"><b>${fmt(r.gap, 1)} t</b></td></tr>`).join('')}</tbody></table></div></div></div>
         <div class="panel"><div class="ph"><h3>Weekly push plan</h3>${ui.srcTag('RULE-BASED')}<span class="hint">greedy by priority × deficit</span></div><div class="pb">
-          <div class="wk">${wp.weeks.map(w => `<div class="c"><b class="h">WEEK ${w.w} · ${ui.when(w.from).split(' ').slice(1, 3).join(' ')}–${ui.when(w.to).split(' ').slice(1, 3).join(' ')}</b>
+          <div class="wk">${wp.weeks.map(w => `<div class="c"><b class="h">Week ${w.w} · ${ui.when(w.from).split(' ').slice(1, 3).join(' ')}–${ui.when(w.to).split(' ').slice(1, 3).join(' ')}</b>
             ${Object.entries(w.alloc).map(([id, k]) => `${E.BYID[id].name.replace('Post ', '')}: <b>${k}</b>`).join('<br>') || '<span class="na">nothing left to send</span>'}${w.spare ? `<br><span style="color:var(--good-ink)">${w.spare} spare slots</span>` : ''}</div>`).join('')}</div>
           <p class="note">Each week the next convoy slot goes to the post with the largest remaining gap × priority. Not delivered before closure: ${Object.entries(wp.left).filter(([, v]) => v > 0).map(([id, v]) => `${E.BYID[id].name.replace('Post ', '')} ${v}`).join(', ') || 'none'}.</p></div></div>
       </div>${FSI.snowHistoryPanel()}`;
@@ -185,7 +185,7 @@
     <div class="brief">
       <div class="cls">SYNTHETIC EXERCISE DATA · NOT OPERATIONAL</div>
       <h2>Forward supply brief · Sector North-1 (fictional)</h2>
-      <div style="font-family:var(--mono);font-size:12px;color:var(--ink-2)">As of ${ui.when(0)} · prepared by Forward Supply Intelligence (prototype)</div>
+      <div style="font-family:var(--mono);font-size:var(--fs-meta);color:var(--ink-2)">As of ${ui.when(0)} · prepared by Forward Supply Intelligence (prototype)</div>
       <h3>1. Situation</h3>
       <ul><li>Scenario: ${esc([st.delay ? `${E.BYID[st.source].name} resupply +${st.delay} d` : '', st.routeOut ? 'Route-1 via Pass-1 closed' : '', st.cons ? `consumption ${st.cons > 0 ? '+' : ''}${st.cons}%` : '', st.inv ? `stock −${st.inv}%` : '', st.short ? `incoming loads −${st.short}%` : ''].filter(Boolean).join('; ') || 'normal schedule')}.</li>
         <li>${it.name}: ${E.POSTS.filter(p => R[p.id].risk === 'red').length} posts with a shortage expected, ${E.POSTS.filter(p => R[p.id].risk === 'amber').length} at risk.</li>
@@ -196,11 +196,11 @@
       <p><b>${esc(best.name)}</b>, because ${esc(ev.reason)}. Posts short: current schedule ${mA.stockouts}, recommended plan ${best.m.stockouts}${best.m.stockouts ? ' (' + esc(best.m.shortList.map(x => x.name).join(', ') + ' still short') + ')' : ''}. Extra cost ₹${fmt(best.m.cost, 1)} lakh (illustrative). Evaluated ${ev.ranked.length} applicable plans with one scoring rule.</p>
       <h3>4. Advance Winter Stocking</h3>
       <p>${wp.totLoads} truckloads still needed before the early closure estimate in ${wp.early} days; capacity ${wp.cap}. ${wp.short > 0 ? `<b>${wp.short} loads short.</b>` : 'On track.'}</p>
-      ${st.replay ? `<h3>Decision replay · ${esc(st.replay.title)}</h3><ol>${st.replay.steps.map(x => `<li><b>${esc(x.t)}:</b> ${esc(x.d)}</li>`).join('')}</ol><p style="font-size:12.5px;color:var(--ink-2)">Generated from the simulation run at ${esc(st.replay.at)} (weather snapshot ${esc(st.replay.snapshot)}).</p>` : ''}
+      ${st.replay ? `<h3>Decision replay · ${esc(st.replay.title)}</h3><ol>${st.replay.steps.map(x => `<li><b>${esc(x.t)}:</b> ${esc(x.d)}</li>`).join('')}</ol><p style="font-size:var(--fs-small);color:var(--ink-2)">Generated from the simulation run at ${esc(st.replay.at)} (weather snapshot ${esc(st.replay.snapshot)}).</p>` : ''}
       <h3>5. Decisions recorded</h3>
       <ul>${(st.decisions || []).slice(-8).map(d => `<li>${esc(d.at)}: ${esc(d.post)} · ${esc(d.item)}: ${esc(d.option)} (deadline ${esc(d.actBy)})</li>`).join('') || '<li>None yet.</li>'}</ul>
       <h3>6. Caveats</h3>
-      <p style="font-size:12.5px;color:var(--ink-2)">All figures are estimates from documented rules on synthetic data. Probabilities assume normal demand variation with report-age uncertainty. Costs, closure dates and airlift availability are illustrative. The system recommends; the commander decides.</p>
+      <p style="font-size:var(--fs-small);color:var(--ink-2)">All figures are estimates from documented rules on synthetic data. Probabilities assume normal demand variation with report-age uncertainty. Costs, closure dates and airlift availability are illustrative. The system recommends; the commander decides.</p>
     </div>`;
   };
 
