@@ -121,7 +121,7 @@
     s('rect', { x: x0, y: 30, width: x1 - x0, height: 14, fill: '#F2F6FB', stroke: '#D6DCE4' });
     for (let d = 0; d <= H; d++) {
       s('line', { x1: X(d), x2: X(d), y1: 44, y2: d % 7 === 0 ? 52 : 48, stroke: '#9AA6B4' });
-      if (d % 2 === 0) s('text', { x: X(d), y: 64, 'text-anchor': 'middle', 'font-size': 9.5, 'font-family': 'IBM Plex Mono', fill: '#6B7887' }).textContent = d === 0 ? 'now' : ui.dayDate(d).toLocaleDateString('en-IN', { weekday: 'short', day: '2-digit' });
+      if (d % 2 === 0) s('text', { x: X(d), y: 64, 'text-anchor': 'middle', 'font-size': 9.5, 'font-family': 'IBM Plex Mono', fill: '#5C6878' }).textContent = d === 0 ? 'now' : ui.dayDate(d).toLocaleDateString('en-IN', { weekday: 'short', day: '2-digit' });
     }
     // stock bar: green until safe stock-out, red after
     if (r.Yc > 0) s('rect', { x: x0, y: 30, width: X(r.Yc) - x0, height: 14, fill: '#CFE8D6' });

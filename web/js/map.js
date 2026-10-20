@@ -98,7 +98,7 @@
       const pick = () => opts.onPick && opts.onPick(n.id);
       g.addEventListener('click', pick); g.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); pick(); } });
     });
-    ui.svg('text', { x: 10, y: 462, 'font-size': 10, 'font-family': 'IBM Plex Mono', fill: '#6B7887' }, svg).textContent = 'SCHEMATIC · NOT TO SCALE · FICTIONAL SITES · NO BORDERS SHOWN';
+    ui.svg('text', { x: 10, y: 462, 'font-size': 10, 'font-family': 'IBM Plex Mono', fill: '#5C6878' }, svg).textContent = 'SCHEMATIC · NOT TO SCALE · FICTIONAL SITES · NO BORDERS SHOWN';
   };
   FSI.mapLegend = () => `<div class="maplegend">
     <span><i class="dot" style="background:#C62828"></i>Act now</span><span><i class="dot" style="background:#E0A100"></i>Act soon (≤ 3 days)</span><span><i class="dot" style="background:#2A5687"></i>Plan ahead</span><span><i class="dot" style="background:#2E9E4A"></i>OK</span>

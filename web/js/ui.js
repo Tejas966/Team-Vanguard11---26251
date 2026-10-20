@@ -62,9 +62,9 @@
     ui.svg('path', { d: `M${by.DA.map.x} ${by.DA.map.y} L${P.P2.x} ${P.P2.y} L${by.DB.map.x} ${by.DB.map.y}`, fill: 'none', stroke: '#8FA9C8', 'stroke-width': 1.6, 'stroke-dasharray': '6 5' }, svg);
     // main roads
     const cut = st.routeOut;
-    line(by.DA.map, P.P1, { stroke: cut ? '#C62828' : '#6B7887', 'stroke-width': 2.4, 'stroke-dasharray': cut ? '3 4' : 'none' });
-    line(P.P1, by.DB.map, { stroke: cut ? '#C62828' : '#6B7887', 'stroke-width': 2.4, 'stroke-dasharray': cut ? '3 4' : 'none' });
-    line(by.DA.map, by.TH.map, { stroke: '#6B7887', 'stroke-width': 2.4 });
+    line(by.DA.map, P.P1, { stroke: cut ? '#C62828' : '#5C6878', 'stroke-width': 2.4, 'stroke-dasharray': cut ? '3 4' : 'none' });
+    line(P.P1, by.DB.map, { stroke: cut ? '#C62828' : '#5C6878', 'stroke-width': 2.4, 'stroke-dasharray': cut ? '3 4' : 'none' });
+    line(by.DA.map, by.TH.map, { stroke: '#5C6878', 'stroke-width': 2.4 });
     N.filter(n => n.type === 'post').forEach(n => line(by[n.parent].map, n.map, { stroke: '#9AA6B4', 'stroke-width': 1.6 }));
     // passes
     Object.entries(P).forEach(([k, p]) => {
@@ -85,10 +85,10 @@
         ui.svg('text', { x: 0, y: 4, 'text-anchor': 'middle', 'font-size': 10, 'font-weight': 700, fill: risk === 'amber' ? '#2B1D00' : '#fff', 'font-family': 'IBM Plex Mono' }, gn).textContent = RB[risk][0];
       }
       ui.svg('text', { x: 15, y: -2, 'font-size': 12, 'font-weight': 600, 'font-family': 'IBM Plex Sans', fill: '#14202E' }, gn).textContent = n.name;
-      if (w && w.label) ui.svg('text', { x: 15, y: 11, 'font-size': 10, 'font-family': 'IBM Plex Mono', fill: risk === 'green' ? '#6B7887' : risk === 'amber' ? '#7D5300' : '#A61F1F' }, gn).textContent = w.label;
+      if (w && w.label) ui.svg('text', { x: 15, y: 11, 'font-size': 10, 'font-family': 'IBM Plex Mono', fill: risk === 'green' ? '#5C6878' : risk === 'amber' ? '#7D5300' : '#A61F1F' }, gn).textContent = w.label;
       if (onPick) { gn.addEventListener('click', () => onPick(n.id)); gn.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onPick(n.id); } }); }
     });
-    ui.svg('text', { x: 10, y: 438, 'font-size': 10, 'font-family': 'IBM Plex Mono', fill: '#6B7887' }, svg).textContent = 'SCHEMATIC · NOT TO SCALE · FICTIONAL SITES · NO BORDERS SHOWN';
+    ui.svg('text', { x: 10, y: 438, 'font-size': 10, 'font-family': 'IBM Plex Mono', fill: '#5C6878' }, svg).textContent = 'SCHEMATIC · NOT TO SCALE · FICTIONAL SITES · NO BORDERS SHOWN';
   };
 
   FSI.ui = ui;

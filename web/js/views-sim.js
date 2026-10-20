@@ -79,8 +79,8 @@
       const ser = (cc, arr, F) => { const p = []; let s = o.s; for (let t = 0; t <= days; t += 0.5) { if (Math.abs(t - arr) < 0.01) s += o.q * F; p.push({ t, v: Math.max(0, s) }); s -= cc * 0.5; } return p; };
       const a = ser(o.c, o.L, 1), b = ser(o.c2, o.A, o.F), ymax = Math.max(...a.map(p => p.v), ...b.map(p => p.v)) * 1.08 || 1;
       const X = t => ml + t / days * (W - ml - mr), Y = v => mt + (Hh - mt - mb) * (1 - v / ymax);
-      for (let k = 0; k <= 4; k++) { const v = ymax * k / 4; ui.svg('line', { x1: ml, x2: W - mr, y1: Y(v), y2: Y(v), stroke: k ? '#E6EAF0' : '#9AA6B4' }, svg); ui.svg('text', { x: ml - 6, y: Y(v) + 4, 'text-anchor': 'end', 'font-size': 10, fill: '#6B7887', 'font-family': 'IBM Plex Mono' }, svg).textContent = fmt(v); }
-      for (let t = 0; t <= days; t += 2) ui.svg('text', { x: X(t), y: Hh - 10, 'text-anchor': 'middle', 'font-size': 10, fill: '#6B7887', 'font-family': 'IBM Plex Mono' }, svg).textContent = t ? 'd' + t : 'now';
+      for (let k = 0; k <= 4; k++) { const v = ymax * k / 4; ui.svg('line', { x1: ml, x2: W - mr, y1: Y(v), y2: Y(v), stroke: k ? '#E6EAF0' : '#9AA6B4' }, svg); ui.svg('text', { x: ml - 6, y: Y(v) + 4, 'text-anchor': 'end', 'font-size': 10, fill: '#5C6878', 'font-family': 'IBM Plex Mono' }, svg).textContent = fmt(v); }
+      for (let t = 0; t <= days; t += 2) ui.svg('text', { x: X(t), y: Hh - 10, 'text-anchor': 'middle', 'font-size': 10, fill: '#5C6878', 'font-family': 'IBM Plex Mono' }, svg).textContent = t ? 'd' + t : 'now';
       if (o.tD < o.A) ui.svg('rect', { x: X(o.tD), y: mt, width: X(Math.min(o.A, days)) - X(o.tD), height: Hh - mt - mb, fill: 'rgba(198,40,40,.12)' }, svg);
       const path = p => p.map((q, i) => (i ? 'L' : 'M') + X(q.t).toFixed(1) + ' ' + Y(q.v).toFixed(1)).join('');
       ui.svg('path', { d: path(a), fill: 'none', stroke: '#2A5687', 'stroke-width': 2 }, svg);
@@ -137,7 +137,7 @@
   function drawNet(svg, st, R) {
     const BW = 180, BH = 56, colr = { green: ['#E8F5EC', '#2E9E4A'], amber: ['#FDF4DC', '#E0A100'], red: ['#FBE9E9', '#C62828'] };
     const defs = ui.svg('defs', {}, svg);
-    ['n', 'r'].forEach(k => { const m = ui.svg('marker', { id: 'ar' + k, viewBox: '0 0 10 10', refX: 9, refY: 5, markerWidth: 7, markerHeight: 7, orient: 'auto-start-reverse' }, defs); ui.svg('path', { d: 'M0 0 L10 5 L0 10z', fill: k === 'r' ? '#C62828' : '#6B7887' }, m); });
+    ['n', 'r'].forEach(k => { const m = ui.svg('marker', { id: 'ar' + k, viewBox: '0 0 10 10', refX: 9, refY: 5, markerWidth: 7, markerHeight: 7, orient: 'auto-start-reverse' }, defs); ui.svg('path', { d: 'M0 0 L10 5 L0 10z', fill: k === 'r' ? '#C62828' : '#5C6878' }, m); });
     NODES.filter(n => n.parent).forEach(n => {
       const p = E.BYID[n.parent], r = R[n.id], x1 = p.net.x + BW, y1 = p.net.y + BH / 2, x2 = n.net.x - 4, y2 = n.net.y + BH / 2, mx = (x1 + x2) / 2;
       const bad = r.D > 0 || r.F < 1, cut = n.id === 'DB' && st.routeOut && !r.rerouted;
@@ -240,7 +240,7 @@
     const W = 520, Hh = 250, ml = 40, mr = 8, mt = 12, mb = 40, ps = E.POSTS.map(p => ({ n: p, a: RA[p.id].margin, b: RB[p.id].margin }));
     const vals = ps.flatMap(p => [p.a, p.b]).filter(Number.isFinite), mx = Math.min(30, Math.max(4, ...vals)), mn = Math.max(-20, Math.min(-2, ...vals));
     const Y = v => mt + (Hh - mt - mb) * (mx - v) / (mx - mn), gw = (W - ml - mr) / ps.length, bw = Math.min(22, gw / 3), tip = ui.$('#sTip');
-    for (let v = Math.ceil(mn / 2) * 2; v <= mx; v += 2) { ui.svg('line', { x1: ml, x2: W - mr, y1: Y(v), y2: Y(v), stroke: v === 0 ? '#14202E' : '#E6EAF0', 'stroke-width': v === 0 ? 1.2 : 1 }, svg); ui.svg('text', { x: ml - 5, y: Y(v) + 4, 'text-anchor': 'end', 'font-size': 10, fill: '#6B7887', 'font-family': 'IBM Plex Mono' }, svg).textContent = v; }
+    for (let v = Math.ceil(mn / 2) * 2; v <= mx; v += 2) { ui.svg('line', { x1: ml, x2: W - mr, y1: Y(v), y2: Y(v), stroke: v === 0 ? '#14202E' : '#E6EAF0', 'stroke-width': v === 0 ? 1.2 : 1 }, svg); ui.svg('text', { x: ml - 5, y: Y(v) + 4, 'text-anchor': 'end', 'font-size': 10, fill: '#5C6878', 'font-family': 'IBM Plex Mono' }, svg).textContent = v; }
     ps.forEach((p, i) => {
       const cx = ml + gw * i + gw / 2;
       [[p.a, '#17365D', -1, 'Plan A'], [p.b, '#5B8DD6', 1, 'Plan B']].forEach(([v, c, s, lab]) => {
