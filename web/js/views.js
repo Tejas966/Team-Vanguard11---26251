@@ -1,4 +1,4 @@
-/* Views: overview, decision clock, field reports, winter stocking, brief, methods. */
+/* Views: decision clock, field reports, winter stocking, brief, methods. */
 (function () {
   const E = FSI.engine, ui = FSI.ui, { ITEMS, NODES, CONFIG } = FSI;
   const { fmt, esc, badge } = ui;
@@ -17,60 +17,6 @@
     if (l && l !== f) s += ` Last fallback: ${l.label.toLowerCase()} until ${ui.when(l.actBy)}.`;
     return s;
   }
-
-  /* ================= 00 OVERVIEW ================= */
-  V.overview = (root, st) => {
-    const due = dueList(st), next = due[0];
-    const in24 = due.filter(r => r.actBy < 1 || r.status === 'late').length;
-    const R = E.simulate(st, {});
-    const posts = E.POSTS.map(p => R[p.id]);
-    const atRisk = posts.filter(r => r.risk !== 'green');
-    const stale = E.POSTS.filter(p => E.freshness(st, p.id) !== 'fresh');
-    const wp = E.winterPlan(st);
-    // worst status per post across all classes, for the map
-    const worst = {};
-    E.POSTS.forEach(p => {
-      const rows = due.filter(r => r.n.id === p.id);
-      const rr = R[p.id];
-      if (rows.length) { const r0 = rows[0]; worst[p.id] = { risk: r0.status === 'now' || r0.status === 'late' ? 'red' : 'amber', label: `${ITEMS[r0.item].name.split(' ').pop()}: act ${r0.status === 'late' ? 'NOW' : ui.rel(r0.actBy)}` }; }
-      else worst[p.id] = { risk: rr.risk === 'red' ? 'amber' : 'green', label: `${fmt(rr.Y, 0)} d ${ITEMS[st.item].name.toLowerCase()}` };
-    });
-    ['DA', 'DB', 'TH'].forEach(id => { worst[id] = { risk: R[id].risk, label: R[id].lateKids ? `${R[id].lateKids} dispatch late` : '' }; });
-
-    root.innerHTML = `
-      <p class="intro">Where the sector stands right now, and <b>which decisions are due first</b>. Deadlines come from the Decision Clock and cover all four supply classes.</p>
-      <div class="tiles">
-        <a class="tile ${next && next.actBy < 1 ? 'crit' : next ? 'warn' : 'good'}" href="#/clock"><div class="l">Next decision deadline</div>
-          <div class="v">${next ? (next.status === 'late' ? 'NOW' : ui.rel(next.actBy).replace('in ', '')) : '—'}</div>
-          <div class="s">${next ? `${esc(next.n.name)} · ${ITEMS[next.item].name}${next.first ? ' · ' + esc(next.first.label) : ''}` : 'No decision needed in 14 d'}</div></a>
-        <a class="tile ${in24 ? 'crit' : 'good'}" href="#/clock"><div class="l">Decisions due within 24 h</div><div class="v">${in24}<small>of ${due.length} open</small></div><div class="s">across ${ITEM_KEYS.length} supply classes</div></a>
-        <a class="tile ${atRisk.length ? 'warn' : 'good'}" href="#/ripple"><div class="l">Posts at risk · ${ITEMS[st.item].name}</div><div class="v">${atRisk.length}<small>/ ${posts.length}</small></div><div class="s">${posts.filter(r => r.risk === 'red').length} red · ${posts.filter(r => r.risk === 'amber').length} amber under current scenario</div></a>
-        <a class="tile ${stale.length ? 'warn' : 'good'}" href="#/reports"><div class="l">Stock reports not fresh</div><div class="v">${stale.length}<small>/ ${E.POSTS.length}</small></div><div class="s">${stale.length ? stale.map(p => p.name.replace('Post ', '')).join(', ') + ': wider uncertainty' : 'All posts reported in 24 h'}</div></a>
-      </div>
-      ${FSI.weatherStrip()}
-      <div class="grid ov-main">
-        <div class="panel"><div class="ph"><h3>Sector picture</h3><span class="hint">Click a post to open its Decision Clock</span></div>
-          <svg class="fluid" id="ovMap" viewBox="0 0 760 445" role="img" aria-label="Schematic sector map"></svg>
-          <div class="legend" style="padding:6px 14px 10px">${badge('green')} on track ${badge('amber')} decision due ${badge('red')} decide now / too late <span>◇ depot</span><span>dashed outline = stale report</span><span>dashed line = Route-2 via Pass-2</span></div>
-        </div>
-        <div class="panel"><div class="ph"><h3>Next decisions</h3><a class="hint" href="#/clock">Open Decision Clock →</a></div>
-          <div class="pb" style="padding-top:2px"><ul class="dlist">${due.slice(0, 7).map(r => `
-            <li><div class="when">${r.status === 'late' ? 'TOO LATE' : ui.when(r.actBy).replace(/^\w+ /, '')}<small>${r.status === 'late' ? 'no option in time' : ui.rel(r.actBy)}</small></div>
-              <div class="what">${ui.statusTag(r.status)} <b>${esc(r.n.name)}</b> · ${ITEMS[r.item].name}<span>${r.first ? esc(r.first.label) + (r.last && r.last !== r.first ? ` · fallback ${esc(r.last.label.toLowerCase())}` : '') : 'stock runs out ' + ui.when(r.r.Yc)}</span></div></li>`).join('') || '<li class="empty">No decisions due within 14 days.</li>'}</ul></div>
-        </div>
-      </div>
-      <div class="grid ov-main" style="margin-top:12px">
-        <div class="panel"><div class="ph"><h3>Alerts · ${ITEMS[st.item].name}</h3><span class="hint">Every alert states its cause</span></div>
-          <div class="pb" style="padding-top:2px"><ul class="alerts">${NODES.map(n => R[n.id]).filter(r => r.risk !== 'green').sort((a, b) => (a.risk === 'red' ? 0 : 1) - (b.risk === 'red' ? 0 : 1)).map(r => `
-            <li>${badge(r.risk)}<span><b>${esc(r.n.name)}</b> <span style="color:var(--muted)">· ${r.n.role}${r.n.type === 'post' ? ` · ${fmt(r.Y, 1)} d of stock` : ''}</span></span>
-            <span class="why"><b>Cause:</b> ${esc(E.explain(st, R, r.n.id).join(' → ') || '—')}</span></li>`).join('') || '<li class="empty">No alerts for this class under the current scenario.</li>'}</ul></div></div>
-        <div class="panel"><div class="ph"><h3>Winter stocking</h3><a class="hint" href="#/winter">Plan →</a></div><div class="pb">
-          <div class="big-num">${wp.early}<small>days to the early closure estimate of Pass-1</small></div>
-          <p style="margin:10px 0 0">${wp.short > 0 ? `${badge('red')} <b>${wp.short} truckloads short.</b> Need ${wp.totLoads}, convoy capacity allows ${wp.cap} before closure.` : `${badge('green')} On track: need ${wp.totLoads} loads, capacity ${wp.cap}.`}</p>
-          <p class="note">Closure dates are illustrative. Safety margin z ${st.winterZ}, winter ${st.winterW} days.</p></div></div>
-      </div>`;
-    ui.sectorMap(ui.$('#ovMap'), st, worst, id => { if (id[0] === 'P') { FSI.set({ focus: id }); location.hash = '#/clock'; } else { FSI.set({ source: id }); location.hash = '#/ripple'; } });
-  };
 
   /* ================= 01 DECISION CLOCK ================= */
   V.clock = (root, st) => {
@@ -242,7 +188,7 @@
       <div style="font-family:var(--mono);font-size:12px;color:var(--ink-2)">As of ${ui.when(0)} · prepared by Forward Supply Intelligence (prototype)</div>
       <h3>1. Situation</h3>
       <ul><li>Scenario: ${esc([st.delay ? `${E.BYID[st.source].name} resupply +${st.delay} d` : '', st.routeOut ? 'Route-1 via Pass-1 closed' : '', st.cons ? `consumption ${st.cons > 0 ? '+' : ''}${st.cons}%` : '', st.inv ? `stock −${st.inv}%` : '', st.short ? `incoming loads −${st.short}%` : ''].filter(Boolean).join('; ') || 'normal schedule')}.</li>
-        <li>${it.name}: ${E.POSTS.filter(p => R[p.id].risk === 'red').length} posts red, ${E.POSTS.filter(p => R[p.id].risk === 'amber').length} amber.</li>
+        <li>${it.name}: ${E.POSTS.filter(p => R[p.id].risk === 'red').length} posts with a shortage expected, ${E.POSTS.filter(p => R[p.id].risk === 'amber').length} at risk.</li>
         <li>Stock reports not fresh: ${stale.length ? stale.map(p => `${p.name} (${st.reports[p.id].ageH} h)`).join(', ') : 'none'}.</li></ul>
       <h3>2. Decisions required (earliest first)</h3>
       <ol>${due.map(r => `<li><b>${esc(r.n.name)} · ${ITEMS[r.item].name}:</b> ${r.status === 'late' ? 'no option arrives in time; shortage from ' + ui.when(r.r.Yc) : `${esc(r.first.label)}, order by ${ui.when(r.first.actBy)}${r.last && r.last !== r.first ? `; fallback ${esc(r.last.label.toLowerCase())} until ${ui.when(r.last.actBy)}` : ''}`}.</li>`).join('') || '<li>No decisions due within 14 days.</li>'}</ol>
@@ -267,7 +213,7 @@
           <h4>Action deadlines</h4><p>Each post's stock is projected day by day: <code>stock − use × days</code>, plus any extra deliveries on the day they land, never below zero. The <b>cautious</b> stock-out day solves <code>stock − use·T − 1.28·√(CV²·use²·T + (σ<sub>report</sub>·stock)²) = 0</code>, using an <b>assumed</b> demand spread (CV) and report-age uncertainty. It is a planning margin, not a calibrated probability. For each option, <b>latest order time = cautious stock-out − lead time</b>. An option is open only if it can start by then: a convoy needs free depot stock, and that stock is reserved once, for the most urgent post first; air maintenance needs a flyable day. Options are ranked cheapest first.</p>
           <h4>Real weather → demand and flying</h4><p>Daily minimum temperature, snowfall, rain and wind come from Open-Meteo for three public grid points in the western Himalaya (W1–W3). Each post takes its cell's temperature adjusted by <code>−6.5 °C per km</code> of extra altitude. SKO use per person per day = <code>1.0 + 0.09 × max(0, 8 − T)</code>, capped at 3.6 L, averaged over the next 14 days. It is anchored so that about −12 °C gives 2.8 L, the figure derived from ThePrint (2020). A day is flyable if snow &lt; 1 cm, rain &lt; 2 mm and wind &lt; 40 km/h. Beyond the forecast the model uses the 2023–2026 average for that date.</p>
           <h4>Field reports</h4><p>A SITREP is checked for format, post code and time. Each value is compared with expected stock; a gap over 25% and over 2 days of use is flagged "check count". Accepting it replaces the stock figure and resets the report age. Report age adds stock uncertainty: under 24 h none, 24–72 h ±8%, over 72 h ±20%.</p>
-          <h4>What-if and knock-on effects</h4><p>What-if uses the same projection. Figures typed on the What-if page stay on that page; they never change the stock other pages use. In the network, each depot ships its children's scheduled loads in date order while stock lasts, and never ships more than it holds. A load it cannot fill waits for the depot's own resupply, so delays travel only along real links. Red: stock runs out before delivery. Amber: delayed, under 2 d margin, under 5 d cover after delivery, or a MEDIUM/HIGH risk class.</p>
+          <h4>What-if and knock-on effects</h4><p>What-if uses the same projection. Figures typed on the What-if page stay on that page; they never change the stock other pages use. In the network, each depot ships its children's scheduled loads in date order while stock lasts, and never ships more than it holds. A load it cannot fill waits for the depot's own resupply, so delays travel only along real links. SHORTAGE: stock runs out before delivery. AT RISK: delayed, under 2 d margin, under 5 d cover after delivery, or a MEDIUM/HIGH risk class. What-if uses the deadline words for its margin: OK (2 d or more), ACT SOON (0–2 d), SHORTAGE (runs out before delivery).</p>
           <h4>Risk class (rule-based)</h4><p>LOW / MEDIUM / HIGH comes from the same assumed demand spread (index under 0.2 / 0.2–0.5 / over 0.5). It is a rule-based classification, <b>not a probability</b>: the spread has not been calibrated on real consumption data.</p>
           <h4>Data quality (separate from risk)</h4><p>GOOD / FAIR / POOR per post, from report age (over 24 h −1, over 72 h −2), supplies missing from the last report (−1) and counts flagged as unlikely (−1). It is shown next to risk, never mixed into it.</p>
           <h4>Compare plans: one evaluator, one score</h4><ol><li>Every plan (current schedule, Route-2 reroute, air maintenance, lateral transfer, reroute + air) runs through the same simulation and metrics.</li><li>Recommendation: among applicable plans, fewest posts short; then lowest score; then lowest cost.</li><li>Score = w<sub>risk</sub>·risk + w<sub>time</sub>·time + w<sub>cost</sub>·cost with <b>fixed scales</b>: risk ÷ current schedule's risk, delivery day ÷ 15, cost ÷ ₹10 lakh. A plan's score does not change with which other plans are listed.</li><li>Constraints: Route-2 carries 60% of a load; at most 2 air sorties of 2 t, only on flyable days; a lateral donor keeps 3 days' safety and gives to one post; nothing uses a closed route.</li><li>If no plan removes every shortage, the page lists the posts still short and what would close the gap.</li></ol>

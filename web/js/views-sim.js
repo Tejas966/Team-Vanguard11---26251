@@ -60,15 +60,17 @@
       // same projection the network simulation uses
       const pN = E.project(s, c, [], L), pD = E.project(s, c2, [], A);
       const remN = pN.short > 0 ? -pN.short * c : pN.end, remD = pD.short > 0 ? -pD.short * c2 : pD.end, tN = pN.Y, tD = pD.Y, mN = tN - L, mD = tD - A;
-      const sev = m => m >= 2 ? ['green', 'LOW', `stock outlasts delivery by ${fmt(m, 1)} d`] : m >= 0 ? ['amber', 'WATCH', `only ${fmt(m, 1)} d of margin`] : m > -2 ? ['red', 'HIGH', `runs out ${fmt(-m, 1)} d before delivery`] : ['red', 'CRITICAL', `runs out ${fmt(-m, 1)} d before delivery`];
+      // Margin severity uses the deadline words (DESIGN.md §5.1): OK / ACT SOON / SHORTAGE.
+      const sev = m => m >= 2 ? ['green', 'OK', `stock outlasts delivery by ${fmt(m, 1)} d`] : m >= 0 ? ['amber', 'ACT SOON', `only ${fmt(m, 1)} d of margin`] : ['red', 'SHORTAGE', `runs out ${fmt(-m, 1)} d before delivery`];
       const [cN, lN, tNt] = sev(mN), [cD, lD, tDt] = sev(mD);
       const shortU = Math.max(0, -remD), cost = shortU * it.kg * CONFIG.airRate / 1e5, sSd = n.type === 'post' ? E.stockSd(st2, n.id) : 0;
       const P = (T, cc) => E.riskClass(E.riskIndex(s, cc, it.cv, sSd, T));
+      const sevTag = (c_, l_) => ui.tag(c_, { green: '✓', amber: '!', red: '✕' }[c_], l_);
       const card = (cls, title, Ad, rem, t, p, c_, l_, tx) => `<div class="card ${cls}"><h4>${title} <span class="est">EST.</span></h4><dl class="kv">
         <dt>Delivery arrives</dt><dd>${ui.when(Ad)}</dd><dt>Stock at arrival</dt><dd>${rem >= 0 ? fmt(rem) : 0} ${it.unit}</dd><dt>Time to stock-out</dt><dd>${fmt(t, 1)} d</dd>
-        <dt>Risk class (rule-based)</dt><dd>${p}</dd><dt>Shortage</dt><dd>${rem < 0 ? fmt(-rem) + ' ' + it.unit : 'none'}</dd></dl><div style="margin-top:8px">${badge(c_)} <span style="font-size:12.5px">${l_} · ${tx}</span></div></div>`;
+        <dt>Risk class</dt><dd>${p} (rule-based)</dd><dt>Shortage</dt><dd>${rem < 0 ? fmt(-rem) + ' ' + it.unit : 'none'}</dd></dl><div style="margin-top:8px">${sevTag(c_, l_)} <span style="font-size:12.5px">${tx}</span></div></div>`;
       ui.$('#wOut').innerHTML = `<div class="cmp2">${card('nor', 'Normal delivery', L, remN, tN, P(L, c), cN, lN, tNt)}${card('dis', `Disrupted (+${d} d, ${st2.cons >= 0 ? '+' : ''}${st2.cons}% use)`, A, remD, tD, P(A, c2), cD, lD, tDt)}</div>
-        <div class="verdict ${cD}">${badge(cD)}<p><b>Estimated impact:</b> ${remD < 0 ? `${n.name} would run out of ${it.name.toLowerCase()} on ${ui.when(tD)}, ${fmt(A - tD, 1)} d before the delivery on ${ui.when(A)}. The gap is ${fmt(shortU)} ${it.unit}; covering it by air maintenance costs about <b>₹${fmt(cost, 1)} lakh</b> <span class="est">ILLUSTRATIVE ₹${CONFIG.airRate}/kg</span>.` : mD < 2 ? `No stock-out expected, but the margin shrinks from ${fmt(mN, 1)} d to ${fmt(mD, 1)} d.` : `Delay absorbed: stock lasts ${fmt(mD, 1)} d beyond delivery.`}</p></div>
+        <div class="verdict ${cD}">${sevTag(cD, lD)}<p><b>Estimated impact:</b> ${remD < 0 ? `${n.name} would run out of ${it.name.toLowerCase()} on ${ui.when(tD)}, ${fmt(A - tD, 1)} d before the delivery on ${ui.when(A)}. The gap is ${fmt(shortU)} ${it.unit}; covering it by air maintenance costs about <b>₹${fmt(cost, 1)} lakh</b> <span class="est">ILLUSTRATIVE ₹${CONFIG.airRate}/kg</span>.` : mD < 2 ? `No stock-out expected, but the margin shrinks from ${fmt(mN, 1)} d to ${fmt(mD, 1)} d.` : `Delay absorbed: stock lasts ${fmt(mD, 1)} d beyond delivery.`}</p></div>
         ${n.type === 'depot' ? '<p class="note">For a depot, a shortage here means dispatches fall behind. The Ripple page shows which posts are hit.</p>' : ''}
         <div class="chart-wrap" style="margin-top:10px"><svg class="fluid" id="wChart" viewBox="0 0 640 230" role="img" aria-label="Projected stock"></svg><div class="tip" id="wTip"></div></div>
         <div class="legend"><span><i style="border-color:var(--navy-500)"></i>Normal</span><span><i style="border-color:var(--dis);border-top-style:dashed"></i>Disrupted</span><span><i class="box" style="background:rgba(198,40,40,.15)"></i>shortage window</span><span>▼ delivery</span></div>`;
@@ -117,15 +119,15 @@
             <li><b>Supply delay</b>${st.delay || st.short || st.routeOut ? esc(src.why.concat(st.routeOut && st.source !== 'DB' ? R.DB.why : []).join('; ')) : 'No delay set. Use the sliders or the What-If page.'}</li>
             <li><b>Inventory reduction</b>${src.n.type === 'depot' ? `${src.n.name} holds ${fmt(src.s)} ${it.unit} (${fmt(src.s / src.c, 1)} d of outflow). ${src.lateKids ? `It fills ${src.queue.filter(q => q.ok).length} of ${src.queue.length} scheduled loads before running dry.` : 'Its buffer covers every scheduled load.'}` : `${src.n.name} stock falls to ${fmt(Math.max(0, src.s - src.c * Math.min(src.A, H)))} ${it.unit} by delivery.`}</li>
             <li><b>Potential shortage</b>${reds.length ? reds.map(r => `${r.n.name} from ${ui.when(r.Y)} (${fmt(r.short, 1)} d)`).join('; ') : 'None expected within 14 days.'}</li>
-            <li><b>Downstream disruption</b>${affected.length ? `${affected.length} node${affected.length > 1 ? 's' : ''} downstream affected: ${affected.filter(r => r.risk === 'red').length} red, ${affected.filter(r => r.risk === 'amber').length} amber.` : 'No downstream node affected.'}</li>
+            <li><b>Downstream disruption</b>${affected.length ? `${affected.length} node${affected.length > 1 ? 's' : ''} downstream affected: ${affected.filter(r => r.risk === 'red').length} with a shortage, ${affected.filter(r => r.risk === 'amber').length} at risk.` : 'No downstream node affected.'}</li>
             <li><b>Recommended action</b>${urg ? esc(actionFor(st, R, urg.n.id)) : affected.length ? esc(actionFor(st, R, affected[0].n.id)) : 'Continue the normal schedule and monitor.'}</li>
           </ol></div></div>
       </div>
       <div class="panel" style="margin-top:12px"><div class="ph"><h3>Node-by-node impact</h3><span class="est">ESTIMATES</span></div><div class="pb scroll" style="padding-top:0"><table class="t">
-        <thead><tr><th>Node</th><th>Risk</th><th class="n">Stock lasts</th><th class="n">Delivery</th><th>Risk class<br><span style="text-transform:none">rule-based</span></th><th>Reason</th><th>Recommended action</th></tr></thead><tbody>
+        <thead><tr><th>Node</th><th>Status</th><th class="n">Stock lasts</th><th class="n">Delivery</th><th>Risk class</th><th>Reason</th><th>Recommended action</th></tr></thead><tbody>
         ${rows.map(r => { const p = r.n.type === 'post'; return `<tr><td><b>${r.n.name}</b><br><span style="font-size:11.5px;color:var(--muted)">${r.n.role}</span></td><td>${badge(r.risk)}</td>
           <td class="n">${fmt(p ? r.Y : r.s / r.c, 1)} d</td><td class="n">${Number.isFinite(r.A) && r.A <= H ? ui.when(r.A) : 'none ≤14 d'}${r.D > 0 && Number.isFinite(r.D) ? `<br><span style="color:var(--crit-ink);font-size:11px">+${r.D} d</span>` : ''}</td>
-          <td>${p ? r.riskClass : '—'}</td><td class="reason">${esc(E.explain(st, R, r.n.id).join(' → ') || 'Not on the disrupted path; schedule unchanged.')}</td><td style="font-size:12.5px">${esc(actionFor(st, R, r.n.id))}</td></tr>`; }).join('')}
+          <td>${p ? r.riskClass + ' (rule-based)' : '—'}</td><td class="reason">${esc(E.explain(st, R, r.n.id).join(' → ') || 'Not on the disrupted path; schedule unchanged.')}</td><td style="font-size:12.5px">${esc(actionFor(st, R, r.n.id))}</td></tr>`; }).join('')}
       </tbody></table></div></div>`;
     ui.$('#rSrc').value = st.source;
     ui.$('#rSrc').onchange = e => FSI.set({ source: e.target.value });
@@ -157,7 +159,7 @@
       ui.svg('rect', { class: 'box', width: BW, height: BH, fill: bg, stroke: bd, 'stroke-width': isSrc ? 2.6 : 1.4 }, g);
       ui.svg('rect', { width: 5, height: BH, fill: bd }, g);
       ui.svg('text', { x: 14, y: 20, 'font-size': 13, 'font-weight': 600, 'font-family': 'IBM Plex Sans', fill: '#14202E' }, g).textContent = n.name;
-      const sub = n.type === 'post' ? (r.short > 0 ? `short ${fmt(r.short, 1)} d from d${fmt(r.Y, 1)}` : `${fmt(r.Y, 1)} d stock · next d${Number.isFinite(r.A) ? r.A : '—'}`) : (r.lateKids ? `${r.lateKids} load${r.lateKids > 1 ? 's' : ''} late` : r.D > 0 ? 'delay absorbed' : n.role);
+      const sub = n.type === 'post' ? (r.short > 0 ? `short ${fmt(r.short, 1)} d from d${fmt(r.Y, 1)}` : `${fmt(r.Y, 1)} d stock · next d${Number.isFinite(r.A) ? r.A : '—'}`) : (r.lateKids ? `${r.lateKids} load${r.lateKids > 1 ? 's' : ''} late` : r.D > 0 ? 'delay absorbed' : n.role.split(' (')[0]);
       ui.svg('text', { x: 14, y: 37, 'font-size': 10.5, 'font-family': 'IBM Plex Mono', fill: '#44515F' }, g).textContent = sub;
       ui.svg('text', { x: 14, y: 50, 'font-size': 9.5, 'font-family': 'IBM Plex Mono', fill: bd === '#E0A100' ? '#7D5300' : bd }, g).textContent = `${ui.RB[r.risk][0]} ${ui.RB[r.risk][1]}${isSrc ? ' · SOURCE' : ''}`;
       const pick = () => FSI.set({ source: n.id });

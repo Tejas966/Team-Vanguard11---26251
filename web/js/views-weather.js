@@ -11,22 +11,13 @@
       : cov >= H ? ui.tag('blue', 'i', 'CACHED FORECAST') + ` snapshot ${W.fetched.replace('T', ' ')}`
         : ui.tag('amber', '!', 'PARTLY CLIMATOLOGY') + ` forecast covers ${cov} of ${H} days; the rest uses the 2023–2026 average`;
   }
-  // summary used by the overview strip
+  // summary used by the Today page
   FSI.weatherSummary = () => {
     const posts = E.POSTS.map(n => { let t = 0; for (let d = 0; d < 7; d++) t += wx.postTemp(n, d); t /= 7; return { n, t, pol: wx.polPerPerson(t) }; });
     const coldest = posts.reduce((a, b) => b.t < a.t ? b : a);
     const noFly = W.cells.map(c => ({ c, days: [...Array(7).keys()].map(i => i + 1).filter(d => !wx.flyable(c.id, d).ok) }));
     const snow = W.cells.map(c => ({ c, cm: [...Array(7).keys()].reduce((a, d) => a + (wx.get(c.id, 'snow', d).v || 0), 0) }));
     return { posts, coldest, noFly, snow };
-  };
-  FSI.weatherStrip = () => {
-    const s = FSI.weatherSummary();
-    return `<div class="panel" style="margin-bottom:12px"><div class="ph"><h3>Real weather · next 7 days</h3><span class="hint">${sourceLine()} · <a href="#/weather">details →</a></span></div>
-      <div class="pb" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px 18px;font-size:13px">
-        <div><b>Coldest post:</b> ${esc(s.coldest.n.name)} about <b>${fmt(s.coldest.t, 0)} °C</b> at night, so SKO need is ${fmt(s.coldest.pol, 1)} L per person per day</div>
-        <div><b>Snow forecast:</b> ${s.snow.map(x => `${x.c.id} ${fmt(x.cm, 1)} cm`).join(' · ')}</div>
-        <div><b>Not flyable for air maintenance:</b> ${s.noFly.map(x => `${x.c.id} ${x.days.length ? x.days.map(d => dayLbl(d).split(',')[0]).join(', ') : 'none'}`).join(' · ')}</div>
-      </div></div>`;
   };
   FSI.snowHistoryPanel = () => {
     const w = wx.winters();
