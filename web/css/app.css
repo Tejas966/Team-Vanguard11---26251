@@ -67,8 +67,12 @@ a{color:var(--navy-500)}
 .ph h3{margin:0;font-family:var(--cond);font-size:15px;font-weight:600;letter-spacing:.02em;text-transform:uppercase}
 .ph .hint{margin-left:auto;font-size:11.5px;color:var(--muted)}
 .pb{padding:12px 14px}
-.est{font-family:var(--mono);font-size:9.5px;letter-spacing:.06em;color:var(--warn-ink);background:var(--warn-bg);border:1px solid #EBCB78;padding:1px 5px;white-space:nowrap}
-.fact{font-family:var(--mono);font-size:9.5px;letter-spacing:.06em;color:var(--navy-700);background:var(--navy-100);border:1px solid #BFD0E4;padding:1px 5px;white-space:nowrap}
+.tag{display:inline-block;font-family:var(--mono);font-size:11px;font-weight:600;line-height:1.2;letter-spacing:.04em;padding:1px 6px;border:1px solid;white-space:nowrap;vertical-align:1px}
+.tag.estimate{color:var(--status-warning-ink);background:var(--status-warning-bg);border-color:var(--status-warning-border)}
+.tag.real{color:var(--status-healthy-ink);background:var(--status-healthy-bg);border-color:var(--status-healthy-border)}
+.tag.rule{color:var(--status-info-ink);background:var(--status-info-bg);border-color:var(--status-info-border)}
+.tag.planned{color:var(--text-secondary);background:var(--surface-inset);border-color:var(--border-strong)}
+.refs .tag{margin-left:6px}
 .btn{border:1px solid var(--border-control);background:var(--panel);padding:6px 12px;border-radius:2px;cursor:pointer;font-size:13px}
 .btn:hover{border-color:var(--navy-500)}
 .btn.primary{background:var(--navy-700);border-color:var(--navy-700);color:#fff;font-weight:500}
@@ -257,8 +261,6 @@ table.cmp td.better::after{content:" ✓ better";font-family:var(--mono);font-si
 .refs li{padding:8px 0;border-bottom:1px solid var(--line);font-size:13px}
 .refs li:last-child{border-bottom:0}
 .refs .use{display:block;font-size:12px;color:var(--ink-2);margin-top:2px}
-.tag-used{font-family:var(--mono);font-size:9.5px;color:var(--good-ink);border:1px solid #A9D8B5;background:var(--good-bg);padding:0 4px;margin-left:4px}
-.tag-plan{font-family:var(--mono);font-size:9.5px;color:var(--navy-700);border:1px solid #BFD0E4;background:var(--navy-100);padding:0 4px;margin-left:4px}
 
 @media (max-width:1180px){
   .crow{grid-template-columns:200px minmax(0,1fr)}

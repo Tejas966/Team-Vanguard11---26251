@@ -12,6 +12,10 @@
   const RB = { green: ['✓', 'OK'], amber: ['!', 'AT RISK'], red: ['✕', 'SHORTAGE'] };
   ui.RB = RB;
   ui.badge = r => `<span class="rb ${r}"><i aria-hidden="true">${RB[r][0]}</i>${RB[r][1]}</span>`;
+  // Source / estimate tag (DESIGN.md §5.2): one component, approved words only, tone follows the word.
+  const TAG_TONE = { ESTIMATE: 'estimate', SIMULATED: 'estimate', ILLUSTRATIVE: 'estimate', ASSUMED: 'estimate', AVERAGE: 'estimate',
+    'REAL PUBLIC': 'real', 'RULE-BASED': 'rule', PLANNED: 'planned', SNAPSHOT: 'planned' };
+  ui.srcTag = w => `<span class="tag ${TAG_TONE[w] || 'planned'}">${w}</span>`;
   ui.tag = (cls, icon, text) => `<span class="rb ${cls}"><i aria-hidden="true">${icon}</i>${text}</span>`;
 
   // "Now" is the moment the page loaded, rounded down to the hour. Day 0 = now.

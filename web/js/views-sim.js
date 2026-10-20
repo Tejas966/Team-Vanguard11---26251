@@ -36,7 +36,7 @@
           <div class="field"><label for="wX">Change in consumption</label><div class="row"><input type="range" id="wX" data-fmt="pct" min="-30" max="60" step="5" value="${st.cons}"><output class="val">${st.cons >= 0 ? '+' : ''}${st.cons}%</output></div><div class="help">Cold snap, troop surge or patrol tempo. Applies to this node and everything it supplies.</div></div>
           <div style="display:flex;gap:8px;flex-wrap:wrap"><a class="btn primary" href="#/ripple" style="text-decoration:none">Trace ripple effect →</a><button type="button" class="btn" id="wReset">Reset inputs</button></div>
         </div></div>
-        <div class="panel"><div class="ph"><h3>Normal vs disrupted</h3><span class="est">ESTIMATES</span></div><div class="pb" id="wOut"></div></div>
+        <div class="panel"><div class="ph"><h3>Normal vs disrupted</h3>${ui.srcTag('ESTIMATE')}</div><div class="pb" id="wOut"></div></div>
       </div>`;
     ui.$('#wNode').value = st.source;
     ui.$('#wNode').onchange = e => FSI.set({ source: e.target.value });
@@ -66,11 +66,11 @@
       const shortU = Math.max(0, -remD), cost = shortU * it.kg * CONFIG.airRate / 1e5, sSd = n.type === 'post' ? E.stockSd(st2, n.id) : 0;
       const P = (T, cc) => E.riskClass(E.riskIndex(s, cc, it.cv, sSd, T));
       const sevTag = (c_, l_) => ui.tag(c_, { green: '✓', amber: '!', red: '✕' }[c_], l_);
-      const card = (cls, title, Ad, rem, t, p, c_, l_, tx) => `<div class="card ${cls}"><h4>${title} <span class="est">EST.</span></h4><dl class="kv">
+      const card = (cls, title, Ad, rem, t, p, c_, l_, tx) => `<div class="card ${cls}"><h4>${title} ${ui.srcTag('ESTIMATE')}</h4><dl class="kv">
         <dt>Delivery arrives</dt><dd>${ui.when(Ad)}</dd><dt>Stock at arrival</dt><dd>${rem >= 0 ? fmt(rem) : 0} ${it.unit}</dd><dt>Time to stock-out</dt><dd>${fmt(t, 1)} d</dd>
         <dt>Risk class</dt><dd>${p} (rule-based)</dd><dt>Shortage</dt><dd>${rem < 0 ? fmt(-rem) + ' ' + it.unit : 'none'}</dd></dl><div style="margin-top:8px">${sevTag(c_, l_)} <span style="font-size:12.5px">${tx}</span></div></div>`;
       ui.$('#wOut').innerHTML = `<div class="cmp2">${card('nor', 'Normal delivery', L, remN, tN, P(L, c), cN, lN, tNt)}${card('dis', `Disrupted (+${d} d, ${st2.cons >= 0 ? '+' : ''}${st2.cons}% use)`, A, remD, tD, P(A, c2), cD, lD, tDt)}</div>
-        <div class="verdict ${cD}">${sevTag(cD, lD)}<p><b>Estimated impact:</b> ${remD < 0 ? `${n.name} would run out of ${it.name.toLowerCase()} on ${ui.when(tD)}, ${fmt(A - tD, 1)} d before the delivery on ${ui.when(A)}. The gap is ${fmt(shortU)} ${it.unit}; covering it by air maintenance costs about <b>₹${fmt(cost, 1)} lakh</b> <span class="est">ILLUSTRATIVE ₹${CONFIG.airRate}/kg</span>.` : mD < 2 ? `No stock-out expected, but the margin shrinks from ${fmt(mN, 1)} d to ${fmt(mD, 1)} d.` : `Delay absorbed: stock lasts ${fmt(mD, 1)} d beyond delivery.`}</p></div>
+        <div class="verdict ${cD}">${sevTag(cD, lD)}<p><b>Estimated impact:</b> ${remD < 0 ? `${n.name} would run out of ${it.name.toLowerCase()} on ${ui.when(tD)}, ${fmt(A - tD, 1)} d before the delivery on ${ui.when(A)}. The gap is ${fmt(shortU)} ${it.unit}; covering it by air maintenance costs about <b>₹${fmt(cost, 1)} lakh</b> at ₹${CONFIG.airRate}/kg ${ui.srcTag('ILLUSTRATIVE')}.` : mD < 2 ? `No stock-out expected, but the margin shrinks from ${fmt(mN, 1)} d to ${fmt(mD, 1)} d.` : `Delay absorbed: stock lasts ${fmt(mD, 1)} d beyond delivery.`}</p></div>
         ${n.type === 'depot' ? '<p class="note">For a depot, a shortage here means dispatches fall behind. The Ripple page shows which posts are hit.</p>' : ''}
         <div class="chart-wrap" style="margin-top:10px"><svg class="fluid" id="wChart" viewBox="0 0 640 230" role="img" aria-label="Projected stock"></svg><div class="tip" id="wTip"></div></div>
         <div class="legend"><span><i style="border-color:var(--navy-500)"></i>Normal</span><span><i style="border-color:var(--dis);border-top-style:dashed"></i>Disrupted</span><span><i class="box" style="background:rgba(198,40,40,.15)"></i>shortage window</span><span>▼ delivery</span></div>`;
@@ -123,7 +123,7 @@
             <li><b>Recommended action</b>${urg ? esc(actionFor(st, R, urg.n.id)) : affected.length ? esc(actionFor(st, R, affected[0].n.id)) : 'Continue the normal schedule and monitor.'}</li>
           </ol></div></div>
       </div>
-      <div class="panel" style="margin-top:12px"><div class="ph"><h3>Node-by-node impact</h3><span class="est">ESTIMATES</span></div><div class="pb scroll" style="padding-top:0"><table class="t">
+      <div class="panel" style="margin-top:12px"><div class="ph"><h3>Node-by-node impact</h3>${ui.srcTag('ESTIMATE')}</div><div class="pb scroll" style="padding-top:0"><table class="t">
         <thead><tr><th>Node</th><th>Status</th><th class="n">Stock lasts</th><th class="n">Delivery</th><th>Risk class</th><th>Reason</th><th>Recommended action</th></tr></thead><tbody>
         ${rows.map(r => { const p = r.n.type === 'post'; return `<tr><td><b>${r.n.name}</b><br><span style="font-size:11.5px;color:var(--muted)">${r.n.role}</span></td><td>${badge(r.risk)}</td>
           <td class="n">${fmt(p ? r.Y : r.s / r.c, 1)} d</td><td class="n">${Number.isFinite(r.A) && r.A <= H ? ui.when(r.A) : 'none ≤14 d'}${r.D > 0 && Number.isFinite(r.D) ? `<br><span style="color:var(--crit-ink);font-size:11px">+${r.D} d</span>` : ''}</td>
@@ -196,7 +196,7 @@
           <div class="field"><label for="sP">Decision priority</label><select id="sP"><option value="balanced">Balanced (risk 60 · time 25 · cost 15)</option><option value="risk">Minimise shortage (80 · 15 · 5)</option><option value="cost">Minimise cost (40 · 20 · 40)</option></select></div>
           <div style="display:flex;gap:8px;flex-wrap:wrap"><button type="button" class="btn primary" id="sSave">Save run to history</button><button type="button" class="btn" id="sReset">Reset stress</button></div>
         </div></div>
-        <div class="panel"><div class="ph"><h3>Recommendation · ${it.name}</h3><span class="est">ESTIMATES · COSTS ILLUSTRATIVE</span></div><div class="pb">
+        <div class="panel"><div class="ph"><h3>Recommendation · ${it.name}</h3>${ui.srcTag('ESTIMATE')} ${ui.srcTag('ILLUSTRATIVE')}</div><div class="pb">
           <div class="reco"><h4>RECOMMENDED · BEST OF ${ev.ranked.length} APPLICABLE PLANS · COMMANDER DECIDES</h4><div class="big">${esc(best.name)}</div>
             <ul><li><b>Why:</b> ${esc(ev.reason)}.</li><li><b>Posts still short:</b> ${esc(shortTxt(best.m))}.</li>${best.key !== 'A' ? `<li><b>Cost:</b> ₹${fmt(best.m.cost, 1)} lakh extra (illustrative).</li>` : ''}${best.notes.length ? `<li><b>Note:</b> ${esc(best.notes.join('; '))}.</li>` : ''}</ul>
             ${FSI.whyPlanBox(st, ev)}</div>
@@ -205,7 +205,7 @@
           <div class="scroll"><table class="t"><thead><tr><th>Plan</th><th class="n">Posts short</th><th class="n">Shortage post-days</th><th class="n">First stock-out</th><th class="n">₹ lakh</th><th class="n">Score</th><th></th></tr></thead><tbody>
             ${ev.cands.map(c => `<tr${c === best ? ' style="background:var(--navy-100)"' : ''}><td>${esc(c.name)}${c.notes.length ? `<br><span class="na" style="font-size:11.5px">${esc(c.notes[0])}</span>` : ''}</td>
               <td class="n">${c.applicable ? c.m.stockouts : '—'}</td><td class="n">${c.applicable ? fmt(c.m.sumShort, 1) : '—'}</td><td class="n">${c.applicable ? (c.m.firstOut == null ? 'none' : 'day ' + fmt(c.m.firstOut, 1)) : '—'}</td><td class="n">${c.applicable ? fmt(c.m.cost, 1) : '—'}</td><td class="n">${scoreCell(c)}</td>
-              <td>${c === best ? '<span class="fact">RECOMMENDED</span>' : !c.applicable ? '<span class="na">not applicable</span>' : `<button type="button" class="btn sm" data-cmp="${c.key}">Compare</button>`}</td></tr>`).join('')}</tbody></table></div>
+              <td>${c === best ? ui.tag('blue', '★', 'RECOMMENDED') : !c.applicable ? '<span class="na">not applicable</span>' : `<button type="button" class="btn sm" data-cmp="${c.key}">Compare</button>`}</td></tr>`).join('')}</tbody></table></div>
           <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:16px 0 6px"><b style="font-size:12.5px">Side by side:</b><span style="font-size:12.5px">Plan A · current schedule vs</span>
             <select id="sB" aria-label="Plan to compare with Plan A">${ev.cands.filter(c => c.key !== 'A').map(c => `<option value="${c.key}" ${c.key === cmpKey ? 'selected' : ''}>${esc(c.name)}${c === best ? ' (recommended)' : ''}</option>`).join('')}</select></div>
           ${B.applicable ? '' : `<p class="note" style="margin-top:0">${esc(B.name)} is not applicable in this situation: ${esc(B.notes.join('; '))}. It is shown identical to Plan A.</p>`}
