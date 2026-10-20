@@ -32,9 +32,14 @@ jobs:
           node-version: 22
       - name: Engine tests
         run: node --test web/tests/engine.test.js
+      - name: Copy the site without its tests
+        run: |
+          mkdir _site
+          cp -r web/. _site/
+          rm -rf _site/tests
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:
-          path: web
+          path: _site
       - id: deployment
         uses: actions/deploy-pages@v4
