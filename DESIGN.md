@@ -1,6 +1,6 @@
 # Forward Supply Intelligence — Design System
 
-Status: **specification v1 (20 Oct 2026)**. It documents the visual system already in `web/css/app.css` and the view code, and sets rules for future changes. Items marked **CHANGE** are proposals that have **not been implemented yet**.
+Status: **specification v1 (20 Oct 2026)**. It documents the visual system already in `web/css/app.css` and the view code, and sets rules for future changes. Items marked **DONE** were proposals in v1 and have been implemented (20 Oct 2026). Appendix A is the audit as it was found before those changes.
 
 Scope: the static web app in `web/` (vanilla JS, one stylesheet, no build step, no `package.json`). Tokens live as CSS custom properties in `web/css/app.css`. There is no second styling system, and none should be added.
 
@@ -50,7 +50,7 @@ Scope: the static web app in `web/` (vanilla JS, one stylesheet, no build step, 
 | `--navy-50` | `#F2F6FB` | recommendation panel tint |
 | `--ink` | `#14202E` | primary text (16.5:1 on white) |
 | `--ink-2` | `#44515F` | secondary text (8.1:1 on white) |
-| `--muted` | `#6B7887` | metadata, axis labels (**CHANGE**, see 2.3) |
+| `--muted` | `#5C6878` | metadata, axis labels (**DONE**, see 2.3; was `#6B7887`) |
 | `--line` | `#D6DCE4` | dividers inside panels |
 | `--line-2` | `#C3CBD6` | panel/table header rules |
 | `--bg` | `#EEF1F5` | workspace background |
@@ -59,7 +59,7 @@ Scope: the static web app in `web/` (vanilla JS, one stylesheet, no build step, 
 
 ### 2.2 Semantic tokens
 
-The semantic names below are the ones components should use. **CHANGE:** today components reference base names directly; add these aliases in `:root` and migrate gradually.
+The semantic names below are the ones components should use. **DONE:** today components reference base names directly; add these aliases in `:root` and migrate gradually.
 
 | Semantic token | Maps to | Meaning |
 |---|---|---|
@@ -90,7 +90,7 @@ The semantic names below are the ones components should use. **CHANGE:** today c
 - **Green = healthy or verified positive:** OK, accepted report, real-data tag. A good outcome ("✓ better") uses green ink, not fill.
 - **Blue = information and planned items:** plan ahead, rule-based tags, selection. Blue is also the action colour, so status-blue always appears **with a label**.
 - **Status is never colour alone.** Every status carries an icon glyph (✕ ! i ✓ –) **and** a word (ACT NOW, OK, …).
-- **CHANGE (contrast):**
+- **DONE (contrast):**
   - `--muted #6B7887` measures 3.98:1 on `--bg` and 4.23:1 on `--panel-2`, below AA for the 10–12 px text it is used for. Change it to **`#5C6878`** (5.0:1 on `--bg`, 5.3:1 on `--panel-2`).
   - Form-control borders `#C3CBD6` are 1.64:1 on white, below the 3:1 needed for non-text elements. Use `--border-control #7C8794`.
   - White ✓ on `--status-healthy` fill is 3.44:1. Use `--status-healthy-ink` as the icon background in badges.
@@ -111,7 +111,7 @@ Fonts load from Google Fonts. Offline, the system fallbacks apply; layouts must 
 
 ### 3.2 Scale
 
-The current CSS uses **22 sizes (9–46 px)**. **CHANGE:** collapse them to this scale.
+The current CSS uses **22 sizes (9–46 px)**. **DONE:** collapse them to this scale.
 
 | Token | Size / line-height | Weight | Use |
 |---|---|---|---|
@@ -136,7 +136,7 @@ The current CSS uses **22 sizes (9–46 px)**. **CHANGE:** collapse them to this
   - On daily-use pages, show an absolute date plus a relative time: `Thu 22 Oct 14:00 (in 2 d 18 h)`.
   - On planning tools, `day N` (days from now) is allowed, but the column or axis says so once.
   - Deadlines round **down** to the hour.
-- **All caps** only in status badges, tags and the sidebar group labels. **CHANGE:** panel titles (`.ph h3`) and the uppercase table headers move to sentence case at `--fs-h3` / `--fs-tag`. This cuts the current eight uppercase rules to three.
+- **All caps** only in status badges, tags and the sidebar group labels. **DONE:** panel titles (`.ph h3`) and the uppercase table headers move to sentence case at `--fs-h3` / `--fs-tag`. This cuts the current eight uppercase rules to three.
 
 ---
 
@@ -153,8 +153,8 @@ The current CSS uses **22 sizes (9–46 px)**. **CHANGE:** collapse them to this
   - Every grid collapses to one column at ≤ 1080 px.
 - **Radius:** 0 for panels, cards, tables and the map; 2 px for buttons, inputs and chips; 3 px for map label boxes; 50% only for status dots.
 - **Borders:** 1 px `--border-subtle` or `--border-strong`. Emphasis uses a **3 px top edge** on metric tiles or a **4 px inset left edge** on list rows, never both.
-  - **CHANGE:** the 6 px left border on Today's big counts becomes 4 px, to match the deadline rows.
-  - **CHANGE:** the `.tile` 3 px top border and `.card` top borders keep only for comparison cards.
+  - **DONE:** the 6 px left border on Today's big counts becomes 4 px, to match the deadline rows.
+  - **DONE:** the `.tile` 3 px top border and `.card` top borders keep only for comparison cards.
 - **Elevation:** none. Flat panels with borders. Shadows only on the open mobile sidebar.
 
 ---
@@ -172,20 +172,20 @@ Each component lists the existing class to keep and the rules that standardise i
   - `blue` = PLAN AHEAD, RULE-BASED
   - `green` = OK, ACCEPTED, REAL PUBLIC
   - `grey` = NOT APPLICABLE, NOT BUILT
-- **Words are meanings, not colours.** **CHANGE:** Knock-on effects shows `RED / AMBER / GREEN` as the badge text; replace with `SHORTAGE / AT RISK / OK`.
-- **One severity vocabulary.** **CHANGE:**
+- **Words are meanings, not colours.** **DONE:** Knock-on effects shows `RED / AMBER / GREEN` as the badge text; replace with `SHORTAGE / AT RISK / OK`.
+- **One severity vocabulary.** **DONE:**
   - What-if uses `LOW / WATCH / HIGH / CRITICAL` while the risk class uses `LOW / MEDIUM / HIGH`. These are two different "LOW/HIGH" scales on adjacent pages.
   - Proposed: margin severity uses the deadline words (`OK / ACT SOON / SHORTAGE`); the rule-based risk class keeps `LOW / MEDIUM / HIGH`, always followed by "(rule-based)".
 
 ### 5.2 Source and estimate tags — `.est`, `.fact`, `.tag-used`, `.tag-plan`
 
-Four classes do one job. **CHANGE:** merge them into one `.tag` with tones `estimate` (amber), `real` (green), `rule` (blue) and `planned` (grey/blue), at 11 px.
+Four classes do one job. **DONE:** merge them into one `.tag` with tones `estimate` (amber), `real` (green), `rule` (blue) and `planned` (grey/blue), at 11 px.
 
-Approved words: `ESTIMATE`, `SIMULATED`, `ILLUSTRATIVE`, `ASSUMED`, `REAL PUBLIC`, `RULE-BASED`, `PLANNED`, `SNAPSHOT`, `AVERAGE`. Don't stack more than two tags on one element.
+Approved words: `ESTIMATE`, `SIMULATED`, `ILLUSTRATIVE`, `ASSUMED`, `REAL PUBLIC`, `RULE-BASED`, `PLANNED`, `SNAPSHOT`, `AVERAGE`. Don't stack more than two tags on one element. Render tags with `ui.srcTag(word)`; the tone follows the word. In the references list only `PLANNED` is tagged; untagged references are used in the prototype.
 
 ### 5.3 Metric summary
 
-There are four patterns today: `.tile`, `.big`, `.big-num`, and `.reco .big`. **CHANGE:** one `.metric` component.
+There are four patterns today: `.tile`, `.big`, `.big-num`, and `.reco .big`. **DONE:** one `.metric` component.
 - Label (`--fs-tag`, sentence case)
 - Value (`--fs-metric`, cond, tabular)
 - Optional unit or "/ total" in `--fs-small`
@@ -202,9 +202,9 @@ Today's counts are `.metric--status`. The Winter top row reuses the same compone
 
 ### 5.5 Data table — `table.t`
 
-- **Header:** mono 11 px (CHANGE from uppercase 10.5) on `--surface-inset`.
+- **Header:** mono 11 px (DONE: was uppercase 10.5) on `--surface-inset`.
 - **Rows:** 7 × 8 padding with `--border-subtle` dividers. Numeric columns use `.n`. The selected or recommended row uses the `--navy-100` background **plus** a tag (`RECOMMENDED`).
-- **CHANGE:** `.optt` (options inside disclosures) becomes `table.t.compact` (5 × 6 padding), not a separate style.
+- **DONE:** `.optt` (options inside disclosures) becomes `table.t.compact` (5 × 6 padding), not a separate style.
 - **Comparison tables:** "better" cells keep the `✓ better` suffix (green ink), so the comparison is never colour-only.
 - **Width:** wide tables sit inside `.scroll`. Never shrink the font to fit.
 
@@ -216,7 +216,7 @@ Today's counts are `.metric--status`. The Winter top row reuses the same compone
   - **Secondary:** white with a `--border-control` border.
   - **Text-link** buttons only for navigation ("All deadlines →").
 - **Destructive or reset actions** (Reset demo, Clear history) are secondary, never red. Red is status, not action.
-- **CHANGE:** links styled as buttons (`a.btn`) need the same height and colour as `button.btn`; three local overrides set `color:var(--ink)` today.
+- **DONE:** links styled as buttons (`a.btn`) need the same height and colour as `button.btn`; three local overrides set `color:var(--ink)` today.
 
 ### 5.7 Form controls — `.field`
 
@@ -229,7 +229,7 @@ Today's counts are `.metric--status`. The Winter top row reuses the same compone
 
 ### 5.8 Callout / alert
 
-There are six variants today: `.urgent`, `.limit`, `.verdict`, `.banner`, `.parse`, `.acard`. **CHANGE:** one `.callout` with tones `critical | warning | healthy | info`.
+There are six variants today: `.urgent`, `.limit`, `.verdict`, `.banner`, `.parse`, `.acard`. **DONE:** one `.callout` with tones `critical | warning | healthy | info`.
 
 **Structure:**
 - status badge
@@ -265,14 +265,14 @@ Only one recommendation panel per page. Don't call a plan "optimal": the method 
 ### 5.11 Timelines
 
 - **Deadline timeline (SVG):** stock bar (healthy tint until "safe until"), red line at the safe-until point, ▼ for scheduled delivery, lettered circles (T C D A) for the latest order time of each option, hatched red for "no option arrives in time". Day ticks with weekday labels.
-- **Step timeline:** `.flow` (numbered, impact chain) and `.tl-steps` (demo, left-edge state) are two patterns for one idea. **CHANGE:** use `.steps` with a numbered marker and states `done | current | pending`.
+- **Step timeline:** `.flow` (numbered, impact chain) and `.tl-steps` (demo, left-edge state) are two patterns for one idea. **DONE:** use `.steps` with a numbered marker and states `done | current | pending`.
 
 ### 5.12 Expandable explanation — `details.why`
 
 - **Summary text:** always "Why this recommendation?" for recommendations, and "How is this worked out?" for page-level method notes.
 - **Body (`.why-b`):** facts as a `dl.kv2` list, then the options table, then **Why:** and **Remaining risk:** sentences.
 - Bodies show engine values only; nothing is typed in by hand.
-- **CHANGE:** the "All options" disclosure in deadline rows and `details.howto` need the same summary style (navy-500, weight 500, ▸/▾ marker).
+- **DONE:** the "All options" disclosure in deadline rows and `details.howto` need the same summary style (navy-500, weight 500, ▸/▾ marker).
 
 ### 5.13 Dialogs and notifications
 
@@ -300,7 +300,7 @@ None exist yet. If added:
 - **Tooltips:** `.tip`, navy-900 with white mono 11.5 px, follows a crosshair. Every chart that has a tooltip also shows its key numbers elsewhere on the page in text, so the tooltip is never the only way to read them.
 - **Legends:** below the chart, `.legend`, with the same swatch shapes as the marks.
 - **Sources:** real-data charts (weather history) say "Real ERA5 data" in the panel head. Synthetic charts carry an `ESTIMATE` / `SIMULATED` tag.
-- **CHANGE:** there are 145 hex literals in JS-built SVG. Read colours from CSS tokens with one helper, e.g. `ui.tok('--status-critical')` via `getComputedStyle`, so charts and maps follow the token table.
+- **DONE:** there are 145 hex literals in JS-built SVG. Read colours from CSS tokens with one helper, e.g. `ui.tok('--status-critical')` via `getComputedStyle`, so charts and maps follow the token table.
 
 ---
 
@@ -323,7 +323,7 @@ None exist yet. If added:
 | Route-2 (light vehicles) | 2 px dashed `#7F97B5` |
 | Porter / animal track | 2 px dotted `#7C8794` |
 | Closed segment | red dashed |
-| Snow in forecast (3 days) | ❄ glyph next to the post (**CHANGE:** use an SVG icon, since the glyph depends on the font) |
+| Snow in forecast (3 days) | ❄ glyph next to the post (**DONE:** use an SVG icon, since the glyph depends on the font) |
 
 **Network diagram (Knock-on effects):**
 - Nodes are 180 × 56 boxes with a status-coloured fill tint and border, plus a 5 px status edge.
@@ -372,7 +372,7 @@ None exist yet. If added:
 
 Use "best of the evaluated plans", never "optimal". Use "recommended", never "decided".
 
-**Terminology** (one name everywhere; **CHANGE** where code or Methods text still differs):
+**Terminology** (one name everywhere; **DONE** where code or Methods text still differs):
 
 | Use | Not |
 |---|---|
@@ -404,11 +404,11 @@ Use "best of the evaluated plans", never "optimal". Use "recommended", never "de
   - Don't remove outlines without a replacement (`.node:focus` currently does; it relies on the stroke change, which is acceptable).
 - **Semantics:**
   - One `h1` per page (top bar).
-  - Panel titles are `h3`. **CHANGE:** add `h2` for the main page section, or demote the panel titles consistently.
+  - Panel titles are `h3`. **DONE:** add `h2` for the main page section, or demote the panel titles consistently.
   - Tables have `th` headers; tabs use `role=tablist/tab` with `aria-selected`.
   - Disclosures use native `details/summary`.
-- **Announcements:** content that changes after an action (Approve, Accept report, demo steps) goes in an `aria-live="polite"` region. **CHANGE:** the demo timeline and the Approve confirmation are not announced today.
-- **Motion:** only the demo's 0.9 s step reveal. Respect `prefers-reduced-motion` by showing all steps at once. **CHANGE**.
+- **Announcements:** content that changes after an action (Approve, Accept report, demo steps) goes in an `aria-live="polite"` region. **DONE:** the demo timeline and the Approve confirmation are not announced today.
+- **Motion:** only the demo's 0.9 s step reveal. Respect `prefers-reduced-motion` by showing all steps at once. **DONE**.
 - **Target size:** at least 24 × 24 px for every control. `.btn.sm` (26 px) meets this; table action buttons must not go smaller.
 - **Language:** `lang="en"` is set. Abbreviations (SKO, POL, AWS, SITREP, MT) are expanded once per page or in a tooltip.
 
@@ -439,7 +439,7 @@ Use "best of the evaluated plans", never "optimal". Use "recommended", never "de
 - Percentages labelled "probability" or "confidence" for rule-based outputs; the word "optimal".
 - A new component that duplicates an existing one (a second badge, a seventh callout style).
 - Hard-coded hex in new code. Use tokens (and `ui.tok()` once it exists).
-- Inline `style="…"` for anything reusable. There are 116 inline styles in view templates today; don't add more, and move repeats into classes.
+- Inline `style="…"` for anything reusable. Repeated inline styles have been moved into classes (116 → 43, mostly one-off widths); don't add more.
 - Text under 11 px; fixed-height boxes that clip text.
 - Sizing SVG label boxes from character counts of one specific font without slack. `map.js` does this, so a font change or the offline fallback can overflow labels.
 - Hiding the synthetic-data badge, the Open-Meteo attribution, or the map's "fictional" footer.

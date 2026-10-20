@@ -73,7 +73,7 @@
         <div class="callout row ${{ red: 'critical', amber: 'warning', green: 'healthy' }[cD]}">${sevTag(cD, lD)}<p><b>Estimated impact:</b> ${remD < 0 ? `${n.name} would run out of ${it.name.toLowerCase()} on ${ui.when(tD)}, ${fmt(A - tD, 1)} d before the delivery on ${ui.when(A)}. The gap is ${fmt(shortU)} ${it.unit}; covering it by air maintenance costs about <b>₹${fmt(cost, 1)} lakh</b> at ₹${CONFIG.airRate}/kg ${ui.srcTag('ILLUSTRATIVE')}.` : mD < 2 ? `No stock-out expected, but the margin shrinks from ${fmt(mN, 1)} d to ${fmt(mD, 1)} d.` : `Delay absorbed: stock lasts ${fmt(mD, 1)} d beyond delivery.`}</p></div>
         ${n.type === 'depot' ? '<p class="note">For a depot, a shortage here means dispatches fall behind. The Knock-on effects page shows which posts are hit.</p>' : ''}
         <div class="chart-wrap mt10"><svg class="fluid" id="wChart" viewBox="0 0 640 230" role="img" aria-label="Projected stock"></svg><div class="tip" id="wTip"></div></div>
-        <div class="legend"><span><i style="border-color:var(--navy-500)"></i>Normal</span><span><i style="border-color:var(--dis);border-top-style:dashed"></i>Disrupted</span><span><i class="box tint-critical"></i>shortage window</span><span>▼ delivery</span></div>`;
+        <div class="legend"><span><i style="border-color:var(--navy-500)"></i>Normal</span><span><i style="border-color:var(--dis);border-top-style:dashed"></i>Disrupted</span><span><i class="box tint-critical"></i>shortage window</span><span>▼ delivery</span><span>d2 = 2 days from now</span></div>`;
       chart({ s, c, c2, L, A, q: v2.q, F: 1 - st2.short / 100, tD, unit: it.unit });
     }
     function chart(o) {
@@ -109,7 +109,7 @@
         <div class="field"><label for="rS">Shortage in incoming delivery</label><div class="row"><input type="range" id="rS" data-fmt="plain" min="0" max="80" step="10" value="${st.short}"><output class="val">${st.short}%</output></div></div>
         <div><button type="button" class="btn" id="rReset">Reset disruption</button></div></div></div>
       <div class="grid m2">
-        <div class="panel"><div class="ph"><h2>Supply network</h2><span class="hint">Arrows = supply direction · dotted = lateral transfer allowed</span></div>
+        <div class="panel"><div class="ph"><h2>Supply network</h2><span class="hint">Arrows = supply direction · dotted = lateral transfer allowed · d6 = day 6 from now</span></div>
           <svg class="net" id="net" viewBox="0 0 900 470" role="img" aria-label="Supply network"></svg>
           <div class="legend" style="padding:8px 14px 10px">${badge('green')} no effect / buffer holds ${badge('amber')} delayed or thin ${badge('red')} shortage expected</div></div>
         <div class="panel"><div class="ph"><h2>Impact chain</h2></div><div class="pb">
@@ -196,7 +196,7 @@
           <div class="field"><label for="sP">Decision priority</label><select id="sP"><option value="balanced">Balanced (risk 60 · time 25 · cost 15)</option><option value="risk">Minimise shortage (80 · 15 · 5)</option><option value="cost">Minimise cost (40 · 20 · 40)</option></select></div>
           <div class="btn-row"><button type="button" class="btn primary" id="sSave">Save run to history</button><button type="button" class="btn" id="sReset">Reset scenario</button></div>
         </div></div>
-        <div class="panel"><div class="ph"><h2>Recommendation · ${it.name}</h2>${ui.srcTag('ESTIMATE')} ${ui.srcTag('ILLUSTRATIVE')}</div><div class="pb">
+        <div class="panel"><div class="ph"><h2>Recommendation · ${it.name}</h2><span class="hint">day N = days from now</span>${ui.srcTag('ESTIMATE')} ${ui.srcTag('ILLUSTRATIVE')}</div><div class="pb">
           <div class="reco"><h3>Recommended · best of ${ev.ranked.length} applicable plans · commander decides</h3><div class="big">${esc(best.name)}</div>
             <ul><li><b>Why:</b> ${esc(ev.reason)}.</li><li><b>Posts still short:</b> ${esc(shortTxt(best.m))}.</li>${best.key !== 'A' ? `<li><b>Cost:</b> ₹${fmt(best.m.cost, 1)} lakh extra (illustrative).</li>` : ''}${best.notes.length ? `<li><b>Note:</b> ${esc(best.notes.join('; '))}.</li>` : ''}</ul>
             ${FSI.whyPlanBox(st, ev)}</div>

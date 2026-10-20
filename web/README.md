@@ -34,6 +34,8 @@ The UI follows `DESIGN.md` at the repository root. In short:
 - **Status badges** (`ui.tag`, `ui.statusTag`) always pair an icon with a meaning word: ACT NOW, ACT SOON, PLAN AHEAD, OK, TOO LATE, SHORTAGE, AT RISK. The rule-based risk class is LOW / MEDIUM / HIGH, labelled "(rule-based)".
 - **Source tags** (`ui.srcTag(word)`, class `.tag`) say what kind of number something is, using only ESTIMATE, SIMULATED, ILLUSTRATIVE, ASSUMED, AVERAGE, REAL PUBLIC, RULE-BASED, PLANNED, SNAPSHOT.
 - **Components:** one `.callout` (critical / warning / healthy / info) and one `.metric` (`.metric--status` for Today's counts) replace the earlier one-off styles.
+- **Also shared:** `table.t.compact` for option tables, one disclosure style, one `.steps` timeline (done / current / pending), and `a.btn` matching `button.btn`.
+- **Accessibility:** panel titles are `h2`; Approve, report results and demo steps are announced through a polite live region (`ui.announce`); the demo shows every step at once when the system asks for reduced motion.
 - Screenshots of all 11 pages (1440 px wide) are in `submission/screenshots/`.
 
 ## Honest limits
