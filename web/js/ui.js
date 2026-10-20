@@ -8,6 +8,9 @@
   ui.svg = (tag, a, p) => { const e = document.createElementNS(NS, tag); for (const k in (a || {})) e.setAttribute(k, a[k]); if (p) p.appendChild(e); return e; };
   ui.esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
   ui.fmt = E.fmt;
+  // Colour from a CSS token (DESIGN.md §6), so SVG maps and charts follow app.css. Cached per name.
+  const TOK = {};
+  ui.tok = name => TOK[name] || (TOK[name] = getComputedStyle(document.documentElement).getPropertyValue(name).trim() || '#000');
   // Knock-on / network severity. Keys are the engine's risk tiers; words are meanings (DESIGN.md §5.1).
   const RB = { green: ['✓', 'OK'], amber: ['!', 'AT RISK'], red: ['✕', 'SHORTAGE'] };
   ui.RB = RB;

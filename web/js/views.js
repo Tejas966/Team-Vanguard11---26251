@@ -27,7 +27,7 @@
       <p class="intro">For every post: <b>the latest time to order each kind of resupply</b> so it arrives before stock runs out. Cheaper options close first.</p>
       <details class="howto"><summary>How is this worked out?</summary>We take a cautious stock-out time ("safe until": expected run-out minus a margin for an assumed demand spread and report age; not a calibrated probability), then subtract each option's travel time. Air maintenance counts only days the real forecast shows as flyable. A rush convoy needs spare stock at the depot.</details>
       <div class="itabs" role="tablist" aria-label="Supply class">${ITEM_KEYS.map(k => `<button type="button" role="tab" aria-selected="${k === item}" data-k="${k}">${ITEMS[k].name}${counts[k] ? `<span class="cnt">${counts[k]}</span>` : ''}</button>`).join('')}</div>
-      <div class="legend" style="margin:-4px 0 10px"><span><b style="font-family:var(--mono)">T C D A</b> = latest time to order: lateral Transfer · expedite Convoy · Detour via Pass-2 · Air maintenance</span><span>▼ next scheduled delivery</span><span><i style="border-color:#C62828"></i>safe until (stock may run out after this)</span><span><i class="box" style="background:repeating-linear-gradient(135deg,rgba(198,40,40,.5) 0 3px,transparent 3px 6px)"></i>no option arrives in time</span></div>
+      <div class="legend" style="margin:-4px 0 10px"><span><b style="font-family:var(--mono)">T C D A</b> = latest time to order: lateral Transfer · expedite Convoy · Detour via Pass-2 · Air maintenance</span><span>▼ next scheduled delivery</span><span><i class="line-critical"></i>safe until (stock may run out after this)</span><span><i class="box hatch-critical"></i>no option arrives in time</span></div>
       <div class="clock">${rows.map(row => clockRow(st, row, it)).join('')}</div>
       <p class="note">Lead times: lateral transfer 1 d · expedite convoy = road time (+ porter / animal transport leg where needed) + 0.5 d, only if the depot has free stock · detour = Route-2 to Depot-B + road · air maintenance 1 d, only on days the <b>real Open-Meteo forecast</b> shows flyable (snow &lt; 1 cm, rain &lt; 2 mm, wind &lt; 40 km/h). Costs are illustrative.</p>`;
     rows.forEach(row => drawTimeline(ui.$('#tl-' + row.n.id), row));
@@ -64,21 +64,21 @@
   function drawTimeline(svg, row) {
     const W = 620, H = CONFIG.horizon, x0 = 10, x1 = W - 10, X = d => x0 + Math.max(0, Math.min(H, d)) / H * (x1 - x0), r = row.r;
     const s = (t, a) => ui.svg(t, a, svg);
-    s('rect', { x: x0, y: 30, width: x1 - x0, height: 14, fill: '#F2F6FB', stroke: '#D6DCE4' });
+    s('rect', { x: x0, y: 30, width: x1 - x0, height: 14, fill: ui.tok('--navy-50'), stroke: ui.tok('--line') });
     for (let d = 0; d <= H; d++) {
-      s('line', { x1: X(d), x2: X(d), y1: 44, y2: d % 7 === 0 ? 52 : 48, stroke: '#9AA6B4' });
-      if (d % 2 === 0) s('text', { x: X(d), y: 64, 'text-anchor': 'middle', 'font-size': 10, 'font-family': 'IBM Plex Mono', fill: '#5C6878' }).textContent = d === 0 ? 'now' : ui.dayDate(d).toLocaleDateString('en-IN', { weekday: 'short', day: '2-digit' });
+      s('line', { x1: X(d), x2: X(d), y1: 44, y2: d % 7 === 0 ? 52 : 48, stroke: ui.tok('--chart-axis') });
+      if (d % 2 === 0) s('text', { x: X(d), y: 64, 'text-anchor': 'middle', 'font-size': 10, 'font-family': 'IBM Plex Mono', fill: ui.tok('--muted') }).textContent = d === 0 ? 'now' : ui.dayDate(d).toLocaleDateString('en-IN', { weekday: 'short', day: '2-digit' });
     }
     // stock bar: green until safe stock-out, red after
-    if (r.Yc > 0) s('rect', { x: x0, y: 30, width: X(r.Yc) - x0, height: 14, fill: '#CFE8D6' });
+    if (r.Yc > 0) s('rect', { x: x0, y: 30, width: X(r.Yc) - x0, height: 14, fill: ui.tok('--timeline-safe') });
     const lastOpen = row.last ? row.last.actBy : 0;
     if (row.status !== 'covered' && r.Yc > lastOpen) s('rect', { x: X(Math.max(0, lastOpen)), y: 30, width: X(r.Yc) - X(Math.max(0, lastOpen)), height: 14, fill: 'url(#hatch-' + row.n.id + ')' });
     const defs = s('defs', {}); const pat = ui.svg('pattern', { id: 'hatch-' + row.n.id, width: 6, height: 6, patternUnits: 'userSpaceOnUse', patternTransform: 'rotate(45)' }, defs);
-    ui.svg('rect', { width: 3, height: 6, fill: 'rgba(198,40,40,.45)' }, pat);
-    if (r.Yc < H) { s('line', { x1: X(r.Yc), x2: X(r.Yc), y1: 22, y2: 50, stroke: '#C62828', 'stroke-width': 2 });
-      s('text', { x: X(r.Yc) + 3, y: 76, 'font-size': 10, 'font-family': 'IBM Plex Mono', fill: '#A61F1F', 'text-anchor': X(r.Yc) > W - 90 ? 'end' : 'start' }).textContent = 'safe until ' + ui.when(r.Yc).replace(/^\w+ /, ''); }
-    if (Number.isFinite(r.A) && r.A <= H) { s('path', { d: `M${X(r.A) - 6} 18 L${X(r.A) + 6} 18 L${X(r.A)} 28Z`, fill: '#17365D' });
-      s('text', { x: X(r.A), y: 12, 'text-anchor': 'middle', 'font-size': 10, 'font-family': 'IBM Plex Mono', fill: '#17365D' }).textContent = 'delivery'; }
+    ui.svg('rect', { width: 3, height: 6, fill: ui.tok('--status-critical'), 'fill-opacity': 0.45 }, pat);
+    if (r.Yc < H) { s('line', { x1: X(r.Yc), x2: X(r.Yc), y1: 22, y2: 50, stroke: ui.tok('--status-critical'), 'stroke-width': 2 });
+      s('text', { x: X(r.Yc) + 3, y: 76, 'font-size': 10, 'font-family': 'IBM Plex Mono', fill: ui.tok('--status-critical-ink'), 'text-anchor': X(r.Yc) > W - 90 ? 'end' : 'start' }).textContent = 'safe until ' + ui.when(r.Yc).replace(/^\w+ /, ''); }
+    if (Number.isFinite(r.A) && r.A <= H) { s('path', { d: `M${X(r.A) - 6} 18 L${X(r.A) + 6} 18 L${X(r.A)} 28Z`, fill: ui.tok('--navy-700') });
+      s('text', { x: X(r.A), y: 12, 'text-anchor': 'middle', 'font-size': 10, 'font-family': 'IBM Plex Mono', fill: ui.tok('--navy-700') }).textContent = 'delivery'; }
     // act-by flags for open options (stacked when close together)
     const used = [];
     if (row.status === 'covered') return; // schedule holds: no deadlines to show
@@ -86,8 +86,8 @@
       const x = X(o.actBy); let lvl = 0; while (used.some(u => u.l === lvl && Math.abs(u.x - x) < 18)) lvl++; used.push({ x, l: lvl });
       const y = 37 - lvl * 0; const cx = x + lvl * 0;
       const g = s('g', { transform: `translate(${cx},${y})` });
-      ui.svg('circle', { r: 8, fill: o === row.first ? '#17365D' : '#fff', stroke: '#17365D', 'stroke-width': 1.5, transform: `translate(0,${-lvl * 17})` }, g);
-      ui.svg('text', { y: 3.5 - lvl * 17, 'text-anchor': 'middle', 'font-size': 10, 'font-weight': 700, 'font-family': 'IBM Plex Mono', fill: o === row.first ? '#fff' : '#17365D' }, g).textContent = OPT_LETTER[o.key];
+      ui.svg('circle', { r: 8, fill: o === row.first ? ui.tok('--navy-700') : ui.tok('--panel'), stroke: ui.tok('--navy-700'), 'stroke-width': 1.5, transform: `translate(0,${-lvl * 17})` }, g);
+      ui.svg('text', { y: 3.5 - lvl * 17, 'text-anchor': 'middle', 'font-size': 10, 'font-weight': 700, 'font-family': 'IBM Plex Mono', fill: o === row.first ? ui.tok('--panel') : ui.tok('--navy-700') }, g).textContent = OPT_LETTER[o.key];
       ui.svg('title', {}, g).textContent = `${o.label}: order by ${ui.when(o.actBy)}`;
     });
   }
@@ -163,7 +163,7 @@
       <div class="grid w-two">
         <div class="panel"><div class="ph"><h3>Requirement vs on hand</h3></div><div class="pb">
           <div class="wbars">${wp.rows.map(r => `<span><b>${r.n.name.replace('Post ', '')}</b></span><div class="wbar" title="${fmt(r.have, 1)} t on hand of ${fmt(r.need, 1)} t"><span style="width:${r.have / max * 100}%"></span><em style="left:${r.have / max * 100}%;width:${r.gap / max * 100}%"></em></div><span class="n" style="font-family:var(--mono);text-align:right">+${r.loads} loads</span>`).join('')}</div>
-          <div class="legend"><span><i class="box" style="background:var(--navy-500)"></i>on hand</span><span><i class="box" style="background:repeating-linear-gradient(135deg,rgba(198,40,40,.55) 0 3px,rgba(198,40,40,.12) 3px 7px)"></i>still to push</span></div>
+          <div class="legend"><span><i class="box" style="background:var(--navy-500)"></i>on hand</span><span><i class="box hatch-critical"></i>still to push</span></div>
           <div class="scroll" style="margin-top:10px"><table class="t"><thead><tr><th>Post</th>${Object.keys(ITEMS).map(k => `<th class="n">${ITEMS[k].name} (t)</th>`).join('')}<th class="n">Total gap</th></tr></thead><tbody>
           ${wp.rows.map(r => `<tr><td>${r.n.name}</td>${Object.keys(ITEMS).map(k => `<td class="n">${fmt(r.by[k], 1)}</td>`).join('')}<td class="n"><b>${fmt(r.gap, 1)} t</b></td></tr>`).join('')}</tbody></table></div></div></div>
         <div class="panel"><div class="ph"><h3>Weekly push plan</h3>${ui.srcTag('RULE-BASED')}<span class="hint">greedy by priority × deficit</span></div><div class="pb">

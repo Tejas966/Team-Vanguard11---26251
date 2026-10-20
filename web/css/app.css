@@ -15,6 +15,11 @@
   --status-healthy:var(--good); --status-healthy-ink:var(--good-ink); --status-healthy-bg:var(--good-bg); --status-healthy-border:#A9D8B5;
   --status-info:var(--navy-500); --status-info-ink:var(--navy-700); --status-info-bg:var(--navy-100); --status-info-border:#BFD0E4;
   --series-a:var(--navy-700); --series-b:#5B8DD6; --series-scenario:#7A3E9D;
+  /* chart, map and network colours read by ui.tok() (DESIGN.md §6, §7) */
+  --chart-grid:#E6EAF0; --chart-axis:#9AA6B4; --on-warning:#2B1D00; --timeline-safe:#CFE8D6; --net-edge:#8C98A6;
+  --map-ground:#EFF3EE; --map-band-1:#E6ECE4; --map-band-2:#DCE4DA; --map-band-3:#D1DACF; --map-band-4:#C7D0C5; --map-band-5:#BEC6BC;
+  --map-snow-1:#E9EEF2; --map-snow-2:#F6F8FA; --map-contour:#C3CCC1; --map-river:#9CC3E4;
+  --map-road:#4A5563; --map-route2:#7F97B5; --map-track:#7C8794;
   --planA:#17365D; --planB:#5B8DD6; --dis:#7A3E9D;
   /* type scale (DESIGN.md §3.2); floor 11 px */
   --fs-display:44px; --fs-metric:30px; --fs-h1:22px; --fs-h2:18px; --fs-h3:15px;
@@ -101,6 +106,9 @@ table.t td.reason{font-size:var(--fs-small);color:var(--ink-2);min-width:240px}
 .scroll{overflow-x:auto}
 .legend{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:var(--fs-meta);color:var(--ink-2);margin-top:6px}
 .legend i{display:inline-block;width:16px;height:0;border-top:2px solid;margin-right:6px;vertical-align:3px}
+.legend i.line-critical{border-color:var(--status-critical)}
+.legend i.tint-critical{background:rgba(198,40,40,.15)}
+.legend i.hatch-critical,.wbar em{background:repeating-linear-gradient(135deg,rgba(198,40,40,.55) 0 3px,rgba(198,40,40,.12) 3px 7px)}
 .legend i.box{height:10px;width:12px;border:0;vertical-align:-1px}
 .legend .rb i{width:15px;height:15px;border:0;margin:0;vertical-align:baseline}
 svg{display:block}
@@ -294,10 +302,12 @@ table.cmp td.better::after{content:" ✓ better";font-family:var(--mono);font-si
 .maplegend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:var(--fs-meta);color:var(--ink-2);padding:8px 14px 10px;border-top:1px solid var(--line)}
 .maplegend i{display:inline-block;margin-right:5px;vertical-align:-1px}
 .maplegend .dot{width:11px;height:11px;border-radius:50%}
+.maplegend .dot.critical{background:var(--status-critical)} .maplegend .dot.warning{background:var(--status-warning)}
+.maplegend .dot.info{background:var(--status-info)} .maplegend .dot.healthy{background:var(--status-healthy)}
 .maplegend .sq{width:11px;height:11px;background:var(--navy-700)}
-.maplegend .ln{width:18px;height:0;border-top:3px solid #4A5563;vertical-align:3px}
-.maplegend .ln.dash{border-top:2px dashed #7F97B5}
-.maplegend .ln.dot2{border-top:2px dotted #7C8794}
+.maplegend .ln{width:18px;height:0;border-top:3px solid var(--map-road);vertical-align:3px}
+.maplegend .ln.dash{border-top:2px dashed var(--map-route2)}
+.maplegend .ln.dot2{border-top:2px dotted var(--map-track)}
 .map-main{grid-template-columns:minmax(0,1.7fr) minmax(300px,1fr)}
 .pcard{padding:14px 16px}
 .pc-head{display:flex;justify-content:space-between;gap:10px;align-items:flex-start}

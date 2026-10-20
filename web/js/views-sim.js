@@ -73,7 +73,7 @@
         <div class="callout row ${{ red: 'critical', amber: 'warning', green: 'healthy' }[cD]}">${sevTag(cD, lD)}<p><b>Estimated impact:</b> ${remD < 0 ? `${n.name} would run out of ${it.name.toLowerCase()} on ${ui.when(tD)}, ${fmt(A - tD, 1)} d before the delivery on ${ui.when(A)}. The gap is ${fmt(shortU)} ${it.unit}; covering it by air maintenance costs about <b>₹${fmt(cost, 1)} lakh</b> at ₹${CONFIG.airRate}/kg ${ui.srcTag('ILLUSTRATIVE')}.` : mD < 2 ? `No stock-out expected, but the margin shrinks from ${fmt(mN, 1)} d to ${fmt(mD, 1)} d.` : `Delay absorbed: stock lasts ${fmt(mD, 1)} d beyond delivery.`}</p></div>
         ${n.type === 'depot' ? '<p class="note">For a depot, a shortage here means dispatches fall behind. The Ripple page shows which posts are hit.</p>' : ''}
         <div class="chart-wrap" style="margin-top:10px"><svg class="fluid" id="wChart" viewBox="0 0 640 230" role="img" aria-label="Projected stock"></svg><div class="tip" id="wTip"></div></div>
-        <div class="legend"><span><i style="border-color:var(--navy-500)"></i>Normal</span><span><i style="border-color:var(--dis);border-top-style:dashed"></i>Disrupted</span><span><i class="box" style="background:rgba(198,40,40,.15)"></i>shortage window</span><span>▼ delivery</span></div>`;
+        <div class="legend"><span><i style="border-color:var(--navy-500)"></i>Normal</span><span><i style="border-color:var(--dis);border-top-style:dashed"></i>Disrupted</span><span><i class="box tint-critical"></i>shortage window</span><span>▼ delivery</span></div>`;
       chart({ s, c, c2, L, A, q: v2.q, F: 1 - st2.short / 100, tD, unit: it.unit });
     }
     function chart(o) {
@@ -81,14 +81,14 @@
       const ser = (cc, arr, F) => { const p = []; let s = o.s; for (let t = 0; t <= days; t += 0.5) { if (Math.abs(t - arr) < 0.01) s += o.q * F; p.push({ t, v: Math.max(0, s) }); s -= cc * 0.5; } return p; };
       const a = ser(o.c, o.L, 1), b = ser(o.c2, o.A, o.F), ymax = Math.max(...a.map(p => p.v), ...b.map(p => p.v)) * 1.08 || 1;
       const X = t => ml + t / days * (W - ml - mr), Y = v => mt + (Hh - mt - mb) * (1 - v / ymax);
-      for (let k = 0; k <= 4; k++) { const v = ymax * k / 4; ui.svg('line', { x1: ml, x2: W - mr, y1: Y(v), y2: Y(v), stroke: k ? '#E6EAF0' : '#9AA6B4' }, svg); ui.svg('text', { x: ml - 6, y: Y(v) + 4, 'text-anchor': 'end', 'font-size': 10, fill: '#5C6878', 'font-family': 'IBM Plex Mono' }, svg).textContent = fmt(v); }
-      for (let t = 0; t <= days; t += 2) ui.svg('text', { x: X(t), y: Hh - 10, 'text-anchor': 'middle', 'font-size': 10, fill: '#5C6878', 'font-family': 'IBM Plex Mono' }, svg).textContent = t ? 'd' + t : 'now';
-      if (o.tD < o.A) ui.svg('rect', { x: X(o.tD), y: mt, width: X(Math.min(o.A, days)) - X(o.tD), height: Hh - mt - mb, fill: 'rgba(198,40,40,.12)' }, svg);
+      for (let k = 0; k <= 4; k++) { const v = ymax * k / 4; ui.svg('line', { x1: ml, x2: W - mr, y1: Y(v), y2: Y(v), stroke: k ? ui.tok('--chart-grid') : ui.tok('--chart-axis') }, svg); ui.svg('text', { x: ml - 6, y: Y(v) + 4, 'text-anchor': 'end', 'font-size': 10, fill: ui.tok('--muted'), 'font-family': 'IBM Plex Mono' }, svg).textContent = fmt(v); }
+      for (let t = 0; t <= days; t += 2) ui.svg('text', { x: X(t), y: Hh - 10, 'text-anchor': 'middle', 'font-size': 10, fill: ui.tok('--muted'), 'font-family': 'IBM Plex Mono' }, svg).textContent = t ? 'd' + t : 'now';
+      if (o.tD < o.A) ui.svg('rect', { x: X(o.tD), y: mt, width: X(Math.min(o.A, days)) - X(o.tD), height: Hh - mt - mb, fill: ui.tok('--status-critical'), 'fill-opacity': 0.12 }, svg);
       const path = p => p.map((q, i) => (i ? 'L' : 'M') + X(q.t).toFixed(1) + ' ' + Y(q.v).toFixed(1)).join('');
-      ui.svg('path', { d: path(a), fill: 'none', stroke: '#2A5687', 'stroke-width': 2 }, svg);
-      ui.svg('path', { d: path(b), fill: 'none', stroke: '#7A3E9D', 'stroke-width': 2, 'stroke-dasharray': '6 4' }, svg);
-      [[o.L, '#2A5687'], [o.A, '#7A3E9D']].forEach(([t, c]) => { if (t <= days) ui.svg('path', { d: `M${X(t) - 5} ${mt} L${X(t) + 5} ${mt} L${X(t)} ${mt + 8}Z`, fill: c }, svg); });
-      const cross = ui.svg('line', { y1: mt, y2: Hh - mb, stroke: '#14202E', opacity: 0 }, svg), hit = ui.svg('rect', { x: ml, y: mt, width: W - ml - mr, height: Hh - mt - mb, fill: 'transparent' }, svg), tip = ui.$('#wTip');
+      ui.svg('path', { d: path(a), fill: 'none', stroke: ui.tok('--navy-500'), 'stroke-width': 2 }, svg);
+      ui.svg('path', { d: path(b), fill: 'none', stroke: ui.tok('--series-scenario'), 'stroke-width': 2, 'stroke-dasharray': '6 4' }, svg);
+      [[o.L, ui.tok('--navy-500')], [o.A, ui.tok('--series-scenario')]].forEach(([t, c]) => { if (t <= days) ui.svg('path', { d: `M${X(t) - 5} ${mt} L${X(t) + 5} ${mt} L${X(t)} ${mt + 8}Z`, fill: c }, svg); });
+      const cross = ui.svg('line', { y1: mt, y2: Hh - mb, stroke: ui.tok('--ink'), opacity: 0 }, svg), hit = ui.svg('rect', { x: ml, y: mt, width: W - ml - mr, height: Hh - mt - mb, fill: 'transparent' }, svg), tip = ui.$('#wTip');
       hit.addEventListener('mousemove', e => { const r = svg.getBoundingClientRect(); let t = Math.round(((e.clientX - r.left) * W / r.width - ml) / (W - ml - mr) * days * 2) / 2; t = Math.max(0, Math.min(days, t)); const i = Math.round(t * 2);
         cross.setAttribute('x1', X(t)); cross.setAttribute('x2', X(t)); cross.setAttribute('opacity', 0.4); tip.style.display = 'block';
         tip.innerHTML = `${ui.when(t)}<br>normal ${fmt(a[i].v)} ${o.unit}<br>disrupted ${fmt(b[i].v)} ${o.unit}`; const px = X(t) * r.width / W; tip.style.left = (px > r.width * 0.6 ? px - tip.offsetWidth - 10 : px + 10) + 'px'; tip.style.top = '20px'; });
@@ -137,31 +137,31 @@
     drawNet(ui.$('#net'), st, R);
   };
   function drawNet(svg, st, R) {
-    const BW = 180, BH = 56, colr = { green: ['#E8F5EC', '#2E9E4A'], amber: ['#FDF4DC', '#E0A100'], red: ['#FBE9E9', '#C62828'] };
+    const BW = 180, BH = 56, colr = { green: [ui.tok('--status-healthy-bg'), ui.tok('--status-healthy')], amber: [ui.tok('--status-warning-bg'), ui.tok('--status-warning')], red: [ui.tok('--status-critical-bg'), ui.tok('--status-critical')] };
     const defs = ui.svg('defs', {}, svg);
-    ['n', 'r'].forEach(k => { const m = ui.svg('marker', { id: 'ar' + k, viewBox: '0 0 10 10', refX: 9, refY: 5, markerWidth: 7, markerHeight: 7, orient: 'auto-start-reverse' }, defs); ui.svg('path', { d: 'M0 0 L10 5 L0 10z', fill: k === 'r' ? '#C62828' : '#5C6878' }, m); });
+    ['n', 'r'].forEach(k => { const m = ui.svg('marker', { id: 'ar' + k, viewBox: '0 0 10 10', refX: 9, refY: 5, markerWidth: 7, markerHeight: 7, orient: 'auto-start-reverse' }, defs); ui.svg('path', { d: 'M0 0 L10 5 L0 10z', fill: k === 'r' ? ui.tok('--status-critical') : ui.tok('--muted') }, m); });
     NODES.filter(n => n.parent).forEach(n => {
       const p = E.BYID[n.parent], r = R[n.id], x1 = p.net.x + BW, y1 = p.net.y + BH / 2, x2 = n.net.x - 4, y2 = n.net.y + BH / 2, mx = (x1 + x2) / 2;
       const bad = r.D > 0 || r.F < 1, cut = n.id === 'DB' && st.routeOut && !r.rerouted;
-      ui.svg('path', { d: `M${x1} ${y1} C${mx} ${y1}, ${mx} ${y2}, ${x2} ${y2}`, fill: 'none', stroke: bad || cut ? '#C62828' : '#8C98A6', 'stroke-width': bad ? 2.4 : 1.6, 'stroke-dasharray': cut ? '4 5' : 'none', 'marker-end': `url(#ar${bad ? 'r' : 'n'})` }, svg);
+      ui.svg('path', { d: `M${x1} ${y1} C${mx} ${y1}, ${mx} ${y2}, ${x2} ${y2}`, fill: 'none', stroke: bad || cut ? ui.tok('--status-critical') : ui.tok('--net-edge'), 'stroke-width': bad ? 2.4 : 1.6, 'stroke-dasharray': cut ? '4 5' : 'none', 'marker-end': `url(#ar${bad ? 'r' : 'n'})` }, svg);
       const lbl = r.D > 0 ? (Number.isFinite(r.D) ? `+${r.D} d` : 'no supply') : `${n.tr} d transit`, ty = (y1 + y2) / 2 - 6;
-      ui.svg('rect', { x: mx - 36, y: ty - 11, width: 72, height: 16, fill: '#fff', stroke: bad ? '#E4A3A3' : '#D6DCE4' }, svg);
-      ui.svg('text', { x: mx, y: ty + 1, 'text-anchor': 'middle', 'font-size': 10, 'font-family': 'IBM Plex Mono', fill: bad ? '#A61F1F' : '#44515F' }, svg).textContent = lbl;
+      ui.svg('rect', { x: mx - 36, y: ty - 11, width: 72, height: 16, fill: ui.tok('--panel'), stroke: bad ? ui.tok('--status-critical-border') : ui.tok('--line') }, svg);
+      ui.svg('text', { x: mx, y: ty + 1, 'text-anchor': 'middle', 'font-size': 10, 'font-family': 'IBM Plex Mono', fill: bad ? ui.tok('--status-critical-ink') : ui.tok('--ink-2') }, svg).textContent = lbl;
     });
     if (st.planB === 'reroute' || st.planB === 'combo') { const p = E.BYID.DA.net, n = E.BYID.DB.net;
-      ui.svg('path', { d: `M${p.x + 60} ${p.y} C${p.x + 60} ${n.y - 60}, ${n.x - 80} ${n.y - 70}, ${n.x + 30} ${n.y - 2}`, fill: 'none', stroke: '#5B8DD6', 'stroke-width': 1.6, 'stroke-dasharray': '6 5', 'marker-end': 'url(#arn)' }, svg);
-      ui.svg('text', { x: p.x + 70, y: n.y - 50, 'font-size': 10, 'font-family': 'IBM Plex Mono', fill: '#2A5687' }, svg).textContent = 'Route-2 via Pass-2 (Plan B option)'; }
+      ui.svg('path', { d: `M${p.x + 60} ${p.y} C${p.x + 60} ${n.y - 60}, ${n.x - 80} ${n.y - 70}, ${n.x + 30} ${n.y - 2}`, fill: 'none', stroke: ui.tok('--series-b'), 'stroke-width': 1.6, 'stroke-dasharray': '6 5', 'marker-end': 'url(#arn)' }, svg);
+      ui.svg('text', { x: p.x + 70, y: n.y - 50, 'font-size': 10, 'font-family': 'IBM Plex Mono', fill: ui.tok('--navy-500') }, svg).textContent = 'Route-2 via Pass-2 (Plan B option)'; }
     LATERAL.forEach(([a, b]) => { const A = E.BYID[a].net, B = E.BYID[b].net, x = A.x + BW + 6;
-      ui.svg('path', { d: `M${x} ${A.y + BH / 2} C${x + 40} ${A.y + BH / 2}, ${x + 40} ${B.y + BH / 2}, ${x} ${B.y + BH / 2}`, fill: 'none', stroke: '#8FA9C8', 'stroke-width': 1.4, 'stroke-dasharray': '3 4', 'marker-end': 'url(#arn)', 'marker-start': 'url(#arn)' }, svg); });
+      ui.svg('path', { d: `M${x} ${A.y + BH / 2} C${x + 40} ${A.y + BH / 2}, ${x + 40} ${B.y + BH / 2}, ${x} ${B.y + BH / 2}`, fill: 'none', stroke: ui.tok('--navy-300'), 'stroke-width': 1.4, 'stroke-dasharray': '3 4', 'marker-end': 'url(#arn)', 'marker-start': 'url(#arn)' }, svg); });
     NODES.forEach(n => {
       const r = R[n.id], [bg, bd] = colr[r.risk], isSrc = n.id === st.source;
       const g = ui.svg('g', { class: 'node', transform: `translate(${n.net.x},${n.net.y})`, tabindex: 0, role: 'button', 'aria-label': `${n.name}, ${ui.RB[r.risk][1]}. Make disruption source.` }, svg);
       ui.svg('rect', { class: 'box', width: BW, height: BH, fill: bg, stroke: bd, 'stroke-width': isSrc ? 2.6 : 1.4 }, g);
       ui.svg('rect', { width: 5, height: BH, fill: bd }, g);
-      ui.svg('text', { x: 14, y: 20, 'font-size': 13, 'font-weight': 600, 'font-family': 'IBM Plex Sans', fill: '#14202E' }, g).textContent = n.name;
+      ui.svg('text', { x: 14, y: 20, 'font-size': 13, 'font-weight': 600, 'font-family': 'IBM Plex Sans', fill: ui.tok('--ink') }, g).textContent = n.name;
       const sub = n.type === 'post' ? (r.short > 0 ? `short ${fmt(r.short, 1)} d from d${fmt(r.Y, 1)}` : `${fmt(r.Y, 1)} d stock · next d${Number.isFinite(r.A) ? r.A : '—'}`) : (r.lateKids ? `${r.lateKids} load${r.lateKids > 1 ? 's' : ''} late` : r.D > 0 ? 'delay absorbed' : n.role.split(' (')[0]);
-      ui.svg('text', { x: 14, y: 37, 'font-size': 10.5, 'font-family': 'IBM Plex Mono', fill: '#44515F' }, g).textContent = sub;
-      ui.svg('text', { x: 14, y: 50, 'font-size': 10, 'font-family': 'IBM Plex Mono', fill: bd === '#E0A100' ? '#7D5300' : bd }, g).textContent = `${ui.RB[r.risk][0]} ${ui.RB[r.risk][1]}${isSrc ? ' · SOURCE' : ''}`;
+      ui.svg('text', { x: 14, y: 37, 'font-size': 10.5, 'font-family': 'IBM Plex Mono', fill: ui.tok('--ink-2') }, g).textContent = sub;
+      ui.svg('text', { x: 14, y: 50, 'font-size': 10, 'font-family': 'IBM Plex Mono', fill: bd === ui.tok('--status-warning') ? ui.tok('--status-warning-ink') : bd }, g).textContent = `${ui.RB[r.risk][0]} ${ui.RB[r.risk][1]}${isSrc ? ' · SOURCE' : ''}`;
       const pick = () => FSI.set({ source: n.id });
       g.addEventListener('click', pick); g.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); pick(); } });
     });
@@ -242,17 +242,17 @@
     const W = 520, Hh = 250, ml = 40, mr = 8, mt = 12, mb = 40, ps = E.POSTS.map(p => ({ n: p, a: RA[p.id].margin, b: RB[p.id].margin }));
     const vals = ps.flatMap(p => [p.a, p.b]).filter(Number.isFinite), mx = Math.min(30, Math.max(4, ...vals)), mn = Math.max(-20, Math.min(-2, ...vals));
     const Y = v => mt + (Hh - mt - mb) * (mx - v) / (mx - mn), gw = (W - ml - mr) / ps.length, bw = Math.min(22, gw / 3), tip = ui.$('#sTip');
-    for (let v = Math.ceil(mn / 2) * 2; v <= mx; v += 2) { ui.svg('line', { x1: ml, x2: W - mr, y1: Y(v), y2: Y(v), stroke: v === 0 ? '#14202E' : '#E6EAF0', 'stroke-width': v === 0 ? 1.2 : 1 }, svg); ui.svg('text', { x: ml - 5, y: Y(v) + 4, 'text-anchor': 'end', 'font-size': 10, fill: '#5C6878', 'font-family': 'IBM Plex Mono' }, svg).textContent = v; }
+    for (let v = Math.ceil(mn / 2) * 2; v <= mx; v += 2) { ui.svg('line', { x1: ml, x2: W - mr, y1: Y(v), y2: Y(v), stroke: v === 0 ? ui.tok('--ink') : ui.tok('--chart-grid'), 'stroke-width': v === 0 ? 1.2 : 1 }, svg); ui.svg('text', { x: ml - 5, y: Y(v) + 4, 'text-anchor': 'end', 'font-size': 10, fill: ui.tok('--muted'), 'font-family': 'IBM Plex Mono' }, svg).textContent = v; }
     ps.forEach((p, i) => {
       const cx = ml + gw * i + gw / 2;
-      [[p.a, '#17365D', -1, 'Plan A'], [p.b, '#5B8DD6', 1, 'Plan B']].forEach(([v, c, s, lab]) => {
+      [[p.a, ui.tok('--navy-700'), -1, 'Plan A'], [p.b, ui.tok('--series-b'), 1, 'Plan B']].forEach(([v, c, s, lab]) => {
         const x = cx + s * (bw / 2 + 1) - bw / 2, y0 = Y(0), y1 = Y(Math.max(mn, Math.min(mx, v)));
-        const r = ui.svg('rect', { x, y: Math.min(y0, y1), width: bw, height: Math.max(1, Math.abs(y1 - y0)), fill: c, stroke: v < 0 ? '#C62828' : 'none', 'stroke-width': 1.5 }, svg);
+        const r = ui.svg('rect', { x, y: Math.min(y0, y1), width: bw, height: Math.max(1, Math.abs(y1 - y0)), fill: c, stroke: v < 0 ? ui.tok('--status-critical') : 'none', 'stroke-width': 1.5 }, svg);
         r.addEventListener('mousemove', () => { const b = svg.getBoundingClientRect(); tip.style.display = 'block'; tip.innerHTML = `${p.n.name}<br>${lab}: ${fmt(v, 1)} d ${v < 0 ? '(shortage)' : 'margin'}`; tip.style.left = Math.min(b.width - 150, (x + bw) * b.width / W + 6) + 'px'; tip.style.top = (Math.min(y0, y1) * b.height / Hh) + 'px'; });
         r.addEventListener('mouseleave', () => tip.style.display = 'none');
       });
-      ui.svg('text', { x: cx, y: Hh - mb + 16, 'text-anchor': 'middle', 'font-size': 10.5, fill: '#14202E', 'font-family': 'IBM Plex Sans' }, svg).textContent = p.n.name.replace('Post ', '');
-      if (Math.min(p.a, p.b) < 0) ui.svg('text', { x: cx, y: Hh - mb + 29, 'text-anchor': 'middle', 'font-size': 10, fill: '#A61F1F', 'font-family': 'IBM Plex Mono' }, svg).textContent = 'short';
+      ui.svg('text', { x: cx, y: Hh - mb + 16, 'text-anchor': 'middle', 'font-size': 10.5, fill: ui.tok('--ink'), 'font-family': 'IBM Plex Sans' }, svg).textContent = p.n.name.replace('Post ', '');
+      if (Math.min(p.a, p.b) < 0) ui.svg('text', { x: cx, y: Hh - mb + 29, 'text-anchor': 'middle', 'font-size': 10, fill: ui.tok('--status-critical-ink'), 'font-family': 'IBM Plex Mono' }, svg).textContent = 'short';
     });
   }
 })();
