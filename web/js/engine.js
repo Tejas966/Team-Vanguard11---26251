@@ -406,7 +406,7 @@
     if (n.lastMile) route.push(`last leg by ${n.lastMile}`);
     const alts = row.opts.map(o => ({ label: o.label, open: o.ok && o.actBy > 0, actBy: o.actBy, lead: o.lead, cost: o.cost, why: o.why }));
     let reason, remaining = [];
-    if (row.status === 'covered') reason = 'the scheduled delivery arrives before the cautious stock-out estimate, so no extra action is needed';
+    if (row.status === 'covered') reason = 'the scheduled delivery arrives before the safe-until time, so no extra action is needed';
     else if (row.status === 'late') { reason = 'no option can arrive before stock runs low'; remaining.push(`shortage of about ${fmt(r.short, 1)} d unless use is cut`); }
     else {
       reason = `it is the cheapest option whose ordering window is still open (options are ranked by cost: transfer, convoy, detour, air)`;

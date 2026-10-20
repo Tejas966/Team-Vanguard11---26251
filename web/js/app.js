@@ -73,12 +73,14 @@
   FSI.logDecision = d => {
     d.at = new Date().toLocaleString('en-IN', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });
     FSI.set({ decisions: (st.decisions || []).concat([d]).slice(-30) });
+    ui.announce(`Approved for ${d.post} · ${d.item}: ${d.option}.`);
   };
   FSI.acceptSitrep = p => {
     const patch = E.applySitrep(st, p), n = p.post;
     const msg = { raw: p.raw, at: new Date().toLocaleString('en-IN', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' }), status: p.warns.length ? 'flagged' : 'accepted',
       note: p.warns.length ? p.warns.join(' · ') : `${n.name} figures updated; report age reset` };
     FSI.set(Object.assign(patch, { inbox: [msg].concat(st.inbox || []).slice(0, 40) }));
+    ui.announce(`Report accepted for ${n.name}${p.warns.length ? ', flagged: check the count' : ''}.`);
   };
   // Restores the exact original baseline (also used by "Reset demo").
   FSI.resetAll = () => { st = DEFAULT(); FSI.state = st; FSI.demoResult = null; FSI.demoStep = 0; FSI.wx.freeze(false); save(); render(true); };
@@ -93,6 +95,7 @@
   FSI.rejectSitrep = p => {
     const msg = { raw: p.raw, at: new Date().toLocaleString('en-IN', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' }), status: 'rejected', note: p.errors.join(' · ') };
     FSI.set({ inbox: [msg].concat(st.inbox || []).slice(0, 40) });
+    ui.announce(`Report rejected: ${p.errors.join('; ')}.`);
   };
 
   // live labels while a slider is being dragged (state commits on release)

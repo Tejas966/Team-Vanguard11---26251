@@ -13,12 +13,12 @@
         <dt>Stock now</dt><dd>${fmt(x.stock)} ${x.unit}</dd>
         <dt>Expected use</dt><dd>${fmt(x.use, 1)} ${x.unit} per day</dd>
         <dt>Runs out (expected)</dt><dd>${day(x.runsOut)}</dd>
-        <dt>Runs out (cautious)</dt><dd>${day(x.cautious)} <span class="na">assumed demand spread, not calibrated</span></dd>
+        <dt>Safe until</dt><dd>${day(x.cautious)} <span class="na">assumed demand spread, not calibrated</span></dd>
         <dt>Next scheduled delivery</dt><dd>${day(x.delivery)} · road leg ${x.deliveryLead} d</dd>
         <dt>Data</dt><dd>${FSI.dqTag(x.dq)} report ${f.ageH != null ? f.ageH + ' h old' : 'missing'}${f.via ? ' by ' + esc(f.via) : ''}${x.dq.reasons.length ? ' · ' + esc(x.dq.reasons.join('; ')) : ''}</dd>
         <dt>Route constraints</dt><dd>${x.route.length ? esc(x.route.join('; ')) : 'none'}</dd>
       </dl>
-      <table class="optt"><thead><tr><th>Option evaluated</th><th class="n">Lead</th><th>Order by</th><th class="n">₹ lakh</th><th>Status</th></tr></thead><tbody>
+      <table class="t compact"><thead><tr><th>Option evaluated</th><th class="n">Lead</th><th>Order by</th><th class="n">₹ lakh</th><th>Status</th></tr></thead><tbody>
         ${x.alts.map(a => `<tr class="${a.open ? '' : 'no'}"><td>${esc(a.label)}<br><span class="na">${esc(a.why)}</span></td><td class="n">${fmt(a.lead, 1)} d</td><td>${a.open ? ui.when(a.actBy) : '—'}</td><td class="n">${fmt(a.cost, 1)}</td><td>${a.open ? 'open' : 'not available'}</td></tr>`).join('')}
       </tbody></table>
       <p><b>Why:</b> ${esc(x.reason)}.</p>
@@ -32,7 +32,7 @@
     return `<details class="why"><summary>Why this recommendation?</summary><div class="why-b">
       <p><b>Rule:</b> among applicable plans, fewest posts short wins; then the lowest score; then the lowest cost.
       Score = ${w[0]} × risk + ${w[1]} × time + ${w[2]} × cost, where risk = (shortage post-days + 5 per post short) ÷ ${fmt(Math.max(1, ev.riskRef), 1)} (current schedule's risk), time = average next-delivery day ÷ ${CONFIG.horizon + 1}, cost = ₹ lakh ÷ ${CONFIG.costRef}. These scales are fixed, so a plan's score does not change with which other plans are listed.</p>
-      <table class="optt"><thead><tr><th>Plan</th><th class="n">Short</th><th class="n">Risk</th><th class="n">Time</th><th class="n">Cost</th><th class="n">Score</th></tr></thead><tbody>
+      <table class="t compact"><thead><tr><th>Plan</th><th class="n">Short</th><th class="n">Risk</th><th class="n">Time</th><th class="n">Cost</th><th class="n">Score</th></tr></thead><tbody>
         ${ev.cands.map(c => `<tr class="${c.applicable ? '' : 'no'}"><td>${esc(c.name)}${c === b ? ' <b>★</b>' : ''}</td><td class="n">${c.applicable ? c.m.stockouts : '—'}</td><td class="n">${c.applicable ? fmt(c.score.parts.risk, 2) : '—'}</td><td class="n">${c.applicable ? fmt(c.score.parts.time, 2) : '—'}</td><td class="n">${c.applicable ? fmt(c.score.parts.cost, 2) : '—'}</td><td class="n">${c.applicable ? fmt(c.score.total, 2) : 'n/a'}</td></tr>`).join('')}
       </tbody></table>
       <p><b>Chosen:</b> ${esc(b.name)}, because ${esc(ev.reason)}.</p>

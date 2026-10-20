@@ -27,16 +27,16 @@
     root.innerHTML = `
       <p class="intro">Compare normal delivery with a delayed one for a single node. The node, delay and consumption change you set here are shared with the other planning tools. <b>Stock and delivery figures you type here stay on this page</b> and never change the real figures.</p>${wi ? `<p class="note" style="margin-top:-8px">Using your edited figures (real: ${fmt(base.s)} ${it.unit}, ${fmt(base.c, 1)} ${it.unit}/day, delivery day ${base.L}).</p>` : ''}
       <div class="grid m1">
-        <div class="panel"><div class="ph"><h3>Inputs</h3></div><div class="pb form">
+        <div class="panel"><div class="ph"><h2>Inputs</h2></div><div class="pb form">
           <div class="field"><label for="wNode">Node (disruption source)</label><select id="wNode">${NODES.map(x => `<option value="${x.id}">${x.name} · ${x.role}</option>`).join('')}</select><div class="help">${n.role}. Supplied by ${n.parent ? E.BYID[n.parent].name : 'railhead'} via ${n.route || 'track'}.</div></div>
           <div class="field" id="f-s"><label for="wS">Available inventory</label><div class="row"><input type="number" id="wS" min="0" step="1" value="${Math.round(v.s)}"><span class="unit">${it.unit}</span></div><div class="err">Enter 0 or more.</div>${st.inv ? `<div class="help">The Compare plans page cuts this by ${st.inv}%.</div>` : ''}</div>
           <div class="field" id="f-c"><label for="wC">Average daily consumption</label><div class="row"><input type="number" id="wC" min="0" step="0.1" value="${Math.round(v.c * 10) / 10}" ${n.type === 'depot' ? 'readonly' : ''}><span class="unit">${it.unit}/d</span></div><div class="err">Must be more than 0.</div><div class="help">${n.type === 'depot' ? 'For a depot this is its outflow to the posts it supplies (edit at post level).' : `${n.troops} personnel × scale × altitude factor.`}</div></div>
           <div class="field" id="f-l"><label for="wL">Expected delivery time</label><div class="row"><input type="number" id="wL" min="0" max="30" step="1" value="${v.L}"><span class="unit">days</span></div><div class="err">Enter 0 to 30.</div></div>
           <div class="field"><label for="wD">Additional delivery delay</label><div class="row"><input type="range" id="wD" data-fmt="delay" min="0" max="10" value="${st.delay}"><output class="val">+${st.delay} d</output></div></div>
           <div class="field"><label for="wX">Change in consumption</label><div class="row"><input type="range" id="wX" data-fmt="pct" min="-30" max="60" step="5" value="${st.cons}"><output class="val">${st.cons >= 0 ? '+' : ''}${st.cons}%</output></div><div class="help">Cold snap, troop surge or patrol tempo. Applies to this node and everything it supplies.</div></div>
-          <div style="display:flex;gap:8px;flex-wrap:wrap"><a class="btn primary" href="#/ripple" style="text-decoration:none">Trace knock-on effects →</a><button type="button" class="btn" id="wReset">Reset inputs</button></div>
+          <div class="btn-row"><a class="btn primary" href="#/ripple">Trace knock-on effects →</a><button type="button" class="btn" id="wReset">Reset inputs</button></div>
         </div></div>
-        <div class="panel"><div class="ph"><h3>Normal vs disrupted</h3>${ui.srcTag('ESTIMATE')}</div><div class="pb" id="wOut"></div></div>
+        <div class="panel"><div class="ph"><h2>Normal vs disrupted</h2>${ui.srcTag('ESTIMATE')}</div><div class="pb" id="wOut"></div></div>
       </div>`;
     ui.$('#wNode').value = st.source;
     ui.$('#wNode').onchange = e => FSI.set({ source: e.target.value });
@@ -66,13 +66,13 @@
       const shortU = Math.max(0, -remD), cost = shortU * it.kg * CONFIG.airRate / 1e5, sSd = n.type === 'post' ? E.stockSd(st2, n.id) : 0;
       const P = (T, cc) => E.riskClass(E.riskIndex(s, cc, it.cv, sSd, T));
       const sevTag = (c_, l_) => ui.tag(c_, { green: '✓', amber: '!', red: '✕' }[c_], l_);
-      const card = (cls, title, Ad, rem, t, p, c_, l_, tx) => `<div class="card ${cls}"><h4>${title} ${ui.srcTag('ESTIMATE')}</h4><dl class="kv">
+      const card = (cls, title, Ad, rem, t, p, c_, l_, tx) => `<div class="card ${cls}"><h3>${title} ${ui.srcTag('ESTIMATE')}</h3><dl class="kv">
         <dt>Delivery arrives</dt><dd>${ui.when(Ad)}</dd><dt>Stock at arrival</dt><dd>${rem >= 0 ? fmt(rem) : 0} ${it.unit}</dd><dt>Time to stock-out</dt><dd>${fmt(t, 1)} d</dd>
-        <dt>Risk class</dt><dd>${p} (rule-based)</dd><dt>Shortage</dt><dd>${rem < 0 ? fmt(-rem) + ' ' + it.unit : 'none'}</dd></dl><div style="margin-top:8px">${sevTag(c_, l_)} <span style="font-size:var(--fs-small)">${tx}</span></div></div>`;
+        <dt>Risk class</dt><dd>${p} (rule-based)</dd><dt>Shortage</dt><dd>${rem < 0 ? fmt(-rem) + ' ' + it.unit : 'none'}</dd></dl><div style="margin-top:8px">${sevTag(c_, l_)} <span class="small">${tx}</span></div></div>`;
       ui.$('#wOut').innerHTML = `<div class="cmp2">${card('nor', 'Normal delivery', L, remN, tN, P(L, c), cN, lN, tNt)}${card('dis', `Disrupted (+${d} d, ${st2.cons >= 0 ? '+' : ''}${st2.cons}% use)`, A, remD, tD, P(A, c2), cD, lD, tDt)}</div>
         <div class="callout row ${{ red: 'critical', amber: 'warning', green: 'healthy' }[cD]}">${sevTag(cD, lD)}<p><b>Estimated impact:</b> ${remD < 0 ? `${n.name} would run out of ${it.name.toLowerCase()} on ${ui.when(tD)}, ${fmt(A - tD, 1)} d before the delivery on ${ui.when(A)}. The gap is ${fmt(shortU)} ${it.unit}; covering it by air maintenance costs about <b>₹${fmt(cost, 1)} lakh</b> at ₹${CONFIG.airRate}/kg ${ui.srcTag('ILLUSTRATIVE')}.` : mD < 2 ? `No stock-out expected, but the margin shrinks from ${fmt(mN, 1)} d to ${fmt(mD, 1)} d.` : `Delay absorbed: stock lasts ${fmt(mD, 1)} d beyond delivery.`}</p></div>
         ${n.type === 'depot' ? '<p class="note">For a depot, a shortage here means dispatches fall behind. The Knock-on effects page shows which posts are hit.</p>' : ''}
-        <div class="chart-wrap" style="margin-top:10px"><svg class="fluid" id="wChart" viewBox="0 0 640 230" role="img" aria-label="Projected stock"></svg><div class="tip" id="wTip"></div></div>
+        <div class="chart-wrap mt10"><svg class="fluid" id="wChart" viewBox="0 0 640 230" role="img" aria-label="Projected stock"></svg><div class="tip" id="wTip"></div></div>
         <div class="legend"><span><i style="border-color:var(--navy-500)"></i>Normal</span><span><i style="border-color:var(--dis);border-top-style:dashed"></i>Disrupted</span><span><i class="box tint-critical"></i>shortage window</span><span>▼ delivery</span></div>`;
       chart({ s, c, c2, L, A, q: v2.q, F: 1 - st2.short / 100, tD, unit: it.unit });
     }
@@ -103,19 +103,19 @@
     const rows = NODES.map(n => R[n.id]).sort((a, b) => ({ red: 0, amber: 1, green: 2 }[a.risk] - { red: 0, amber: 1, green: 2 }[b.risk]) || (a.Y ?? 99) - (b.Y ?? 99));
     root.innerHTML = `
       <p class="intro">One disruption traced through the <b>actual links</b> of the network. A depot with enough buffer absorbs a delay; one without passes it on to the posts it supplies. Click any node to make it the source.</p>
-      <div class="panel" style="margin-bottom:12px"><div class="pb ctl-row">
+      <div class="panel lead"><div class="pb ctl-row">
         <div class="field"><label for="rSrc">Disrupted node</label><select id="rSrc">${NODES.map(x => `<option value="${x.id}">${x.name} · ${x.role}</option>`).join('')}</select></div>
         <div class="field"><label for="rD">Supply delay at source</label><div class="row"><input type="range" id="rD" data-fmt="delay" min="0" max="10" value="${st.delay}"><output class="val">+${st.delay} d</output></div></div>
         <div class="field"><label for="rS">Shortage in incoming delivery</label><div class="row"><input type="range" id="rS" data-fmt="plain" min="0" max="80" step="10" value="${st.short}"><output class="val">${st.short}%</output></div></div>
         <div><button type="button" class="btn" id="rReset">Reset disruption</button></div></div></div>
       <div class="grid m2">
-        <div class="panel"><div class="ph"><h3>Supply network</h3><span class="hint">Arrows = supply direction · dotted = lateral transfer allowed</span></div>
+        <div class="panel"><div class="ph"><h2>Supply network</h2><span class="hint">Arrows = supply direction · dotted = lateral transfer allowed</span></div>
           <svg class="net" id="net" viewBox="0 0 900 470" role="img" aria-label="Supply network"></svg>
           <div class="legend" style="padding:8px 14px 10px">${badge('green')} no effect / buffer holds ${badge('amber')} delayed or thin ${badge('red')} shortage expected</div></div>
-        <div class="panel"><div class="ph"><h3>Impact chain</h3></div><div class="pb">
-          ${urg ? `<div class="callout critical"><h4>Most urgent · ${esc(urg.n.name)}</h4><p>Runs out of ${it.name.toLowerCase()} on <b>${ui.when(urg.Y)}</b>; delivery ${Number.isFinite(urg.A) && urg.A <= H ? 'on <b>' + ui.when(urg.A) + '</b>' : '<b>not within 14 d</b>'}. It ranks first on priority × shortage (priority ${urg.n.prio}, ${fmt(urg.short, 1)} d short). <b>Action:</b> ${esc(actionFor(st, R, urg.n.id))}. <a href="#/clock" onclick="FSI.set({focus:'${urg.n.id}',clockItem:'${st.item}'},{quiet:true})">See its deadline →</a></p></div>`
-            : `<div class="callout healthy"><h4>No shortage expected</h4><p>${sub.some(r => r.risk === 'amber') ? 'Some nodes are delayed or thin, but every post holds until delivery.' : 'The network absorbs this disruption.'}</p></div>`}
-          <ol class="flow">
+        <div class="panel"><div class="ph"><h2>Impact chain</h2></div><div class="pb">
+          ${urg ? `<div class="callout critical"><h3>Most urgent · ${esc(urg.n.name)}</h3><p>Runs out of ${it.name.toLowerCase()} on <b>${ui.when(urg.Y)}</b>; delivery ${Number.isFinite(urg.A) && urg.A <= H ? 'on <b>' + ui.when(urg.A) + '</b>' : '<b>not within 14 d</b>'}. It ranks first on priority × shortage (priority ${urg.n.prio}, ${fmt(urg.short, 1)} d short). <b>Action:</b> ${esc(actionFor(st, R, urg.n.id))}. <a href="#/clock" onclick="FSI.set({focus:'${urg.n.id}',clockItem:'${st.item}'},{quiet:true})">See its deadline →</a></p></div>`
+            : `<div class="callout healthy"><h3>No shortage expected</h3><p>${sub.some(r => r.risk === 'amber') ? 'Some nodes are delayed or thin, but every post holds until delivery.' : 'The network absorbs this disruption.'}</p></div>`}
+          <ol class="steps">
             <li><b>Supply delay</b>${st.delay || st.short || st.routeOut ? esc(src.why.concat(st.routeOut && st.source !== 'DB' ? R.DB.why : []).join('; ')) : 'No delay set. Use the sliders or the What-If page.'}</li>
             <li><b>Inventory reduction</b>${src.n.type === 'depot' ? `${src.n.name} holds ${fmt(src.s)} ${it.unit} (${fmt(src.s / src.c, 1)} d of outflow). ${src.lateKids ? `It fills ${src.queue.filter(q => q.ok).length} of ${src.queue.length} scheduled loads before running dry.` : 'Its buffer covers every scheduled load.'}` : `${src.n.name} stock falls to ${fmt(Math.max(0, src.s - src.c * Math.min(src.A, H)))} ${it.unit} by delivery.`}</li>
             <li><b>Potential shortage</b>${reds.length ? reds.map(r => `${r.n.name} from ${ui.when(r.Y)} (${fmt(r.short, 1)} d)`).join('; ') : 'None expected within 14 days.'}</li>
@@ -123,11 +123,11 @@
             <li><b>Recommended action</b>${urg ? esc(actionFor(st, R, urg.n.id)) : affected.length ? esc(actionFor(st, R, affected[0].n.id)) : 'Continue the normal schedule and monitor.'}</li>
           </ol></div></div>
       </div>
-      <div class="panel" style="margin-top:12px"><div class="ph"><h3>Node-by-node impact</h3>${ui.srcTag('ESTIMATE')}</div><div class="pb scroll" style="padding-top:0"><table class="t">
+      <div class="panel next"><div class="ph"><h2>Node-by-node impact</h2>${ui.srcTag('ESTIMATE')}</div><div class="pb scroll flush"><table class="t">
         <thead><tr><th>Node</th><th>Status</th><th class="n">Stock lasts</th><th class="n">Delivery</th><th>Risk class (rule-based)</th><th>Reason</th><th>Recommended action</th></tr></thead><tbody>
-        ${rows.map(r => { const p = r.n.type === 'post'; return `<tr><td><b>${r.n.name}</b><br><span style="font-size:var(--fs-meta);color:var(--muted)">${r.n.role}</span></td><td>${badge(r.risk)}</td>
+        ${rows.map(r => { const p = r.n.type === 'post'; return `<tr><td><b>${r.n.name}</b><br><span class="meta">${r.n.role}</span></td><td>${badge(r.risk)}</td>
           <td class="n">${fmt(p ? r.Y : r.s / r.c, 1)} d</td><td class="n">${Number.isFinite(r.A) && r.A <= H ? ui.when(r.A) : 'none ≤14 d'}${r.D > 0 && Number.isFinite(r.D) ? `<br><span style="color:var(--crit-ink);font-size:var(--fs-tag)">+${r.D} d</span>` : ''}</td>
-          <td>${p ? r.riskClass : '—'}</td><td class="reason">${esc(E.explain(st, R, r.n.id).join(' → ') || 'Not on the disrupted path; schedule unchanged.')}</td><td style="font-size:var(--fs-small)">${esc(actionFor(st, R, r.n.id))}</td></tr>`; }).join('')}
+          <td>${p ? r.riskClass : '—'}</td><td class="reason">${esc(E.explain(st, R, r.n.id).join(' → ') || 'Not on the disrupted path; schedule unchanged.')}</td><td class="small">${esc(actionFor(st, R, r.n.id))}</td></tr>`; }).join('')}
       </tbody></table></div></div>`;
     ui.$('#rSrc').value = st.source;
     ui.$('#rSrc').onchange = e => FSI.set({ source: e.target.value });
@@ -188,16 +188,16 @@
     root.innerHTML = `
       <p class="intro">Stress the current situation, then let the system evaluate <b>every</b> permitted plan with the same simulation and the same score. The recommendation is the best of all of them. The side-by-side table lets you look at any one plan against the current schedule.</p>
       <div class="grid m3">
-        <div class="panel"><div class="ph"><h3>Scenario builder</h3></div><div class="pb form">
+        <div class="panel"><div class="ph"><h2>Scenario builder</h2></div><div class="pb form">
           <div class="field"><label id="sDL">Delivery delayed by</label><div class="chips" role="group" aria-labelledby="sDL">${[0, 3, 5, 7].map(d => `<button type="button" data-d="${d}" aria-pressed="${st.delay === d}">${d ? '+' + d + ' d' : 'None'}</button>`).join('')}</div><div class="help">Applied at ${E.BYID[st.source].name}, the shared source.</div></div>
           <div class="field"><label for="sC">Increased consumption</label><div class="row"><input type="range" id="sC" data-fmt="pct" min="-30" max="60" step="5" value="${st.cons}"><output class="val">${st.cons >= 0 ? '+' : ''}${st.cons}%</output></div></div>
           <div class="field"><label for="sI">Reduced inventory availability</label><div class="row"><input type="range" id="sI" data-fmt="neg" min="0" max="60" step="5" value="${st.inv}"><output class="val">−${st.inv}%</output></div><div class="help">Spoilage, damage or a count correction in the disrupted area.</div></div>
-          <label class="check"><input type="checkbox" id="sR" ${st.routeOut ? 'checked' : ''}> <span><b>Route-1 via Pass-1 unavailable</b><br><span style="color:var(--muted);font-size:var(--fs-meta)">Depot-B gets no road resupply on Route-1 within 14 days. No plan may use Route-1.</span></span></label>
+          <label class="check"><input type="checkbox" id="sR" ${st.routeOut ? 'checked' : ''}> <span><b>Route-1 via Pass-1 unavailable</b><br><span class="meta">Depot-B gets no road resupply on Route-1 within 14 days. No plan may use Route-1.</span></span></label>
           <div class="field"><label for="sP">Decision priority</label><select id="sP"><option value="balanced">Balanced (risk 60 · time 25 · cost 15)</option><option value="risk">Minimise shortage (80 · 15 · 5)</option><option value="cost">Minimise cost (40 · 20 · 40)</option></select></div>
-          <div style="display:flex;gap:8px;flex-wrap:wrap"><button type="button" class="btn primary" id="sSave">Save run to history</button><button type="button" class="btn" id="sReset">Reset stress</button></div>
+          <div class="btn-row"><button type="button" class="btn primary" id="sSave">Save run to history</button><button type="button" class="btn" id="sReset">Reset scenario</button></div>
         </div></div>
-        <div class="panel"><div class="ph"><h3>Recommendation · ${it.name}</h3>${ui.srcTag('ESTIMATE')} ${ui.srcTag('ILLUSTRATIVE')}</div><div class="pb">
-          <div class="reco"><h4>Recommended · best of ${ev.ranked.length} applicable plans · commander decides</h4><div class="big">${esc(best.name)}</div>
+        <div class="panel"><div class="ph"><h2>Recommendation · ${it.name}</h2>${ui.srcTag('ESTIMATE')} ${ui.srcTag('ILLUSTRATIVE')}</div><div class="pb">
+          <div class="reco"><h3>Recommended · best of ${ev.ranked.length} applicable plans · commander decides</h3><div class="big">${esc(best.name)}</div>
             <ul><li><b>Why:</b> ${esc(ev.reason)}.</li><li><b>Posts still short:</b> ${esc(shortTxt(best.m))}.</li>${best.key !== 'A' ? `<li><b>Cost:</b> ₹${fmt(best.m.cost, 1)} lakh extra (illustrative).</li>` : ''}${best.notes.length ? `<li><b>Note:</b> ${esc(best.notes.join('; '))}.</li>` : ''}</ul>
             ${FSI.whyPlanBox(st, ev)}</div>
           ${limit}
@@ -206,7 +206,7 @@
             ${ev.cands.map(c => `<tr${c === best ? ' style="background:var(--navy-100)"' : ''}><td>${esc(c.name)}${c.notes.length ? `<br><span class="na" style="font-size:var(--fs-meta)">${esc(c.notes[0])}</span>` : ''}</td>
               <td class="n">${c.applicable ? c.m.stockouts : '—'}</td><td class="n">${c.applicable ? fmt(c.m.sumShort, 1) : '—'}</td><td class="n">${c.applicable ? (c.m.firstOut == null ? 'none' : 'day ' + fmt(c.m.firstOut, 1)) : '—'}</td><td class="n">${c.applicable ? fmt(c.m.cost, 1) : '—'}</td><td class="n">${scoreCell(c)}</td>
               <td>${c === best ? ui.tag('blue', '★', 'RECOMMENDED') : !c.applicable ? '<span class="na">not applicable</span>' : `<button type="button" class="btn sm" data-cmp="${c.key}">Compare</button>`}</td></tr>`).join('')}</tbody></table></div>
-          <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:16px 0 6px"><b style="font-size:var(--fs-small)">Side by side:</b><span style="font-size:var(--fs-small)">Plan A · current schedule vs</span>
+          <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:16px 0 6px"><b class="small">Side by side:</b><span class="small">Plan A · current schedule vs</span>
             <select id="sB" aria-label="Plan to compare with Plan A">${ev.cands.filter(c => c.key !== 'A').map(c => `<option value="${c.key}" ${c.key === cmpKey ? 'selected' : ''}>${esc(c.name)}${c === best ? ' (recommended)' : ''}</option>`).join('')}</select></div>
           ${B.applicable ? '' : `<p class="note" style="margin-top:0">${esc(B.name)} is not applicable in this situation: ${esc(B.notes.join('; '))}. It is shown identical to Plan A.</p>`}
           <div class="scroll"><table class="t cmp"><thead><tr><th>Metric</th><th class="n">Plan A · current</th><th class="n">${esc(B.name)}</th></tr></thead><tbody>
@@ -216,10 +216,10 @@
           <div class="legend"><span><i class="box" style="background:var(--planA)"></i>Plan A · current</span><span><i class="box" style="background:var(--planB)"></i>${esc(B.name)}</span></div>
         </div></div>
       </div>
-      <div class="panel" style="margin-top:12px"><div class="ph"><h3>Scenario history</h3><button type="button" class="btn sm" id="hClear" style="margin-left:auto">Clear</button></div><div class="pb scroll" style="padding-top:0"><table class="t">
+      <div class="panel next"><div class="ph"><h2>Scenario history</h2><button type="button" class="btn sm push" id="hClear">Clear</button></div><div class="pb scroll flush"><table class="t">
         ${(st.hist || []).length ? `<thead><tr><th>#</th><th>Saved</th><th>Scenario</th><th class="n">Short (current)</th><th class="n">Short (recommended)</th><th>Recommended</th><th></th></tr></thead><tbody>${st.hist.map((h, i) => `<tr><td class="n">${st.hist.length - i}</td><td style="font-family:var(--mono);font-size:var(--fs-meta)">${esc(h.at)}</td>
-          <td style="font-size:var(--fs-small)">${ITEMS[h.sc.item].name} · ${E.BYID[h.sc.source].name} · +${h.sc.delay} d · use ${h.sc.cons >= 0 ? '+' : ''}${h.sc.cons}% · stock −${h.sc.inv}%${h.sc.routeOut ? ' · Route-1 closed' : ''}</td><td class="n">${h.a}</td><td class="n">${h.b}</td><td>${esc(h.reco)}</td><td><button type="button" class="btn sm" data-restore="${i}">Restore</button></td></tr>`).join('')}</tbody>`
-          : '<tbody><tr><td class="empty" style="border:0">No saved runs yet.</td></tr></tbody>'}</table></div></div>`;
+          <td class="small">${ITEMS[h.sc.item].name} · ${E.BYID[h.sc.source].name} · +${h.sc.delay} d · use ${h.sc.cons >= 0 ? '+' : ''}${h.sc.cons}% · stock −${h.sc.inv}%${h.sc.routeOut ? ' · Route-1 closed' : ''}</td><td class="n">${h.a}</td><td class="n">${h.b}</td><td>${esc(h.reco)}</td><td><button type="button" class="btn sm" data-restore="${i}">Restore</button></td></tr>`).join('')}</tbody>`
+          : '<tbody><tr><td class="empty" style="border:0">No saved runs yet. Set up a scenario and press Save run to history.</td></tr></tbody>'}</table></div></div>`;
     ui.$('#sP').value = st.prio;
     root.querySelectorAll('[data-d]').forEach(b => b.onclick = () => FSI.set({ delay: +b.dataset.d }));
     root.querySelectorAll('[data-cmp]').forEach(b => b.onclick = () => FSI.set({ planB: b.dataset.cmp }));

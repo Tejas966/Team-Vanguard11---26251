@@ -6,12 +6,12 @@
 
   function demoPanel(st) {
     const d = FSI.demoResult, shown = FSI.demoStep || 0;
-    if (!d) return `<div class="panel demo-p"><div class="pb demo-row"><div><b>See it work in 60 seconds</b><span>Loads a fixed scenario (Pass-1 closed by snow), re-projects stock, finds affected posts, evaluates every option and compares the outcomes. Numbers come from the engine; the demo uses the bundled weather snapshot so each run is identical.</span></div>
+    if (!d) return `<div class="panel demo-p"><div class="pb demo-row"><div><h2>See it work in 60 seconds</h2><span>Loads a fixed scenario (Pass-1 closed by snow), re-projects stock, finds affected posts, evaluates every option and compares the outcomes. Numbers come from the engine; the demo uses the bundled weather snapshot so each run is identical.</span></div>
       <button type="button" class="btn primary" id="runDemo">▶ Run demo scenario</button></div></div>`;
     const row = (l, f) => `<tr><td>${l}</td><td class="n">${f(d.base)}</td><td class="n">${f(d.dis)}</td><td class="n"><b>${f(d.rec)}</b></td></tr>`;
-    return `<div class="panel demo-p"><div class="ph"><h3>Demo scenario · Pass-1 closed by snow</h3><span class="hint">weather snapshot ${esc(d.snapshot)} · repeatable</span>
+    return `<div class="panel demo-p"><div class="ph"><h2>Demo scenario · Pass-1 closed by snow</h2><span class="hint">weather snapshot ${esc(d.snapshot)} · repeatable</span>
         <button type="button" class="btn sm" id="runDemo">Run again</button><button type="button" class="btn sm" id="resetDemo2">Reset demo</button></div>
-      <div class="pb"><ol class="tl-steps">${d.steps.map((s, i) => `<li class="${i < shown ? 'done' : i === shown ? 'cur' : ''}"><b>${i + 1}. ${esc(s.t)}</b>${i < shown ? `<span>${esc(s.d)}</span>` : ''}</li>`).join('')}</ol>
+      <div class="pb"><ol class="steps">${d.steps.map((s, i) => `<li class="${i < shown ? 'done' : i === shown ? 'current' : 'pending'}"><b>${esc(s.t)}</b>${i < shown ? `<span>${esc(s.d)}</span>` : ''}</li>`).join('')}</ol>
       ${shown >= d.steps.length ? `<div class="scroll"><table class="t"><thead><tr><th>${ITEMS[E.DEMO.item].name}</th><th class="n">Baseline</th><th class="n">Disrupted, no action</th><th class="n">With: ${esc(d.recName)}</th></tr></thead><tbody>
         ${row('Posts short in 14 days', m => m.stockouts)}${row('Shortage (post-days)', m => fmt(m.sumShort, 1))}${row('Shortage volume (L)', m => fmt(m.shortUnits))}${row('First stock-out', m => m.firstOut == null ? 'none' : 'day ' + fmt(m.firstOut, 1))}${row('Extra cost (₹ lakh, illustrative)', m => fmt(m.cost, 1))}
         </tbody></table></div>${FSI.whyPlanBox(Object.assign({}, st, { prio: E.DEMO.prio }), d.ev)}
@@ -31,9 +31,9 @@
         <div class="metric metric--status info"><b class="v">${sc.counts.plan}</b><span class="l">Plan ahead<small>more than 3 days</small></span></div>
         <div class="metric metric--status healthy"><b class="v">${sc.postsOk}<small>/ ${E.POSTS.length}</small></b><span class="l">Posts fully OK<small>every supply lasts</small></span></div>
       </div>
-      <p class="note" style="margin:-4px 0 10px">Counts are post × supply decisions from the Action deadlines page (same calculation).</p>
+      <p class="note legend-top">Counts are post × supply decisions from the Action deadlines page (same calculation).</p>
       <div class="grid today-main">
-        <div class="panel"><div class="ph"><h3>What needs doing</h3><a class="hint" href="#/clock">All deadlines →</a></div>
+        <div class="panel"><div class="ph"><h2>What needs doing</h2><a class="hint" href="#/clock">All deadlines →</a></div>
           <div class="pb" style="padding-top:4px">${rows.length ? rows.slice(0, 6).map(r => {
             const d = done(r.n, r.item);
             return `<div class="acard ${r.status}">
@@ -44,7 +44,7 @@
               ${FSI.whyBox(st, r)}</div>`; }).join('')
               + (rows.length > 6 ? `<p class="note"><a href="#/clock">${rows.length - 6} more on the Action deadlines page →</a></p>` : '')
             : '<p class="empty">Nothing to do. Every post has enough of every supply until its next delivery.</p>'}</div></div>
-        <div class="panel"><div class="ph"><h3>Sector map</h3><a class="hint" href="#/map">Full map →</a></div>
+        <div class="panel"><div class="ph"><h2>Sector map</h2><a class="hint" href="#/map">Full map →</a></div>
           <svg class="fluid" id="tMap" viewBox="0 0 820 470" role="img" aria-label="Sector map"></svg>${FSI.mapLegend()}</div>
       </div>
       <div class="grid today-low">
@@ -62,8 +62,15 @@
     const rd = ui.$('#runDemo'); if (rd) rd.onclick = () => {
       clearInterval(demoTimer);
       FSI.startDemo();                     // applies the fixed scenario and computes every step
+      const steps = FSI.demoResult.steps;
+      // Reduced motion: show every step at once instead of revealing them one by one.
+      if (window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches) {
+        FSI.demoStep = steps.length; FSI.views.overview(ui.$('#view'), FSI.state);
+        ui.announce(`Demo finished: ${steps.length} steps shown. ${steps[steps.length - 1].d}`); return;
+      }
       FSI.demoStep = 0; FSI.views.overview(ui.$('#view'), FSI.state);
       demoTimer = setInterval(() => {
+        const s = steps[FSI.demoStep]; if (s) ui.announce(`Step ${FSI.demoStep + 1} of ${steps.length}: ${s.t}. ${s.d}`);
         FSI.demoStep++;
         if (location.hash.replace(/^#\/?/, '') !== 'overview' && location.hash !== '') { clearInterval(demoTimer); FSI.demoStep = FSI.demoResult.steps.length; return; }
         FSI.views.overview(ui.$('#view'), FSI.state);

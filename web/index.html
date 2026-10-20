@@ -7,7 +7,7 @@
 <meta name="description" content="Decision-support prototype for forward logistics: act-by deadlines, disruption simulation and plan comparison. Synthetic data.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans+Condensed:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/app.css?v=12">
+<link rel="stylesheet" href="css/app.css?v=13">
 </head>
 <body>
 <div class="shell">
@@ -18,8 +18,8 @@
       <a href="#/overview"><span class="k">●</span>Today</a>
       <a href="#/map"><span class="k">●</span>Sector map</a>
       <a href="#/clock"><span class="k">●</span>Action deadlines</a>
-      <a href="#/reports"><span class="k">●</span>Field reports (SITREP)</a>
-      <a href="#/winter"><span class="k">●</span>Winter stocking (AWS)</a>
+      <a href="#/reports"><span class="k">●</span><span>Field reports (<abbr title="situation report">SITREP</abbr>)</span></a>
+      <a href="#/winter"><span class="k">●</span><span>Winter stocking (<abbr title="Advance Winter Stocking">AWS</abbr>)</span></a>
       <a href="#/brief"><span class="k">●</span>Commander's brief</a>
       <details id="tools"><summary>PLANNING TOOLS</summary>
         <a href="#/whatif"><span class="k">○</span>What-if: one delay</a>
@@ -36,25 +36,26 @@
       <button type="button" class="btn sm menu-btn" id="menuBtn" aria-controls="side" aria-expanded="false">☰ Menu</button>
       <div><h1 id="pageTitle">Command overview</h1><div class="sub" id="pageSub"></div></div>
       <span class="sp"></span>
-      <div><label for="itemSel">Supply class</label><select id="itemSel"></select></div>
+      <div><label for="itemSel">Supply class</label><select id="itemSel" title="POL: petroleum, oil and lubricants · SKO: superior kerosene oil · MT: motor transport"></select></div>
       <span class="dtg" id="dtg"></span>
       <span class="demo" title="Logistics data and sites are fictional; weather is real">DEMO DATA · REAL WEATHER</span>
     </header>
     <div class="scbar" id="scbar" aria-label="Shared scenario"></div>
     <main class="main" id="view" tabindex="-1"></main>
+    <div id="live" class="sr-only" role="status" aria-live="polite"></div>
   </div>
 </div>
-<script src="js/data.js?v=12"></script>
-<script src="js/weather-data.js?v=12"></script>
-<script src="js/weather.js?v=12"></script>
-<script src="js/engine.js?v=12"></script>
-<script src="js/ui.js?v=12"></script>
-<script src="js/explain.js?v=12"></script>
-<script src="js/views.js?v=12"></script>
-<script src="js/views-sim.js?v=12"></script>
-<script src="js/views-weather.js?v=12"></script>
-<script src="js/map.js?v=12"></script>
-<script src="js/today.js?v=12"></script>
-<script src="js/app.js?v=12"></script>
+<script src="js/data.js?v=13"></script>
+<script src="js/weather-data.js?v=13"></script>
+<script src="js/weather.js?v=13"></script>
+<script src="js/engine.js?v=13"></script>
+<script src="js/ui.js?v=13"></script>
+<script src="js/explain.js?v=13"></script>
+<script src="js/views.js?v=13"></script>
+<script src="js/views-sim.js?v=13"></script>
+<script src="js/views-weather.js?v=13"></script>
+<script src="js/map.js?v=13"></script>
+<script src="js/today.js?v=13"></script>
+<script src="js/app.js?v=13"></script>
 </body>
 </html>

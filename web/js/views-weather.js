@@ -21,9 +21,9 @@
   };
   FSI.snowHistoryPanel = () => {
     const w = wx.winters();
-    return `<div class="panel" style="margin-top:12px"><div class="ph"><h3>Snow history · real data</h3><span class="hint">Open-Meteo ERA5 archive · Oct–May each winter</span></div><div class="pb scroll" style="padding-top:0">
+    return `<div class="panel next"><div class="ph"><h2>Snow history · real data</h2><span class="hint">Open-Meteo ERA5 archive · Oct–May each winter</span></div><div class="pb scroll flush">
       <table class="t"><thead><tr><th>Cell</th>${w[0].rows.map(r => `<th>Winter ${r.y}–${String(r.y + 1).slice(2)}</th>`).join('')}</tr></thead><tbody>
-      ${w.map(x => `<tr><td><b>${x.cell.id}</b> ${esc(x.cell.label)}<br><span style="font-size:var(--fs-meta);color:var(--muted)">${fmt(x.cell.elev)} m</span></td>${x.rows.map(r => `<td style="font-size:var(--fs-small)">First week ≥ 10 cm: <b>${r.first ? r.first.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : 'none'}</b><br>Total snow ${fmt(r.tot)} cm · coldest night ${fmt(r.cold, 0)} °C</td>`).join('')}</tr>`).join('')}
+      ${w.map(x => `<tr><td><b>${x.cell.id}</b> ${esc(x.cell.label)}<br><span class="meta">${fmt(x.cell.elev)} m</span></td>${x.rows.map(r => `<td class="small">First week ≥ 10 cm: <b>${r.first ? r.first.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : 'none'}</b><br>Total snow ${fmt(r.tot)} cm · coldest night ${fmt(r.cold, 0)} °C</td>`).join('')}</tr>`).join('')}
       </tbody></table><p class="note">The first heavy snow moved by up to four months between winters. That is why the plan uses the <b>early</b> closure estimate. Real pass-closure dates are not used: we do not model any real route.</p></div></div>`;
   };
 
@@ -32,23 +32,23 @@
     const jan = id => { const cl = wx.byId[id]; const t0 = new Date(cl.hist.t0 + 'T00:00'); const v = cl.hist.tmin.filter((x, i) => x != null && new Date(t0.getTime() + i * 86400000).getMonth() === 0); return v.reduce((a, b) => a + b, 0) / v.length; };
     root.innerHTML = `
       <p class="intro">This is the one layer of <b>real data</b> in the prototype. Daily temperature, snow, rain and wind for three public grid points in the western Himalaya come from <a href="https://open-meteo.com/" target="_blank" rel="noopener">Open-Meteo</a>, which provides ERA5 reanalysis since 2023 and a 16-day forecast. Weather drives two things: <b>how much SKO each post burns</b>, and <b>which days air maintenance can fly</b>. The points are civilian grid points and are not linked to any military site.</p>
-      <div class="panel" style="margin-bottom:12px"><div class="pb" style="display:flex;flex-wrap:wrap;gap:8px 18px;align-items:center;font-size:var(--fs-small)">${sourceLine()}
+      <div class="panel lead"><div class="pb" style="display:flex;flex-wrap:wrap;gap:8px 18px;align-items:center;font-size:var(--fs-small)">${sourceLine()}
         <button type="button" class="btn sm" id="wxRefresh">Fetch latest forecast</button>
         <label class="check" style="margin-left:auto"><input type="checkbox" id="wxStorm" ${st.wxStorm ? 'checked' : ''}> <span><b>Demo: simulate a snowstorm</b> at W3 from day 1 to day 4 (25 cm/day, wind 55 km/h, 6 °C colder). ${ui.srcTag('SIMULATED')}</span></label><span class="note" style="margin:0">Data © Open-Meteo.com, CC BY 4.0 (free non-commercial tier).</span></div></div>
-      <div class="panel"><div class="ph"><h3>Weather drives SKO demand</h3>${ui.srcTag('RULE-BASED')}<span class="hint">rule anchored on public figures</span></div><div class="pb scroll" style="padding-top:0">
+      <div class="panel"><div class="ph"><h2>Weather drives SKO demand</h2>${ui.srcTag('RULE-BASED')}<span class="hint">rule anchored on public figures</span></div><div class="pb scroll flush">
         <table class="t"><thead><tr><th>Post</th><th>Cell</th><th class="n">Altitude</th><th class="n">Night temp, next 7 d</th><th class="n">SKO L/person/day</th><th class="n">SKO L/day now</th><th class="n">Mid-January equivalent</th></tr></thead><tbody>
         ${E.POSTS.map(n => { let t = 0; for (let d = 0; d < 7; d++) t += wx.postTemp(n, d); t /= 7; const p = wx.polPerPerson(t);
           const tj = jan(n.cell) - FSI.POL_RULE.lapse * (n.alt * 0.3048 - cellOf(n.cell).elev) / 1000, pj = wx.polPerPerson(tj);
-          return `<tr><td><b>${n.name}</b></td><td>${n.cell}</td><td class="n">${fmt(n.alt)} ft</td><td class="n">${fmt(t, 1)} °C</td><td class="n">${fmt(p, 2)}</td><td class="n">${fmt(p * n.troops)}</td><td class="n">${fmt(pj * n.troops)} L/day <span style="color:var(--muted)">(${fmt(tj, 0)} °C, ×${fmt(pj / p, 1)})</span></td></tr>`; }).join('')}
+          return `<tr><td><b>${n.name}</b></td><td>${n.cell}</td><td class="n">${fmt(n.alt)} ft</td><td class="n">${fmt(t, 1)} °C</td><td class="n">${fmt(p, 2)}</td><td class="n">${fmt(p * n.troops)}</td><td class="n">${fmt(pj * n.troops)} L/day <span class="muted">(${fmt(tj, 0)} °C, ×${fmt(pj / p, 1)})</span></td></tr>`; }).join('')}
         </tbody></table><p class="note">Night temperature at the post = cell minimum − 6.5 °C per km of extra altitude. The January column shows why stock must go up before the pass closes: demand rises as it gets colder.</p></div></div>
-      <div class="panel" style="margin-top:12px"><div class="ph"><h3>16-day forecast</h3>
+      <div class="panel next"><div class="ph"><h2>16-day forecast</h2>
         <div class="itabs" role="tablist" style="margin:0 0 0 auto">${W.cells.map(x => `<button type="button" role="tab" aria-selected="${x.id === sel}" data-c="${x.id}">${x.id} · ${esc(x.label)}</button>`).join('')}</div></div>
-        <div class="pb scroll" style="padding-top:0"><table class="t"><thead><tr><th>Day</th><th class="n">Min °C</th><th class="n">Max °C</th><th class="n">Snow cm</th><th class="n">Rain mm</th><th class="n">Wind km/h</th><th>Air maintenance</th></tr></thead><tbody>
+        <div class="pb scroll flush"><table class="t"><thead><tr><th>Day</th><th class="n">Min °C</th><th class="n">Max °C</th><th class="n">Snow cm</th><th class="n">Rain mm</th><th class="n">Wind km/h</th><th>Air maintenance</th></tr></thead><tbody>
         ${[...Array(16).keys()].map(d => { const f = wx.flyable(sel, d), g = k => wx.get(sel, k, d);
           return `<tr><td>${d ? dayLbl(d) : 'Today'}${f.src === 'simulated' ? ' '+ui.srcTag('SIMULATED') : f.src === 'climatology' ? ' '+ui.srcTag('AVERAGE') : ''}</td><td class="n">${fmt(g('tmin').v, 1)}</td><td class="n">${fmt(g('tmax').v, 1)}</td><td class="n">${fmt(g('snow').v, 1)}</td><td class="n">${fmt(g('prcp').v, 1)}</td><td class="n">${f.wind == null ? '—' : fmt(f.wind, 0)}</td>
             <td>${f.ok ? ui.tag('green', '✓', 'FLYABLE') : ui.tag('red', '✕', 'NOT FLYABLE')}</td></tr>`; }).join('')}
         </tbody></table><p class="note">${esc(c.label)}: grid point ${c.lat}°N ${c.lon}°E, model elevation ${fmt(c.elev)} m. The flyable rule (snow &lt; 1 cm, rain &lt; 2 mm, wind &lt; 40 km/h) is ours. Real flying also depends on cloud, visibility and aircraft, which we do not model.</p></div></div>
-      <div class="panel" style="margin-top:12px"><div class="ph"><h3>Night temperature, Jan 2023 – now · ${sel}</h3><span class="hint">Real ERA5 data</span></div><div class="pb">
+      <div class="panel next"><div class="ph"><h2>Night temperature, Jan 2023 – now · ${sel}</h2><span class="hint">Real ERA5 data</span></div><div class="pb">
         <div class="chart-wrap"><svg class="fluid" id="wxChart" viewBox="0 0 900 220" role="img" aria-label="Daily minimum temperature history"></svg><div class="tip" id="wxTip"></div></div></div></div>
       ${FSI.snowHistoryPanel()}`;
     root.querySelectorAll('[data-c]').forEach(b => b.onclick = () => FSI.set({ wxCell: b.dataset.c }));

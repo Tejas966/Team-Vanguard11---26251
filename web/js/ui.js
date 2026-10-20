@@ -19,6 +19,8 @@
   const TAG_TONE = { ESTIMATE: 'estimate', SIMULATED: 'estimate', ILLUSTRATIVE: 'estimate', ASSUMED: 'estimate', AVERAGE: 'estimate',
     'REAL PUBLIC': 'real', 'RULE-BASED': 'rule', PLANNED: 'planned', SNAPSHOT: 'planned' };
   ui.srcTag = w => `<span class="tag ${TAG_TONE[w] || 'planned'}">${w}</span>`;
+  // Polite screen-reader announcement for results of an action (DESIGN.md §9).
+  ui.announce = msg => { const el = document.getElementById('live'); if (!el) return; el.textContent = ''; setTimeout(() => { el.textContent = msg; }, 50); };
   ui.tag = (cls, icon, text) => `<span class="rb ${cls}"><i aria-hidden="true">${icon}</i>${text}</span>`;
 
   // "Now" is the moment the page loaded, rounded down to the hour. Day 0 = now.

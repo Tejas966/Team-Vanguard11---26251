@@ -88,7 +88,10 @@
       ui.svg('circle', { r: 14, fill: col, stroke: ui.tok('--panel'), 'stroke-width': 3 }, g);
       ui.svg('text', { y: 5, 'text-anchor': 'middle', 'font-size': 14, 'font-weight': 700, fill: s.status === 'soon' ? ui.tok('--on-warning') : ui.tok('--panel'), 'font-family': 'IBM Plex Mono' }, g).textContent = ICON[s.status];
       const snow3 = [1, 2, 3].some(d => (FSI.wx.get(n.cell, 'snow', d).v || 0) >= 1);
-      if (snow3) ui.svg('text', { x: 12, y: -10, 'font-size': 13, fill: ui.tok('--navy-500') }, g).textContent = '❄';
+      if (snow3) { // snowflake drawn as SVG so it does not depend on the font (DESIGN.md §7)
+        const sf = ui.svg('g', { transform: 'translate(17,-15)', stroke: ui.tok('--navy-500'), 'stroke-width': 1.6, 'stroke-linecap': 'round', 'aria-hidden': 'true' }, g);
+        [0, 60, 120].forEach(a => ui.svg('line', { x1: 0, y1: -6, x2: 0, y2: 6, transform: `rotate(${a})` }, sf));
+      }
       const line2 = s.status === 'covered' ? `OK · ${fmt(s.minDays, 0)} d of stock` : s.status === 'plan' ? `${ITEMS[s.worst.item].short} · plan by ${ui.when(s.worst.first.actBy).replace(/^\w+, /, '')}` : s.status === 'late' ? `${ITEMS[s.worst.item].short} · TOO LATE` : `${ITEMS[s.worst.item].short} · act by ${ui.when(s.worst.first.actBy).replace(/^\w+, /, '')}`;
       const w = Math.max(n.name.length * 7.2, line2.length * 6.1) + 16, left = x + 22 + w > 815;
       const lx = left ? -22 - w : 22;
@@ -108,7 +111,7 @@
   };
   FSI.mapLegend = () => `<div class="maplegend">
     <span><i class="dot critical"></i>Act now</span><span><i class="dot warning"></i>Act soon (≤ 3 days)</span><span><i class="dot info"></i>Plan ahead</span><span><i class="dot healthy"></i>OK</span>
-    <span><i class="sq"></i>Supply depot</span><span><i class="ln"></i>Main road</span><span><i class="ln dash"></i>Route-2, light vehicles</span><span><i class="ln dot2"></i>Porter / animal transport</span><span>❄ snow forecast (3 days)</span></div>`;
+    <span><i class="sq"></i>Supply depot</span><span><i class="ln"></i>Main road</span><span><i class="ln dash"></i>Route-2, light vehicles</span><span><i class="ln dot2"></i>Porter / animal transport</span><span><svg class="ico" viewBox="-7 -7 14 14" width="13" height="13" aria-hidden="true"><g stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><line y1="-6" y2="6"/><line y1="-6" y2="6" transform="rotate(60)"/><line y1="-6" y2="6" transform="rotate(120)"/></g></svg> Snow forecast (3 days)</span></div>`;
 
   // Detail card for one post: all four supplies, next action, weather.
   FSI.postCard = (st, s) => {
@@ -128,7 +131,7 @@
       ${act ? FSI.whyBox(st, act) : ''}
       <div class="pc-sec">Conditions</div>
       <p class="pc-small">Night temperature about <b>${fmt(t, 0)} °C</b> (real forecast, adjusted for altitude). Air maintenance next 3 days: ${fly.map((f, i) => `${ui.dayDate(i + 1).toLocaleDateString('en-IN', { weekday: 'short' })} ${f ? '✓' : '✕'}`).join(' · ')}.<br>
-      Last stock report ${rep.ageH} h ago by ${rep.via}${fr !== 'fresh' ? ` <b style="color:var(--warn-ink)">(old, so figures are less certain)</b>` : ''}.</p>
+      Last stock report ${rep.ageH} h ago by ${rep.via}${fr !== 'fresh' ? ` <b class="warn-text">(old, so figures are less certain)</b>` : ''}.</p>
     </div>`;
   };
   FSI.bindCard = (root, st, s) => {
