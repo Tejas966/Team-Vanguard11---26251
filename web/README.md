@@ -24,7 +24,17 @@ All pages share one scenario (top bar), so a change anywhere updates everything.
 ## Code
 - `js/data.js` — synthetic dataset and assumptions
 - `js/engine.js` — all calculations (no DOM); documented on the Methods page
-- `js/ui.js`, `js/views*.js`, `js/app.js` — rendering, routing, shared state
+- `js/ui.js`, `js/views*.js`, `js/map.js`, `js/today.js`, `js/app.js` — rendering, routing, shared state
+- Tests: `node --test web/tests/engine.test.js` (14 engine tests)
+
+## Design system
+The UI follows `DESIGN.md` at the repository root. In short:
+- **Tokens** live in `css/app.css` (`:root`): base palette, semantic aliases (`--status-critical`, `--text-meta`, `--border-control`, …), a nine-step type scale (`--fs-display` … `--fs-tag`, never below 11 px) and the chart/map colours.
+- **SVG maps and charts** read the same tokens through `ui.tok('--name')`, so there are no hard-coded colours in the view code.
+- **Status badges** (`ui.tag`, `ui.statusTag`) always pair an icon with a meaning word: ACT NOW, ACT SOON, PLAN AHEAD, OK, TOO LATE, SHORTAGE, AT RISK. The rule-based risk class is LOW / MEDIUM / HIGH, labelled "(rule-based)".
+- **Source tags** (`ui.srcTag(word)`, class `.tag`) say what kind of number something is, using only ESTIMATE, SIMULATED, ILLUSTRATIVE, ASSUMED, AVERAGE, REAL PUBLIC, RULE-BASED, PLANNED, SNAPSHOT.
+- **Components:** one `.callout` (critical / warning / healthy / info) and one `.metric` (`.metric--status` for Today's counts) replace the earlier one-off styles.
+- Screenshots of all 11 pages (1440 px wide) are in `submission/screenshots/`.
 
 ## Honest limits
-Demand comes from ration scales and a weather-driven SKO rule, not yet from a trained forecaster. Probabilities use a normal approximation. Costs, closure dates and airlift availability are illustrative. The system recommends; a human decides.
+Demand comes from ration scales and a weather-driven SKO rule, not yet from a trained forecaster. The risk class and the "safe until" time use an assumed demand spread; they are rule-based, not calibrated probabilities. Costs, closure dates and airlift availability are illustrative. The system recommends; a human decides.

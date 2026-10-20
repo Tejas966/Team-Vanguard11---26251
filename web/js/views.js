@@ -200,7 +200,7 @@
       <h3>5. Decisions recorded</h3>
       <ul>${(st.decisions || []).slice(-8).map(d => `<li>${esc(d.at)}: ${esc(d.post)} · ${esc(d.item)}: ${esc(d.option)} (deadline ${esc(d.actBy)})</li>`).join('') || '<li>None yet.</li>'}</ul>
       <h3>6. Caveats</h3>
-      <p style="font-size:var(--fs-small);color:var(--ink-2)">All figures are estimates from documented rules on synthetic data. Probabilities assume normal demand variation with report-age uncertainty. Costs, closure dates and airlift availability are illustrative. The system recommends; the commander decides.</p>
+      <p style="font-size:var(--fs-small);color:var(--ink-2)">All figures are estimates from documented rules on synthetic data. Risk classes and safe-until times are rule-based: they assume normal demand variation with report-age uncertainty and are not calibrated probabilities. Costs, closure dates and airlift availability are illustrative. The system recommends; the commander decides.</p>
     </div>`;
   };
 
