@@ -39,4 +39,4 @@ The UI follows `DESIGN.md` at the repository root. In short:
 - Screenshots of all 11 pages (1440 px wide) are in `submission/screenshots/`.
 
 ## Honest limits
-Demand comes from ration scales and a weather-driven SKO rule, not yet from a trained forecaster. The risk class and the "safe until" time use an assumed demand spread; they are rule-based, not calibrated probabilities. Costs, closure dates and airlift availability are illustrative. The system recommends; a human decides.
+Demand comes from ration scales and a weather-driven SKO rule, not yet from a trained forecaster. The risk class and the "safe until" time use an assumed demand spread; they are rule-based, not calibrated probabilities. Costs, closure dates and air maintenance availability are illustrative. The system recommends; a human decides.
