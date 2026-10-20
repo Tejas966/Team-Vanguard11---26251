@@ -123,7 +123,7 @@
       if (!ta.value.trim()) { out.innerHTML = ''; acc.disabled = true; parsed = null; return; }
       parsed = E.parseSitrep(ta.value, st);
       const p = parsed;
-      out.innerHTML = `<div class="parse ${p.ok ? (p.warns.length ? '' : 'ok') : 'bad'}">${p.ok ? `<b>${esc(p.post.name)}</b> · ${Object.entries(p.values).map(([k, v]) => `${ITEMS[k].name}: <b>${fmt(v)}</b> ${ITEMS[k].unit}`).join(' · ')}${p.str != null ? ` · strength ${p.str}` : ''}` : '<b>Cannot accept this message</b>'}
+      out.innerHTML = `<div class="callout ${p.ok ? (p.warns.length ? 'warning' : 'healthy') : 'critical'}">${p.ok ? `<b>${esc(p.post.name)}</b> · ${Object.entries(p.values).map(([k, v]) => `${ITEMS[k].name}: <b>${fmt(v)}</b> ${ITEMS[k].unit}`).join(' · ')}${p.str != null ? ` · strength ${p.str}` : ''}` : '<b>Cannot accept this message</b>'}
         ${p.errors.length ? `<ul>${p.errors.map(e => `<li>${esc(e)}</li>`).join('')}</ul>` : ''}${p.warns.length ? `<ul>${p.warns.map(w => `<li>${esc(w)}</li>`).join('')}</ul>` : ''}</div>`;
       acc.disabled = !p.ok;
     };
@@ -148,13 +148,13 @@
     const sorties = Math.ceil(remainT * 1000 / CONFIG.sortieKg);
     root.innerHTML = `
       <p class="intro"><b>Advance Winter Stocking (AWS).</b> Pass-1 closes for months each winter, and air maintenance carries only a small share of road capacity. The question is: <b>can we push enough stock up before the pass shuts?</b> This works out the requirement for every post beyond the pass, compares it with convoy capacity, and builds a week-by-week push plan.</p>
-      <div class="grid w-top" style="margin-bottom:12px">
-        <div class="panel"><div class="pb"><div class="tile" style="border:0;padding:0"><div class="l">Days until Pass-1 closes</div></div>
-          <div class="big-num" style="margin-top:4px">${W.p10}<small>early estimate</small></div><p class="note">Median ${W.median} d · late ${W.p90} d. Planning uses the early date, which is our assumption. ${ui.srcTag('ILLUSTRATIVE')}</p></div></div>
-        <div class="panel"><div class="pb"><div class="tile" style="border:0;padding:0"><div class="l">Truckloads still to push</div></div>
-          <div class="big-num" style="margin-top:4px">${wp.totLoads}<small>loads of ${CONFIG.truckT} t</small></div><p class="note">Capacity before closure: ${wp.cap} loads (${CONFIG.loadsPerDay}/day, assumption).</p></div></div>
-        <div class="panel"><div class="pb"><div class="tile" style="border:0;padding:0"><div class="l">Verdict</div></div>
-          <div style="margin-top:8px">${wp.short > 0 ? `${badge('red')} <b>${wp.short} loads short.</b><p style="margin:6px 0 0;font-size:var(--fs-small)">About ${fmt(remainT)} t would have to go by air, roughly <b>${sorties} sorties</b> of 2 t. Start Pass-2 runs now or pre-book air maintenance.</p>` : `${badge('green')} <b>On track</b><p style="margin:6px 0 0;font-size:var(--fs-small)">${-wp.short} loads of spare capacity.</p>`}</div></div></div>
+      <div class="metrics three">
+        <div class="metric"><div class="l">Days until Pass-1 closes</div>
+          <div class="v hero">${W.p10}<small>early estimate</small></div><p class="note">Median ${W.median} d · late ${W.p90} d. Planning uses the early date, which is our assumption. ${ui.srcTag('ILLUSTRATIVE')}</p></div>
+        <div class="metric"><div class="l">Truckloads still to push</div>
+          <div class="v">${wp.totLoads}<small>loads of ${CONFIG.truckT} t</small></div><p class="note">Capacity before closure: ${wp.cap} loads (${CONFIG.loadsPerDay}/day, assumption).</p></div>
+        <div class="metric"><div class="l">Verdict</div>
+          ${wp.short > 0 ? `<div class="v">${wp.short}<small>loads short</small></div><p>${badge('red')} About ${fmt(remainT)} t would have to go by air, roughly <b>${sorties} sorties</b> of 2 t. Start Pass-2 runs now or pre-book air maintenance.</p>` : `<div class="v">${-wp.short}<small>loads spare</small></div><p>${badge('green')} On track: spare convoy capacity before closure.</p>`}</div>
       </div>
       <div class="panel" style="margin-bottom:12px"><div class="pb" style="display:flex;gap:18px;flex-wrap:wrap;align-items:end">
         <div class="field"><label for="wConf">Safety margin (assumed demand spread)</label><select id="wConf"><option value="1.2816">Normal (z 1.28)</option><option value="1.6449">High (z 1.64)</option><option value="2.3263">Very high (z 2.33)</option></select></div>

@@ -25,11 +25,11 @@
     const done = (n, it) => (st.decisions || []).filter(d => d.post === n.name && d.item === ITEMS[it].name).pop();
     root.innerHTML = `
       ${demoPanel(st)}
-      <div class="tiles4">
-        <div class="big red"><b>${sc.actNow}</b><span>Act now<br><small>within 24 h, or too late</small></span></div>
-        <div class="big amber"><b>${sc.counts.soon}</b><span>Act soon<br><small>within 3 days</small></span></div>
-        <div class="big blue"><b>${sc.counts.plan}</b><span>Plan ahead<br><small>more than 3 days</small></span></div>
-        <div class="big green"><b>${sc.postsOk}<small>/ ${E.POSTS.length}</small></b><span>Posts fully OK<br><small>every supply lasts</small></span></div>
+      <div class="metrics">
+        <div class="metric metric--status critical"><b class="v">${sc.actNow}</b><span class="l">Act now<small>within 24 h, or too late</small></span></div>
+        <div class="metric metric--status warning"><b class="v">${sc.counts.soon}</b><span class="l">Act soon<small>within 3 days</small></span></div>
+        <div class="metric metric--status info"><b class="v">${sc.counts.plan}</b><span class="l">Plan ahead<small>more than 3 days</small></span></div>
+        <div class="metric metric--status healthy"><b class="v">${sc.postsOk}<small>/ ${E.POSTS.length}</small></b><span class="l">Posts fully OK<small>every supply lasts</small></span></div>
       </div>
       <p class="note" style="margin:-4px 0 10px">Counts are post × supply decisions from the Action deadlines page (same calculation).</p>
       <div class="grid today-main">
